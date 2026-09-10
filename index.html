@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The 2026 Rasuwa–Bhotekoshi Flood — 3D Analytical Explainer</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./node_modules/three/build/three.module.js",
+      "three/addons/": "./node_modules/three/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- 3D WebGL Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- Cinematic Vignette Overlay -->
+  <div class="vignette"></div>
+
+  <!-- Top Navigation / Title Bar -->
+  <header class="top-nav">
+    <div class="brand-container">
+      <span class="brand-badge">Scientific Explainer</span>
+      <h1 class="brand-title">The 2026 Rasuwa–Bhotekoshi Flood</h1>
+      <span class="brand-subtitle">Langtang Lirung Avalanche & River Dam-Burst</span>
+    </div>
+  </header>
+
+  <!-- Toll Counters (§6) -->
+  <div class="tally-container">
+    <div class="tally-card tally-dead">
+      <span class="tally-label">Confirmed Dead</span>
+      <span class="tally-number" id="tally-dead">0</span>
+    </div>
+    <div class="tally-card tally-missing">
+      <span class="tally-label">Missing Persons</span>
+      <span class="tally-number" id="tally-missing">0</span>
+    </div>
+    <div class="tally-card tally-hydro">
+      <span class="tally-label">Hydropower Offline</span>
+      <span class="tally-number" id="tally-hydro">0.0 MW</span>
+    </div>
+  </div>
+
+  <!-- Left Waypoint Roadmap Navigation (§9) -->
+  <aside class="left-sidebar">
+    <div class="sidebar-heading">Chronological Waypoints</div>
+    <div id="waypoint-list"></div>
+  </aside>
+
+  <!-- Right Analytics Readout Panel (§6, §9) -->
+  <aside class="right-sidebar">
+    <div class="analytics-card" id="analytics-card">
+      <!-- Injected dynamically by UIManager -->
+    </div>
+  </aside>
+
+  <!-- Bottom Narration / Caption Bar (§10) -->
+  <div class="bottom-caption-bar">
+    <div class="caption-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+      </svg>
+    </div>
+    <div class="caption-text" id="caption-text">
+      Establishing scene...
+    </div>
+  </div>
+
+  <!-- Transport & Playback Control Bar (§9) -->
+  <footer class="transport-bar">
+    <button class="transport-btn" id="play-btn" title="Pause / Play">
+      <span id="play-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <rect x="5" y="4" width="4" height="16" rx="1"/>
+          <rect x="15" y="4" width="4" height="16" rx="1"/>
+        </svg>
+      </span>
+    </button>
+
+    <div class="scrubber-container">
+      <input type="range" class="scrubber-input" id="timeline-scrubber" min="0" max="1" step="0.0005" value="0">
+      <div class="scrubber-meta">
+        <span>SCENE TIME: <strong id="time-display">0.0s / 34.0s</strong></span>
+        <span>EVENT CLOCK: <strong class="meta-clock" id="real-clock">08:37:00</strong></span>
+      </div>
+    </div>
+
+    <button class="transport-btn active" id="guided-btn" title="Camera Mode">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+      <span>DIRECTOR CAM</span>
+    </button>
+
+    <button class="transport-btn active" id="rain-btn" title="Atmospheric Particles">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/>
+        <line x1="8" y1="19" x2="8" y2="23"/>
+        <line x1="16" y1="19" x2="16" y2="23"/>
+      </svg>
+      <span>RAIN / MIST</span>
+    </button>
+
+    <button class="transport-btn" id="speed-btn" title="Playback Speed">1.0x</button>
+  </footer>
+
+  <!-- Climate Establishing Intro Card (§3) -->
+  <div class="intro-card-overlay" id="intro-card">
+    <div class="intro-modal">
+      <div class="intro-badge">Background & Attribution Context</div>
+      <h2 class="intro-title">The 2026 Rasuwa–Bhotekoshi Flood</h2>
+      <p class="intro-p">
+        In early September 2026, a catastrophic flood surge traversed over 100 km down the Bhotekoshi–Trishuli corridor in central Nepal, claiming over 1,350 lives and severing a tenth of the national power grid.
+      </p>
+      <div class="intro-alert">
+        <strong>Core scientific finding:</strong> This was an <strong>ice–rock avalanche that dammed and burst a river</strong>, NOT a classic Glacial Lake Outburst Flood (GLOF). Rapid Himalayan warming doubled ice loss rates since 2000, destabilizing the high-altitude cirque.
+      </div>
+      <div class="intro-actions">
+        <span class="intro-timer-tag" id="intro-timer">Autoplaying in 3.4s...</span>
+        <button class="intro-btn" id="intro-skip-btn">Start Interactive Explainer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
