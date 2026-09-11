@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { WAYPOINTS, getScenario } from './data.js';
 import { buildDelhiScene } from './scenarios/delhi_models.js';
+import { buildNewYorkScene } from './scenarios/newyork_models.js';
 
 export class FloodSimulation {
   constructor(scene, riverSystem, terrainSystem, scenarioId = null) {
@@ -16,6 +17,8 @@ export class FloodSimulation {
 
     if (this.scenarioId === 'delhi') {
       this.initDelhiSimulation();
+    } else if (this.scenarioId === 'newyork') {
+      this.initNewYorkSimulation();
     } else {
       this.initCollapse();
       this.initFloodFront();
@@ -54,6 +57,46 @@ export class FloodSimulation {
       { name: "Red Fort (Lal Qila)", sub: "Historic 208.66m Record Peak", u: 0.60, offset: new THREE.Vector3(-18, 14, 0) },
       { name: "ITO Barrage", sub: "Regulator 12 Breach & Bund", u: 0.74, offset: new THREE.Vector3(-12, 10, 0) },
       { name: "Rajghat & Relief Camp", sub: "1,000 HP Dewatering Fleet", u: 0.88, offset: new THREE.Vector3(-12, 10, 0) }
+    ];
+
+    for (const lm of landmarks) {
+      const sprite = this.createBadgeSprite(lm.name, lm.sub);
+      const pt = this.river.getPointAt(lm.u);
+      sprite.position.copy(pt).add(lm.offset);
+      this.group.add(sprite);
+      this.landmarkBadges.push({ sprite, u: lm.u });
+    }
+  }
+
+  initNewYorkSimulation() {
+    this.wipeableItems = [];
+    this.bridges = [];
+
+    // Glowing surge front ball leading the harbor storm surge
+    this.initFloodFront();
+    this.initWaypointMarker();
+    this.initAtmosphere();
+
+    // Procedural New York landmarks, bridges, skyscrapers, and countermeasures
+    const { wipeableItems, arcLight, arcMesh } = buildNewYorkScene(this.group, this.river, this.terrain);
+    this.wipeableItems = wipeableItems;
+    this.nyArcLight = arcLight;
+    this.nyArcMesh = arcMesh;
+
+    // New York landmark badges
+    this.initNewYorkLandmarkBadges();
+  }
+
+  initNewYorkLandmarkBadges() {
+    this.landmarkBadges = [];
+    const landmarks = [
+      { name: "Verrazzano Narrows", sub: "Ocean Surge Funnel • 4.8m", u: 0.10, offset: new THREE.Vector3(0, 14, 0) },
+      { name: "The Battery & Wall St", sub: "Seawall Breached • 14.9 ft", u: 0.20, offset: new THREE.Vector3(-14, 12, 0) },
+      { name: "South Ferry Subway", sub: "7 Under-River Tubes Flooded", u: 0.35, offset: new THREE.Vector3(-12, 10, 0) },
+      { name: "FDR Drive & ESCR", sub: "16.5-ft Roller Floodgates", u: 0.48, offset: new THREE.Vector3(-12, 10, 0) },
+      { name: "Brooklyn Bridge", sub: "DUMBO Waterfront Submerged", u: 0.60, offset: new THREE.Vector3(0, 14, 0) },
+      { name: "ConEd 14th St Substation", sub: "345 kV Arc Blast • Blackout", u: 0.74, offset: new THREE.Vector3(-14, 12, 0) },
+      { name: "USACE Unwatering Armada", sub: "380k GPM Tunnel Dewatering", u: 0.88, offset: new THREE.Vector3(-12, 10, 0) }
     ];
 
     for (const lm of landmarks) {
@@ -2581,6 +2624,76 @@ export class FloodSimulation {
         const count = pos.count;
         for (let i = 0; i < count; i++) {
           let y = pos.getY(i) - 2.8;
+          if (y < 0) y = 140;
+          pos.setY(i, y);
+        }
+        pos.needsUpdate = true;
+      }
+
+      if (this.waypointRing) {
+        const wpPt = this.river.getPointAt(uWave);
+        this.waypointRing.position.set(wpPt.x, wpPt.y + 0.3, wpPt.z);
+      }
+
+      return uWave;
+    }
+
+    if (this.scenarioId === 'newyork') {
+      let uWave = 0;
+      if (clampedT < 0.10) {
+        this.floodGroup.visible = false;
+        this.river.updateFloodTrail(this.trailObj, 0);
+        this.uWave = 0;
+      } else {
+        this.floodGroup.visible = true;
+        uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
+        this.uWave = uWave;
+
+        const wavePos = this.river.getPointAt(uWave);
+        const waveTangent = this.river.getTangentAt(uWave);
+
+        this.surgeBall.position.set(wavePos.x, wavePos.y + 1.2, wavePos.z);
+        this.surgeBall.rotation.y += 0.04;
+
+        this.waveCrest.position.set(wavePos.x, wavePos.y + 1.4, wavePos.z);
+        this.waveCrest.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), waveTangent);
+
+        this.surgeLight.position.set(wavePos.x, wavePos.y + 5.0, wavePos.z);
+
+        this.debrisOrbitAngle += 0.04;
+        for (let i = 0; i < this.boulders.length; i++) {
+          const b = this.boulders[i];
+          const angle = this.debrisOrbitAngle + b.angleOffset;
+          b.mesh.position.set(
+            wavePos.x + Math.cos(angle) * b.radius,
+            wavePos.y + 1.2 + Math.sin(angle * 2.0) * 0.5,
+            wavePos.z + Math.sin(angle) * b.radius
+          );
+        }
+
+        this.river.updateFloodTrail(this.trailObj, uWave);
+
+        // Dynamic electric arc flash burst when surge hits ConEd substation (uWave ~0.70 - 0.82)
+        if (this.nyArcLight && this.nyArcMesh) {
+          if (uWave >= 0.70 && uWave <= 0.82) {
+            const flicker = Math.random() > 0.35 ? 1.0 : 0.2;
+            const pulse = (Math.sin(Date.now() * 0.035) * 0.5 + 0.5) * flicker;
+            this.nyArcLight.intensity = pulse * 8.0;
+            this.nyArcMesh.material.opacity = pulse * 0.85;
+            this.nyArcMesh.scale.setScalar(1.0 + pulse * 1.5);
+          } else {
+            this.nyArcLight.intensity = 0.0;
+            this.nyArcMesh.material.opacity = 0.0;
+          }
+        }
+      }
+
+      // Rain animation
+      if (this.rainSystem && this.rainSystem.visible) {
+        const pos = this.rainSystem.geometry.attributes.position;
+        const count = pos.count;
+        for (let i = 0; i < count; i++) {
+          let y = pos.getY(i) - 3.2; // faster tropical gale fall speed
           if (y < 0) y = 140;
           pos.setY(i, y);
         }

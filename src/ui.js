@@ -221,43 +221,51 @@ export class UIManager {
     this.elTimeDisplay.textContent = `${sceneSeconds}s / ${TIMELINE_CONFIG.DUR}s`;
 
     // Real Clock mapping
+    const isDelhi = (this.currentScenario.config.id === 'delhi');
+    const isNewYork = (this.currentScenario.config.id === 'newyork');
+
     let clock = "08:37:00";
-    if (t < 0.20) {
-      const frac = t / 0.20;
-      const sec = Math.floor(frac * 7 * 60);
-      const m = Math.floor(sec / 60);
-      const s = sec % 60;
-      clock = `08:${String(37 + m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    } else if (uWave < 0.10) {
-      const frac = uWave / 0.10;
-      const sec = Math.floor(frac * 6 * 60);
-      const m = 44 + Math.floor(sec / 60);
-      const s = sec % 60;
-      clock = `08:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    } else if (uWave < 0.30) {
-      const frac = (uWave - 0.10) / (0.30 - 0.10);
-      const sec = Math.floor(frac * 10 * 60);
-      const m = 50 + Math.floor(sec / 60);
-      const s = sec % 60;
-      clock = `08:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    } else if (uWave < 0.42) {
-      const frac = (uWave - 0.30) / (0.42 - 0.30);
-      const sec = Math.floor(frac * 5 * 60);
-      const m = Math.floor(sec / 60);
-      const s = sec % 60;
-      clock = `09:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    } else if (uWave < 0.52) {
-      const frac = (uWave - 0.42) / (0.52 - 0.42);
-      const sec = Math.floor(frac * 15 * 60);
-      const m = 5 + Math.floor(sec / 60);
-      const s = sec % 60;
-      clock = `09:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    if (isNewYork || isDelhi) {
+      const { waypoint } = getCurrentWaypoint(t, uWave);
+      clock = waypoint.realTime;
     } else {
-      const frac = Math.min(1.0, (uWave - 0.52) / 0.48);
-      const sec = Math.floor(frac * 35 * 60);
-      const m = 20 + Math.floor(sec / 60);
-      const s = sec % 60;
-      clock = `09:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      if (t < 0.20) {
+        const frac = t / 0.20;
+        const sec = Math.floor(frac * 7 * 60);
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        clock = `08:${String(37 + m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      } else if (uWave < 0.10) {
+        const frac = uWave / 0.10;
+        const sec = Math.floor(frac * 6 * 60);
+        const m = 44 + Math.floor(sec / 60);
+        const s = sec % 60;
+        clock = `08:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      } else if (uWave < 0.30) {
+        const frac = (uWave - 0.10) / (0.30 - 0.10);
+        const sec = Math.floor(frac * 10 * 60);
+        const m = 50 + Math.floor(sec / 60);
+        const s = sec % 60;
+        clock = `08:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      } else if (uWave < 0.42) {
+        const frac = (uWave - 0.30) / (0.42 - 0.30);
+        const sec = Math.floor(frac * 5 * 60);
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        clock = `09:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      } else if (uWave < 0.52) {
+        const frac = (uWave - 0.42) / (0.52 - 0.42);
+        const sec = Math.floor(frac * 15 * 60);
+        const m = 5 + Math.floor(sec / 60);
+        const s = sec % 60;
+        clock = `09:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      } else {
+        const frac = Math.min(1.0, (uWave - 0.52) / 0.48);
+        const sec = Math.floor(frac * 35 * 60);
+        const m = 20 + Math.floor(sec / 60);
+        const s = sec % 60;
+        clock = `09:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      }
     }
     this.elRealClock.textContent = clock;
 
@@ -271,20 +279,24 @@ export class UIManager {
       this.elTallyMissing.textContent = displayMissing.toLocaleString();
     }
 
-    // Secondary Infrastructure (Water works in Delhi vs Hydropower in Rasuwa)
-    const isDelhi = (this.currentScenario.config.id === 'delhi');
+    // Secondary Infrastructure (Subway tubes in NY vs Water works in Delhi vs Hydropower in Rasuwa)
     if (this.elTallyHydro) {
-      if (isDelhi) {
+      if (isNewYork) {
+        this.elTallyHydro.innerHTML = `${tallies.hydro} <small>Tubes</small>`;
+      } else if (isDelhi) {
         this.elTallyHydro.innerHTML = `${tallies.waterOfflineMGD} <small>MGD</small>`;
       } else {
         this.elTallyHydro.innerHTML = `${tallies.hydro} <small>MW</small>`;
       }
     }
     if (this.elTallyHydroSub) {
-      this.elTallyHydroSub.textContent = isDelhi ? '/ 234 MGD' : '/ 431 MW';
+      this.elTallyHydroSub.textContent = isNewYork ? '/ 7 Tubes' : (isDelhi ? '/ 234 MGD' : '/ 431 MW');
     }
     if (this.elTallyHydroPct) {
-      if (isDelhi) {
+      if (isNewYork) {
+        const pct = Math.round((tallies.hydro / 7) * 100);
+        this.elTallyHydroPct.textContent = `${pct}% Submerged`;
+      } else if (isDelhi) {
         const pct = Math.round((tallies.waterOfflineMGD / 234) * 100);
         this.elTallyHydroPct.textContent = `${pct}% Water Cut`;
       } else {
@@ -304,7 +316,13 @@ export class UIManager {
     if (this.elTallyIntensityTag) this.elTallyIntensityTag.textContent = tallies.intensityClass.toUpperCase();
 
     // Economic Destruction Level
-    if (this.elTallyEconUsd) this.elTallyEconUsd.textContent = `$${tallies.econUSD}M`;
+    if (this.elTallyEconUsd) {
+      if (isNewYork) {
+        this.elTallyEconUsd.textContent = `$${(tallies.econUSD / 1000).toFixed(1)}B`;
+      } else {
+        this.elTallyEconUsd.textContent = `$${tallies.econUSD}M`;
+      }
+    }
     if (this.elTallyEconNpr) this.elTallyEconNpr.textContent = tallies.econLocal || `${tallies.econNPR}B`;
     if (this.elTallyEconLevel) {
       this.elTallyEconLevel.textContent = tallies.econLevel;
@@ -406,10 +424,7 @@ export class UIManager {
             <div class="agency-deployment-box">
               <div class="action-heading">AGENCIES DEPLOYED</div>
               <div class="agency-tags">
-                <span class="agency-badge">NDRF</span>
-                <span class="agency-badge">Army Corps</span>
-                <span class="agency-badge">DJB</span>
-                <span class="agency-badge">CWC</span>
+                ${this.getAgencyTagsHtml()}
               </div>
             </div>
           </div>
@@ -490,25 +505,56 @@ export class UIManager {
       this.elBrandBadge.textContent = 'Forecasting Simulator';
     }
 
-    if (this.elTallyHydroLabel) {
-      this.elTallyHydroLabel.textContent = (id === 'delhi') ? 'Works Offline' : 'Hydro Offline';
-    }
-    if (this.elTallyHumanLabel) {
-      this.elTallyHumanLabel.textContent = (id === 'delhi') ? 'Human Impact' : 'Human Toll';
-    }
-    if (this.elTallyDeadUnit) {
-      this.elTallyDeadUnit.textContent = (id === 'delhi') ? 'drowned' : 'dead';
-    }
-    if (this.elTallyMissingUnit) {
-      this.elTallyMissingUnit.textContent = (id === 'delhi') ? 'evacuated' : 'missing';
-    }
-    if (this.elTallyHumanRegion) {
-      this.elTallyHumanRegion.textContent = (id === 'delhi') ? 'Yamuna Corridor' : 'Trishuli Corridor';
+    if (id === 'newyork') {
+      if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Subways Flooded';
+      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Coastal Impact';
+      if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = 'fatalities';
+      if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = 'displaced';
+      if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'NYC Metro & Harbor';
+    } else if (id === 'delhi') {
+      if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Works Offline';
+      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Human Impact';
+      if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = 'drowned';
+      if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = 'evacuated';
+      if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'Yamuna Corridor';
+    } else {
+      if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Hydro Offline';
+      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Human Toll';
+      if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = 'dead';
+      if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = 'missing';
+      if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'Trishuli Corridor';
     }
 
     this.renderWaypointNav();
     if (this.currentScenario.waypoints && this.currentScenario.waypoints.length > 0) {
       this.renderAnalytics(this.currentScenario.waypoints[0]);
+    }
+  }
+
+  getAgencyTagsHtml() {
+    const id = this.currentScenario?.config?.id;
+    if (id === 'newyork') {
+      return `
+        <span class="agency-badge">USACE</span>
+        <span class="agency-badge">FEMA</span>
+        <span class="agency-badge">MTA</span>
+        <span class="agency-badge">FDNY Marine</span>
+        <span class="agency-badge">NYC OEM</span>
+      `;
+    } else if (id === 'delhi') {
+      return `
+        <span class="agency-badge">NDRF</span>
+        <span class="agency-badge">Army Corps</span>
+        <span class="agency-badge">DJB</span>
+        <span class="agency-badge">CWC</span>
+      `;
+    } else {
+      return `
+        <span class="agency-badge">Nepal Army</span>
+        <span class="agency-badge">APF</span>
+        <span class="agency-badge">NEA</span>
+        <span class="agency-badge">DHM</span>
+      `;
     }
   }
 }

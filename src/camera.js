@@ -54,8 +54,38 @@ export class CameraDirector {
       let desiredTheta = -1.15;
 
       const isDelhi = (this.scenarioId === 'delhi');
+      const isNewYork = (this.scenarioId === 'newyork');
 
-      if (isDelhi) {
+      if (isNewYork) {
+        if (t < 0.20) {
+          // Establish on The Narrows entrance & Lower Manhattan skyline in distance
+          const p = this.river.getPointAt(0.12);
+          desiredTarget.set(p.x + 8.0, p.y + 6.0, p.z);
+          desiredRadius = 135;
+          desiredPhi = 0.80;
+          desiredTheta = -1.25;
+        } else if (t <= 0.92) {
+          // Follow-cam tracking the Atlantic storm surge as it rounds The Battery,
+          // hits South Ferry subway, races along FDR Drive, passes under Brooklyn Bridge,
+          // and strikes ConEd substation
+          const uWave = Math.max(0, Math.min(1, (t - 0.18) / 0.78));
+          const wavePos = this.river.getPointAt(uWave);
+          desiredTarget.copy(wavePos).add(new THREE.Vector3(4.0, 4.5, 0));
+
+          const followAlpha = (t - 0.20) / (0.92 - 0.20);
+          desiredRadius = 115;
+          desiredPhi = 0.82;
+          desiredTheta = -1.25 + 1.15 * followAlpha;
+        } else {
+          // Pull back wide over entire flooded Lower Manhattan & East River basin
+          const pullAlpha = (t - 0.92) / (1.0 - 0.92);
+          const endTarget = this.river.getPointAt(0.70);
+          desiredTarget.lerpVectors(endTarget, new THREE.Vector3(10, 8, 10), pullAlpha);
+          desiredRadius = 115 + 125 * pullAlpha;
+          desiredPhi = 0.82 + 0.10 * pullAlpha;
+          desiredTheta = -0.10 - 0.40 * pullAlpha;
+        }
+      } else if (isDelhi) {
         if (t < 0.20) {
           // Establish on Hathnikund release & Wazirabad approach
           const p = this.river.getPointAt(0.12);

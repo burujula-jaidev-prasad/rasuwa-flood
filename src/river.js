@@ -81,7 +81,8 @@ export class RiverSystem {
   // River water ribbon
   createWaterMesh() {
     const isDelhi = (this.scenarioId === 'delhi');
-    const width = isDelhi ? 11.5 : 5.2; // Broad Yamuna river vs narrow Himalayan gorge
+    const isNewYork = (this.scenarioId === 'newyork');
+    const width = isNewYork ? 19.5 : (isDelhi ? 11.5 : 5.2); // Broad harbor vs Yamuna vs Himalayan gorge
     const geometry = new THREE.BufferGeometry();
     const vertices = [];
     const uvs = [];
@@ -117,11 +118,17 @@ export class RiverSystem {
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
 
-    const waterColor = isDelhi ? 0x5a4835 : 0x22809e; // Silt mud vs glacial cyan
+    let waterColor = 0x22809e; // Glacial cyan default
+    if (isNewYork) {
+      waterColor = 0x1a384f; // Atlantic oceanic brackish deep slate
+    } else if (isDelhi) {
+      waterColor = 0x5a4835; // Silt monsoonal mud
+    }
+
     const material = new THREE.MeshStandardMaterial({
       color: waterColor,
-      roughness: isDelhi ? 0.35 : 0.18,
-      metalness: 0.15,
+      roughness: isNewYork ? 0.22 : (isDelhi ? 0.35 : 0.18),
+      metalness: isNewYork ? 0.25 : 0.15,
       transparent: true,
       opacity: 0.94,
       side: THREE.DoubleSide
@@ -177,11 +184,19 @@ export class RiverSystem {
     const col = trailObj.colors;
 
     const isDelhi = (this.scenarioId === 'delhi');
-    const baseWidth = isDelhi ? 22.0 : 8.5; // Wide alluvial floodplain inundation
-    const surgeStage = isDelhi ? 1.5 : 1.8;
+    const isNewYork = (this.scenarioId === 'newyork');
+    const baseWidth = isNewYork ? 26.0 : (isDelhi ? 22.0 : 8.5); // Wide harbor surge vs alluvial floodplain vs gorge
+    const surgeStage = isNewYork ? 2.2 : (isDelhi ? 1.5 : 1.8);
 
-    const colMud = isDelhi ? new THREE.Color(0x7a4d25) : new THREE.Color(0xb0581e);
-    const colFoam = isDelhi ? new THREE.Color(0xdca358) : new THREE.Color(0xffaa44);
+    let colMud = new THREE.Color(0xb0581e);
+    let colFoam = new THREE.Color(0xffaa44);
+    if (isNewYork) {
+      colMud = new THREE.Color(0x234a60);   // Churning deep storm brine
+      colFoam = new THREE.Color(0x8bc0d9);  // White/cyan ocean wave foam crest
+    } else if (isDelhi) {
+      colMud = new THREE.Color(0x7a4d25);
+      colFoam = new THREE.Color(0xdca358);
+    }
 
     for (let i = 0; i <= targetIdx; i++) {
       const pt = this.points[i];

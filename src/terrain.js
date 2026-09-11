@@ -179,6 +179,120 @@ export function createTerrain(riverSystem, scenarioId = null) {
     return { mesh: terrainMesh, geometry, getTerrainHeight };
   }
 
+  const isNewYork = (activeScenarioId === 'newyork');
+  if (isNewYork) {
+    // ----------------------------------------------------
+    // COASTAL HARBOR & TIDAL STRAIT TERRAIN (NEW YORK CITY)
+    // ----------------------------------------------------
+    const colHarborMud  = new THREE.Color(0x1e293b); // Estuarine deep silt/mud
+    const colSeawall    = new THREE.Color(0x475569); // Granite seawall / rip-rap
+    const colAsphalt    = new THREE.Color(0x27272a); // Manhattan street grid asphalt
+    const colSidewalk   = new THREE.Color(0x64748b); // Urban concrete sidewalk
+    const colParkLawn   = new THREE.Color(0x234e32); // Battery Park & Brooklyn Bridge Park turf
+
+    for (let i = 0; i < count; i++) {
+      const x = posAttr.getX(i);
+      const z = posAttr.getZ(i);
+
+      const riverInfo = riverSystem.getClosestRiverInfo(x, z);
+      const riverDist = riverInfo.distance;
+      const bedWidth = 18.0; // Wide Upper NY Bay & East River fairway
+      const bankWidth = 28.0;
+
+      // Base urban coastal topography
+      let h = 2.4 + valueNoise(x * 0.04, z * 0.04) * 1.2;
+
+      // Staten Island & Bay Ridge hills at southwest (x < -50, z < -30)
+      if (x < -50 && z < -30) {
+        const hillDist = Math.sqrt((x + 80) * (x + 80) + (z + 60) * (z + 60));
+        if (hillDist < 50) {
+          h += (1.0 - hillDist / 50) * 9.5;
+        }
+      }
+
+      // Harbor fairway & coastal seawall transition
+      if (riverDist <= bedWidth) {
+        h = riverInfo.riverY - 1.4;
+      } else if (riverDist < bankWidth) {
+        const t = (riverDist - bedWidth) / (bankWidth - bedWidth);
+        const bedFloor = riverInfo.riverY - 1.4;
+        const bankTop = riverInfo.riverY + 1.2;
+        h = bedFloor + (bankTop - bedFloor) * Math.sin(t * Math.PI * 0.5);
+      }
+
+      posAttr.setY(i, h);
+    }
+    posAttr.needsUpdate = true;
+    geometry.computeVertexNormals();
+
+    // Vertex color assignment for New York Harbor
+    for (let i = 0; i < count; i++) {
+      const x = posAttr.getX(i);
+      const z = posAttr.getZ(i);
+      const riverInfo = riverSystem.getClosestRiverInfo(x, z);
+      const d = riverInfo.distance;
+
+      const vertexCol = new THREE.Color();
+      if (d < 18.0) {
+        vertexCol.copy(colHarborMud);
+      } else if (d < 28.0) {
+        const t = (d - 18.0) / 10.0;
+        vertexCol.copy(colHarborMud).lerp(colSeawall, t);
+      } else if (d < 38.0) {
+        const t = (d - 28.0) / 10.0;
+        // Battery Park and waterfront parks greenery
+        if (z > -25 && z < 25 && x > 0) {
+          vertexCol.copy(colSeawall).lerp(colParkLawn, t * 0.85);
+        } else {
+          vertexCol.copy(colSeawall).lerp(colSidewalk, t);
+        }
+      } else {
+        vertexCol.copy(colSidewalk).lerp(colAsphalt, 0.65);
+      }
+
+      colors[i * 3 + 0] = vertexCol.r;
+      colors[i * 3 + 1] = vertexCol.g;
+      colors[i * 3 + 2] = vertexCol.b;
+    }
+
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const material = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.75,
+      metalness: 0.15,
+      flatShading: false
+    });
+
+    const terrainMesh = new THREE.Mesh(geometry, material);
+    terrainMesh.name = "TerrainMesh";
+    terrainMesh.receiveShadow = true;
+    terrainMesh.castShadow = true;
+
+    function getTerrainHeight(x, z) {
+      const riverInfo = riverSystem.getClosestRiverInfo(x, z);
+      const riverDist = riverInfo.distance;
+      const bedWidth = 18.0;
+      const bankWidth = 28.0;
+      let h = 2.4 + valueNoise(x * 0.04, z * 0.04) * 1.2;
+      if (x < -50 && z < -30) {
+        const hillDist = Math.sqrt((x + 80) * (x + 80) + (z + 60) * (z + 60));
+        if (hillDist < 50) h += (1.0 - hillDist / 50) * 9.5;
+      }
+      if (riverDist <= bedWidth) {
+        h = riverInfo.riverY - 1.4;
+      } else if (riverDist < bankWidth) {
+        const t = (riverDist - bedWidth) / (bankWidth - bedWidth);
+        const bedFloor = riverInfo.riverY - 1.4;
+        const bankTop = riverInfo.riverY + 1.2;
+        h = bedFloor + (bankTop - bedFloor) * Math.sin(t * Math.PI * 0.5);
+      }
+      return h;
+    }
+
+    return { mesh: terrainMesh, geometry, getTerrainHeight };
+  }
+
   // ----------------------------------------------------
   // HIMALAYAN ALPINE GORGE TERRAIN (RASUWA SCENARIO)
   // ----------------------------------------------------
