@@ -293,6 +293,129 @@ export function createTerrain(riverSystem, scenarioId = null) {
     return { mesh: terrainMesh, geometry, getTerrainHeight };
   }
 
+  const isBeijing = (activeScenarioId === 'beijing');
+  if (isBeijing) {
+    // ----------------------------------------------------
+    // MOUNTAIN GORGE TO URBAN PLAIN (BEIJING MENTOUGOU)
+    // ----------------------------------------------------
+    const colGorgeRock  = new THREE.Color(0x3e444d); // Taihang dark granite crags
+    const colLoessMud   = new THREE.Color(0x7c532e); // Yellow-brown loess & flood silt
+    const colMountainVeg= new THREE.Color(0x2f462e); // Taihang pine & shrub
+    const colPlain      = new THREE.Color(0x445338); // Western Beijing alluvial green
+    const colUrbanTarmac= new THREE.Color(0x292524); // Highway G109 tarmac & urban ground
+
+    for (let i = 0; i < count; i++) {
+      const x = posAttr.getX(i);
+      const z = posAttr.getZ(i);
+
+      const riverInfo = riverSystem.getClosestRiverInfo(x, z);
+      const riverDist = riverInfo.distance;
+      const u = riverInfo.u;
+
+      // Canyon gorge width expands from 8m in mountains to 18m on plain
+      const bedWidth = 8.0 + u * 10.0;
+      const bankWidth = 18.0 + u * 12.0;
+
+      // Base elevation: High Taihang mountains in northwest (x < 0), flat plain in southeast (x > 0)
+      let h = 3.0 + valueNoise(x * 0.04, z * 0.04) * 1.5;
+
+      // Steep Taihang Mountain canyon walls flanking the northwest
+      if (x < 15) {
+        const mountainFactor = Math.min(1.0, Math.max(0, (15 - x) / 80));
+        const ridgeH = (ridgedNoise(x * 1.5, z * 1.5) * 18.0 + 8.0) * mountainFactor;
+        // Suppress mountain peaks inside the river channel
+        const gorgeChannelSuppression = Math.min(1.0, Math.pow(riverDist / bankWidth, 1.8));
+        h += ridgeH * gorgeChannelSuppression;
+      }
+
+      // Gorge riverbed floor & riverbank cutting
+      if (riverDist <= bedWidth) {
+        h = riverInfo.riverY - 1.2;
+      } else if (riverDist < bankWidth) {
+        const t = (riverDist - bedWidth) / (bankWidth - bedWidth);
+        const bedFloor = riverInfo.riverY - 1.2;
+        const bankTop = riverInfo.riverY + (x < 0 ? 3.5 : 1.4);
+        h = bedFloor + (bankTop - bedFloor) * Math.sin(t * Math.PI * 0.5);
+      }
+
+      posAttr.setY(i, h);
+    }
+    posAttr.needsUpdate = true;
+    geometry.computeVertexNormals();
+
+    // Vertex colors for Beijing Mentougou
+    for (let i = 0; i < count; i++) {
+      const x = posAttr.getX(i);
+      const z = posAttr.getZ(i);
+      const riverInfo = riverSystem.getClosestRiverInfo(x, z);
+      const d = riverInfo.distance;
+      const u = riverInfo.u;
+
+      const vertexCol = new THREE.Color();
+      if (d < 10.0 + u * 6.0) {
+        vertexCol.copy(colLoessMud);
+      } else if (d < 22.0) {
+        const t = (d - 10.0) / 12.0;
+        if (x < 0) {
+          vertexCol.copy(colLoessMud).lerp(colGorgeRock, t);
+        } else {
+          vertexCol.copy(colLoessMud).lerp(colPlain, t);
+        }
+      } else if (x < 0) {
+        // High mountain slopes
+        const t = Math.min(1.0, (d - 22.0) / 25.0);
+        vertexCol.copy(colGorgeRock).lerp(colMountainVeg, t * 0.7);
+      } else {
+        // Urban plain & retention basin
+        vertexCol.copy(colPlain).lerp(colUrbanTarmac, 0.4);
+      }
+
+      colors[i * 3 + 0] = vertexCol.r;
+      colors[i * 3 + 1] = vertexCol.g;
+      colors[i * 3 + 2] = vertexCol.b;
+    }
+
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const material = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.85,
+      metalness: 0.1,
+      flatShading: false
+    });
+
+    const terrainMesh = new THREE.Mesh(geometry, material);
+    terrainMesh.name = "TerrainMesh";
+    terrainMesh.receiveShadow = true;
+    terrainMesh.castShadow = true;
+
+    function getTerrainHeight(x, z) {
+      const riverInfo = riverSystem.getClosestRiverInfo(x, z);
+      const riverDist = riverInfo.distance;
+      const u = riverInfo.u;
+      const bedWidth = 8.0 + u * 10.0;
+      const bankWidth = 18.0 + u * 12.0;
+      let h = 3.0 + valueNoise(x * 0.04, z * 0.04) * 1.5;
+      if (x < 15) {
+        const mountainFactor = Math.min(1.0, Math.max(0, (15 - x) / 80));
+        const ridgeH = (ridgedNoise(x * 1.5, z * 1.5) * 18.0 + 8.0) * mountainFactor;
+        const gorgeChannelSuppression = Math.min(1.0, Math.pow(riverDist / bankWidth, 1.8));
+        h += ridgeH * gorgeChannelSuppression;
+      }
+      if (riverDist <= bedWidth) {
+        h = riverInfo.riverY - 1.2;
+      } else if (riverDist < bankWidth) {
+        const t = (riverDist - bedWidth) / (bankWidth - bedWidth);
+        const bedFloor = riverInfo.riverY - 1.2;
+        const bankTop = riverInfo.riverY + (x < 0 ? 3.5 : 1.4);
+        h = bedFloor + (bankTop - bedFloor) * Math.sin(t * Math.PI * 0.5);
+      }
+      return h;
+    }
+
+    return { mesh: terrainMesh, geometry, getTerrainHeight };
+  }
+
   // ----------------------------------------------------
   // HIMALAYAN ALPINE GORGE TERRAIN (RASUWA SCENARIO)
   // ----------------------------------------------------

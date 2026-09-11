@@ -82,7 +82,8 @@ export class RiverSystem {
   createWaterMesh() {
     const isDelhi = (this.scenarioId === 'delhi');
     const isNewYork = (this.scenarioId === 'newyork');
-    const width = isNewYork ? 19.5 : (isDelhi ? 11.5 : 5.2); // Broad harbor vs Yamuna vs Himalayan gorge
+    const isBeijing = (this.scenarioId === 'beijing');
+    const width = isNewYork ? 19.5 : (isBeijing ? 12.5 : (isDelhi ? 11.5 : 5.2));
     const geometry = new THREE.BufferGeometry();
     const vertices = [];
     const uvs = [];
@@ -121,13 +122,15 @@ export class RiverSystem {
     let waterColor = 0x22809e; // Glacial cyan default
     if (isNewYork) {
       waterColor = 0x1a384f; // Atlantic oceanic brackish deep slate
+    } else if (isBeijing) {
+      waterColor = 0x6b4528; // Turbid loess & mountain silt clay
     } else if (isDelhi) {
       waterColor = 0x5a4835; // Silt monsoonal mud
     }
 
     const material = new THREE.MeshStandardMaterial({
       color: waterColor,
-      roughness: isNewYork ? 0.22 : (isDelhi ? 0.35 : 0.18),
+      roughness: isNewYork ? 0.22 : (isBeijing ? 0.38 : (isDelhi ? 0.35 : 0.18)),
       metalness: isNewYork ? 0.25 : 0.15,
       transparent: true,
       opacity: 0.94,
@@ -185,14 +188,18 @@ export class RiverSystem {
 
     const isDelhi = (this.scenarioId === 'delhi');
     const isNewYork = (this.scenarioId === 'newyork');
-    const baseWidth = isNewYork ? 26.0 : (isDelhi ? 22.0 : 8.5); // Wide harbor surge vs alluvial floodplain vs gorge
-    const surgeStage = isNewYork ? 2.2 : (isDelhi ? 1.5 : 1.8);
+    const isBeijing = (this.scenarioId === 'beijing');
+    const baseWidth = isNewYork ? 26.0 : (isBeijing ? 20.0 : (isDelhi ? 22.0 : 8.5));
+    const surgeStage = isNewYork ? 2.2 : (isBeijing ? 1.9 : (isDelhi ? 1.5 : 1.8));
 
     let colMud = new THREE.Color(0xb0581e);
     let colFoam = new THREE.Color(0xffaa44);
     if (isNewYork) {
       colMud = new THREE.Color(0x234a60);   // Churning deep storm brine
       colFoam = new THREE.Color(0x8bc0d9);  // White/cyan ocean wave foam crest
+    } else if (isBeijing) {
+      colMud = new THREE.Color(0x733f1c);   // Heavy yellow-brown loess & clay torrent
+      colFoam = new THREE.Color(0xd49b55);  // Frothing silt spray
     } else if (isDelhi) {
       colMud = new THREE.Color(0x7a4d25);
       colFoam = new THREE.Color(0xdca358);

@@ -55,8 +55,37 @@ export class CameraDirector {
 
       const isDelhi = (this.scenarioId === 'delhi');
       const isNewYork = (this.scenarioId === 'newyork');
+      const isBeijing = (this.scenarioId === 'beijing');
 
-      if (isNewYork) {
+      if (isBeijing) {
+        if (t < 0.20) {
+          // Establish high in the misty Taihang mountain gorge (Miaofengshan)
+          const p = this.river.getPointAt(0.10);
+          desiredTarget.set(p.x - 8.0, p.y + 8.0, p.z);
+          desiredRadius = 135;
+          desiredPhi = 0.76;
+          desiredTheta = -1.18;
+        } else if (t <= 0.92) {
+          // Follow-cam tracking the torrential mountain deluge as it passes Luopoling train,
+          // tears along G109, bursts through Sanjiadian Dam, and reaches Lugouqiao
+          const uWave = Math.max(0, Math.min(1, (t - 0.18) / 0.78));
+          const wavePos = this.river.getPointAt(uWave);
+          desiredTarget.copy(wavePos).add(new THREE.Vector3(0, 4.0, 0));
+
+          const followAlpha = (t - 0.20) / (0.92 - 0.20);
+          desiredRadius = 112;
+          desiredPhi = 0.82;
+          desiredTheta = -1.22 + 1.10 * followAlpha;
+        } else {
+          // Pull back wide over western Beijing plain, Lugouqiao, and Yongding retention wetlands
+          const pullAlpha = (t - 0.92) / (1.0 - 0.92);
+          const endTarget = this.river.getPointAt(0.75);
+          desiredTarget.lerpVectors(endTarget, new THREE.Vector3(12, 6, 15), pullAlpha);
+          desiredRadius = 112 + 120 * pullAlpha;
+          desiredPhi = 0.82 + 0.10 * pullAlpha;
+          desiredTheta = -0.12 - 0.35 * pullAlpha;
+        }
+      } else if (isNewYork) {
         if (t < 0.20) {
           // Establish on The Narrows entrance & Lower Manhattan skyline in distance
           const p = this.river.getPointAt(0.12);

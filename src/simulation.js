@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { WAYPOINTS, getScenario } from './data.js';
 import { buildDelhiScene } from './scenarios/delhi_models.js';
 import { buildNewYorkScene } from './scenarios/newyork_models.js';
+import { buildBeijingScene } from './scenarios/beijing_models.js';
 
 export class FloodSimulation {
   constructor(scene, riverSystem, terrainSystem, scenarioId = null) {
@@ -19,6 +20,8 @@ export class FloodSimulation {
       this.initDelhiSimulation();
     } else if (this.scenarioId === 'newyork') {
       this.initNewYorkSimulation();
+    } else if (this.scenarioId === 'beijing') {
+      this.initBeijingSimulation();
     } else {
       this.initCollapse();
       this.initFloodFront();
@@ -97,6 +100,45 @@ export class FloodSimulation {
       { name: "Brooklyn Bridge", sub: "DUMBO Waterfront Submerged", u: 0.60, offset: new THREE.Vector3(0, 14, 0) },
       { name: "ConEd 14th St Substation", sub: "345 kV Arc Blast • Blackout", u: 0.74, offset: new THREE.Vector3(-14, 12, 0) },
       { name: "USACE Unwatering Armada", sub: "380k GPM Tunnel Dewatering", u: 0.88, offset: new THREE.Vector3(-12, 10, 0) }
+    ];
+
+    for (const lm of landmarks) {
+      const sprite = this.createBadgeSprite(lm.name, lm.sub);
+      const pt = this.river.getPointAt(lm.u);
+      sprite.position.copy(pt).add(lm.offset);
+      this.group.add(sprite);
+      this.landmarkBadges.push({ sprite, u: lm.u });
+    }
+  }
+
+  initBeijingSimulation() {
+    this.wipeableItems = [];
+    this.bridges = [];
+
+    // Glowing surge front ball leading the mountain flash deluge
+    this.initFloodFront();
+    this.initWaypointMarker();
+    this.initAtmosphere();
+
+    // Procedural Beijing landmarks, bridges, K396 train, and countermeasures
+    const { wipeableItems, animatedRotors } = buildBeijingScene(this.group, this.river, this.terrain);
+    this.wipeableItems = wipeableItems;
+    this.bjRotors = animatedRotors || [];
+
+    // Beijing landmark badges
+    this.initBeijingLandmarkBadges();
+  }
+
+  initBeijingLandmarkBadges() {
+    this.landmarkBadges = [];
+    const landmarks = [
+      { name: "Miaofengshan Headwaters", sub: "1,029mm Cloudburst Peak", u: 0.05, offset: new THREE.Vector3(0, 14, 0) },
+      { name: "Luopoling Mountain Pass", sub: "K396 Train Stranded • Mudslide", u: 0.20, offset: new THREE.Vector3(-14, 12, 0) },
+      { name: "National Highway G109", sub: "1,050 km Mountain Roads Cut", u: 0.35, offset: new THREE.Vector3(14, 12, 0) },
+      { name: "Sanjiadian Dam Sluice", sub: "4,649 m³/s Gorge Throttle", u: 0.48, offset: new THREE.Vector3(0, 14, 0) },
+      { name: "Lugouqiao (Marco Polo)", sub: "1189 AD Bridge & Sluice Opened", u: 0.60, offset: new THREE.Vector3(-14, 12, 0) },
+      { name: "PLA Air-Bridge Task Force", sub: "Z-20 Airborne Relief Drops", u: 0.74, offset: new THREE.Vector3(-16, 16, 0) },
+      { name: "Yongding Retention Basin", sub: "180M m³ Sponge City Storage", u: 0.88, offset: new THREE.Vector3(-14, 10, 0) }
     ];
 
     for (const lm of landmarks) {
@@ -2694,6 +2736,69 @@ export class FloodSimulation {
         const count = pos.count;
         for (let i = 0; i < count; i++) {
           let y = pos.getY(i) - 3.2; // faster tropical gale fall speed
+          if (y < 0) y = 140;
+          pos.setY(i, y);
+        }
+        pos.needsUpdate = true;
+      }
+
+      if (this.waypointRing) {
+        const wpPt = this.river.getPointAt(uWave);
+        this.waypointRing.position.set(wpPt.x, wpPt.y + 0.3, wpPt.z);
+      }
+
+      return uWave;
+    }
+
+    if (this.scenarioId === 'beijing') {
+      let uWave = 0;
+      if (clampedT < 0.10) {
+        this.floodGroup.visible = false;
+        this.river.updateFloodTrail(this.trailObj, 0);
+        this.uWave = 0;
+      } else {
+        this.floodGroup.visible = true;
+        uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
+        this.uWave = uWave;
+
+        const wavePos = this.river.getPointAt(uWave);
+        const waveTangent = this.river.getTangentAt(uWave);
+
+        this.surgeBall.position.set(wavePos.x, wavePos.y + 1.2, wavePos.z);
+        this.surgeBall.rotation.y += 0.04;
+
+        this.waveCrest.position.set(wavePos.x, wavePos.y + 1.4, wavePos.z);
+        this.waveCrest.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), waveTangent);
+
+        this.surgeLight.position.set(wavePos.x, wavePos.y + 5.0, wavePos.z);
+
+        this.debrisOrbitAngle += 0.04;
+        for (let i = 0; i < this.boulders.length; i++) {
+          const b = this.boulders[i];
+          const angle = this.debrisOrbitAngle + b.angleOffset;
+          b.mesh.position.set(
+            wavePos.x + Math.cos(angle) * b.radius,
+            wavePos.y + 1.2 + Math.sin(angle * 2.0) * 0.5,
+            wavePos.z + Math.sin(angle) * b.radius
+          );
+        }
+
+        this.river.updateFloodTrail(this.trailObj, uWave);
+
+        // Spin PLA helicopter rotors
+        if (this.bjRotors && this.bjRotors.length > 0) {
+          for (const rotor of this.bjRotors) {
+            rotor.rotation.y += 0.35;
+          }
+        }
+      }
+
+      // Rain animation
+      if (this.rainSystem && this.rainSystem.visible) {
+        const pos = this.rainSystem.geometry.attributes.position;
+        const count = pos.count;
+        for (let i = 0; i < count; i++) {
+          let y = pos.getY(i) - 3.4; // rapid mountain downpour fall speed
           if (y < 0) y = 140;
           pos.setY(i, y);
         }
