@@ -240,6 +240,11 @@ class ExplainerApp {
     this.currentScenarioId = scenarioId;
     setCurrentScenarioId(scenarioId);
 
+    // 0. Clean up previous camera director controls
+    if (this.cameraDirector && this.cameraDirector.dispose) {
+      this.cameraDirector.dispose();
+    }
+
     // 1. Clean up existing objects
     if (this.waterMesh) this.scene.remove(this.waterMesh);
     if (this.terrainSystem && this.terrainSystem.mesh) this.scene.remove(this.terrainSystem.mesh);
@@ -251,8 +256,13 @@ class ExplainerApp {
     // 3. Update environment (sky, fog, sun)
     this.updateEnvironmentForScenario(getScenario(scenarioId));
 
-    // 4. Update UI
+    // 4. Update UI & timeline
     this.t = 0.0;
+    this.introDismissed = true;
+    this.ui.hideIntroCard();
+    this.isPlaying = true;
+    this.ui.isPlaying = true;
+    this.ui.updatePlayBtnState();
     this.ui.setScenario(scenarioId);
     this.updateSimulationState(0.016);
   }
@@ -262,13 +272,18 @@ class ExplainerApp {
     this.introDismissed = true;
     this.ui.hideIntroCard();
     this.isPlaying = true;
+    this.ui.isPlaying = true;
     this.ui.updatePlayBtnState();
   }
 
   updateSimulationState(deltaSec) {
-    const uWave = this.simulation.update(this.t, deltaSec);
-    this.cameraDirector.update(this.t, deltaSec);
-    this.ui.update(this.t, this.t * TIMELINE_CONFIG.DUR, uWave);
+    try {
+      const uWave = this.simulation.update(this.t, deltaSec);
+      this.cameraDirector.update(this.t, deltaSec);
+      this.ui.update(this.t, this.t * TIMELINE_CONFIG.DUR, uWave);
+    } catch (err) {
+      console.error('Error in simulation state update:', err);
+    }
   }
 
   onResize() {

@@ -38,6 +38,12 @@ export class CameraDirector {
     }
   }
 
+  dispose() {
+    if (this.controls) {
+      this.controls.dispose();
+    }
+  }
+
   jumpToWaypoint(u) {
     const pt = this.river.getPointAt(u);
     this.currentTarget.copy(pt).add(new THREE.Vector3(0, 10, 0));

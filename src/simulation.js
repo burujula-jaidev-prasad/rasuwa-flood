@@ -368,6 +368,16 @@ export class FloodSimulation {
 
     this.trailObj = this.river.createFloodTrail();
     this.group.add(this.trailObj.mesh);
+
+    // Multi-scenario aliases & debris parameters
+    this.surgeBall = this.floodGlow;
+    this.surgeLight = this.floodLight;
+    this.debrisOrbitAngle = 0;
+    this.boulders = this.floodDebris.map(d => ({
+      mesh: d.mesh,
+      radius: 3.5,
+      angleOffset: Math.random() * Math.PI * 2
+    }));
   }
 
   /* ----------------------------------------------------
@@ -2701,6 +2711,63 @@ export class FloodSimulation {
     this.mistPlane.visible = visible;
   }
 
+  updateSurgeFront(uWave) {
+    if (!this.river) return;
+    const wavePos = this.river.getPointAt(uWave);
+    const waveTangent = this.river.getTangentAt(uWave);
+
+    if (this.surgeBall) {
+      this.surgeBall.position.set(wavePos.x, wavePos.y + 1.2, wavePos.z);
+      this.surgeBall.rotation.y += 0.04;
+    }
+
+    if (this.waveCrest) {
+      this.waveCrest.position.set(wavePos.x, wavePos.y + 1.4, wavePos.z);
+      this.waveCrest.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), waveTangent);
+    }
+
+    if (this.surgeLight) {
+      this.surgeLight.position.set(wavePos.x, wavePos.y + 5.0, wavePos.z);
+    }
+
+    this.debrisOrbitAngle = (this.debrisOrbitAngle || 0) + 0.04;
+    if (this.boulders && this.boulders.length > 0) {
+      for (let i = 0; i < this.boulders.length; i++) {
+        const b = this.boulders[i];
+        if (!b || !b.mesh) continue;
+        const angle = this.debrisOrbitAngle + (b.angleOffset || 0);
+        const radius = b.radius || 3.5;
+        b.mesh.position.set(
+          wavePos.x + Math.cos(angle) * radius,
+          wavePos.y + 1.2 + Math.sin(angle * 2.0) * 0.5,
+          wavePos.z + Math.sin(angle) * radius
+        );
+      }
+    }
+
+    if (this.trailObj) {
+      this.river.updateFloodTrail(this.trailObj, uWave);
+    }
+
+    if (this.waypointRing) {
+      const wpPt = this.river.getPointAt(uWave);
+      this.waypointRing.position.set(wpPt.x, wpPt.y + 0.3, wpPt.z);
+    }
+  }
+
+  animateRain(speed = 3.0) {
+    if (this.rainSystem && this.rainSystem.visible) {
+      const pos = this.rainSystem.geometry.attributes.position;
+      const count = pos.count;
+      for (let i = 0; i < count; i++) {
+        let y = pos.getY(i) - speed;
+        if (y < 0) y = 140;
+        pos.setY(i, y);
+      }
+      pos.needsUpdate = true;
+    }
+  }
+
   /* ----------------------------------------------------
    * 8. FRAME SIMULATION UPDATE
    * ---------------------------------------------------- */
@@ -2710,95 +2777,31 @@ export class FloodSimulation {
     if (this.scenarioId === 'delhi') {
       let uWave = 0;
       if (clampedT < 0.10) {
-        this.floodGroup.visible = false;
-        this.river.updateFloodTrail(this.trailObj, 0);
+        if (this.floodGroup) this.floodGroup.visible = false;
+        if (this.trailObj) this.river.updateFloodTrail(this.trailObj, 0);
         this.uWave = 0;
       } else {
-        this.floodGroup.visible = true;
+        if (this.floodGroup) this.floodGroup.visible = true;
         uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
         this.uWave = uWave;
-
-        const wavePos = this.river.getPointAt(uWave);
-        const waveTangent = this.river.getTangentAt(uWave);
-
-        this.surgeBall.position.set(wavePos.x, wavePos.y + 1.2, wavePos.z);
-        this.surgeBall.rotation.y += 0.04;
-
-        this.waveCrest.position.set(wavePos.x, wavePos.y + 1.4, wavePos.z);
-        this.waveCrest.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), waveTangent);
-
-        this.surgeLight.position.set(wavePos.x, wavePos.y + 5.0, wavePos.z);
-
-        this.debrisOrbitAngle += 0.04;
-        for (let i = 0; i < this.boulders.length; i++) {
-          const b = this.boulders[i];
-          const angle = this.debrisOrbitAngle + b.angleOffset;
-          b.mesh.position.set(
-            wavePos.x + Math.cos(angle) * b.radius,
-            wavePos.y + 1.2 + Math.sin(angle * 2.0) * 0.5,
-            wavePos.z + Math.sin(angle) * b.radius
-          );
-        }
-
-        this.river.updateFloodTrail(this.trailObj, uWave);
+        this.updateSurgeFront(uWave);
       }
-
-      // Rain animation
-      if (this.rainSystem && this.rainSystem.visible) {
-        const pos = this.rainSystem.geometry.attributes.position;
-        const count = pos.count;
-        for (let i = 0; i < count; i++) {
-          let y = pos.getY(i) - 2.8;
-          if (y < 0) y = 140;
-          pos.setY(i, y);
-        }
-        pos.needsUpdate = true;
-      }
-
-      if (this.waypointRing) {
-        const wpPt = this.river.getPointAt(uWave);
-        this.waypointRing.position.set(wpPt.x, wpPt.y + 0.3, wpPt.z);
-      }
-
+      this.animateRain(2.8);
       return uWave;
     }
 
     if (this.scenarioId === 'newyork') {
       let uWave = 0;
       if (clampedT < 0.10) {
-        this.floodGroup.visible = false;
-        this.river.updateFloodTrail(this.trailObj, 0);
+        if (this.floodGroup) this.floodGroup.visible = false;
+        if (this.trailObj) this.river.updateFloodTrail(this.trailObj, 0);
         this.uWave = 0;
       } else {
-        this.floodGroup.visible = true;
+        if (this.floodGroup) this.floodGroup.visible = true;
         uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
         this.uWave = uWave;
+        this.updateSurgeFront(uWave);
 
-        const wavePos = this.river.getPointAt(uWave);
-        const waveTangent = this.river.getTangentAt(uWave);
-
-        this.surgeBall.position.set(wavePos.x, wavePos.y + 1.2, wavePos.z);
-        this.surgeBall.rotation.y += 0.04;
-
-        this.waveCrest.position.set(wavePos.x, wavePos.y + 1.4, wavePos.z);
-        this.waveCrest.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), waveTangent);
-
-        this.surgeLight.position.set(wavePos.x, wavePos.y + 5.0, wavePos.z);
-
-        this.debrisOrbitAngle += 0.04;
-        for (let i = 0; i < this.boulders.length; i++) {
-          const b = this.boulders[i];
-          const angle = this.debrisOrbitAngle + b.angleOffset;
-          b.mesh.position.set(
-            wavePos.x + Math.cos(angle) * b.radius,
-            wavePos.y + 1.2 + Math.sin(angle * 2.0) * 0.5,
-            wavePos.z + Math.sin(angle) * b.radius
-          );
-        }
-
-        this.river.updateFloodTrail(this.trailObj, uWave);
-
-        // Dynamic electric arc flash burst when surge hits ConEd substation (uWave ~0.70 - 0.82)
         if (this.nyArcLight && this.nyArcMesh) {
           if (uWave >= 0.70 && uWave <= 0.82) {
             const flicker = Math.random() > 0.35 ? 1.0 : 0.2;
@@ -2812,182 +2815,60 @@ export class FloodSimulation {
           }
         }
       }
-
-      // Rain animation
-      if (this.rainSystem && this.rainSystem.visible) {
-        const pos = this.rainSystem.geometry.attributes.position;
-        const count = pos.count;
-        for (let i = 0; i < count; i++) {
-          let y = pos.getY(i) - 3.2; // faster tropical gale fall speed
-          if (y < 0) y = 140;
-          pos.setY(i, y);
-        }
-        pos.needsUpdate = true;
-      }
-
-      if (this.waypointRing) {
-        const wpPt = this.river.getPointAt(uWave);
-        this.waypointRing.position.set(wpPt.x, wpPt.y + 0.3, wpPt.z);
-      }
-
+      this.animateRain(3.2);
       return uWave;
     }
 
     if (this.scenarioId === 'beijing') {
       let uWave = 0;
       if (clampedT < 0.10) {
-        this.floodGroup.visible = false;
-        this.river.updateFloodTrail(this.trailObj, 0);
+        if (this.floodGroup) this.floodGroup.visible = false;
+        if (this.trailObj) this.river.updateFloodTrail(this.trailObj, 0);
         this.uWave = 0;
       } else {
-        this.floodGroup.visible = true;
+        if (this.floodGroup) this.floodGroup.visible = true;
         uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
         this.uWave = uWave;
+        this.updateSurgeFront(uWave);
 
-        const wavePos = this.river.getPointAt(uWave);
-        const waveTangent = this.river.getTangentAt(uWave);
-
-        this.surgeBall.position.set(wavePos.x, wavePos.y + 1.2, wavePos.z);
-        this.surgeBall.rotation.y += 0.04;
-
-        this.waveCrest.position.set(wavePos.x, wavePos.y + 1.4, wavePos.z);
-        this.waveCrest.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), waveTangent);
-
-        this.surgeLight.position.set(wavePos.x, wavePos.y + 5.0, wavePos.z);
-
-        this.debrisOrbitAngle += 0.04;
-        for (let i = 0; i < this.boulders.length; i++) {
-          const b = this.boulders[i];
-          const angle = this.debrisOrbitAngle + b.angleOffset;
-          b.mesh.position.set(
-            wavePos.x + Math.cos(angle) * b.radius,
-            wavePos.y + 1.2 + Math.sin(angle * 2.0) * 0.5,
-            wavePos.z + Math.sin(angle) * b.radius
-          );
-        }
-
-        this.river.updateFloodTrail(this.trailObj, uWave);
-
-        // Spin PLA helicopter rotors
         if (this.bjRotors && this.bjRotors.length > 0) {
           for (const rotor of this.bjRotors) {
             rotor.rotation.y += 0.35;
           }
         }
       }
-
-      // Rain animation
-      if (this.rainSystem && this.rainSystem.visible) {
-        const pos = this.rainSystem.geometry.attributes.position;
-        const count = pos.count;
-        for (let i = 0; i < count; i++) {
-          let y = pos.getY(i) - 3.4; // rapid mountain downpour fall speed
-          if (y < 0) y = 140;
-          pos.setY(i, y);
-        }
-        pos.needsUpdate = true;
-      }
-
-      if (this.waypointRing) {
-        const wpPt = this.river.getPointAt(uWave);
-        this.waypointRing.position.set(wpPt.x, wpPt.y + 0.3, wpPt.z);
-      }
-
+      this.animateRain(3.4);
       return uWave;
     }
 
     if (this.scenarioId === 'tokyo') {
       let uWave = 0;
       if (clampedT < 0.10) {
-        this.floodGroup.visible = false;
-        this.river.updateFloodTrail(this.trailObj, 0);
+        if (this.floodGroup) this.floodGroup.visible = false;
+        if (this.trailObj) this.river.updateFloodTrail(this.trailObj, 0);
         this.uWave = 0;
       } else {
-        this.floodGroup.visible = true;
+        if (this.floodGroup) this.floodGroup.visible = true;
         uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
         this.uWave = uWave;
-
-        const wavePos = this.river.getPointAt(uWave);
-        const waveTangent = this.river.getTangentAt(uWave);
-
-        this.surgeBall.position.set(wavePos.x, wavePos.y + 1.2, wavePos.z);
-        this.surgeBall.rotation.y += 0.04;
-
-        this.waveCrest.position.set(wavePos.x, wavePos.y + 1.4, wavePos.z);
-        this.waveCrest.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), waveTangent);
-
-        this.surgeLight.position.set(wavePos.x, wavePos.y + 5.0, wavePos.z);
-
-        this.debrisOrbitAngle += 0.04;
-        for (let i = 0; i < this.boulders.length; i++) {
-          const b = this.boulders[i];
-          const angle = this.debrisOrbitAngle + b.angleOffset;
-          b.mesh.position.set(
-            wavePos.x + Math.cos(angle) * b.radius,
-            wavePos.y + 1.2 + Math.sin(angle * 2.0) * 0.5,
-            wavePos.z + Math.sin(angle) * b.radius
-          );
-        }
-
-        this.river.updateFloodTrail(this.trailObj, uWave);
+        this.updateSurgeFront(uWave);
       }
-
-      // Rain animation (typhoon downpour)
-      if (this.rainSystem && this.rainSystem.visible) {
-        const pos = this.rainSystem.geometry.attributes.position;
-        const count = pos.count;
-        for (let i = 0; i < count; i++) {
-          let y = pos.getY(i) - 3.2;
-          if (y < 0) y = 140;
-          pos.setY(i, y);
-        }
-        pos.needsUpdate = true;
-      }
-
-      if (this.waypointRing) {
-        const wpPt = this.river.getPointAt(uWave);
-        this.waypointRing.position.set(wpPt.x, wpPt.y + 0.3, wpPt.z);
-      }
-
+      this.animateRain(3.2);
       return uWave;
     }
 
     if (this.scenarioId === 'london') {
       let uWave = 0;
       if (clampedT < 0.10) {
-        this.floodGroup.visible = false;
-        this.river.updateFloodTrail(this.trailObj, 0);
+        if (this.floodGroup) this.floodGroup.visible = false;
+        if (this.trailObj) this.river.updateFloodTrail(this.trailObj, 0);
         this.uWave = 0;
       } else {
-        this.floodGroup.visible = true;
+        if (this.floodGroup) this.floodGroup.visible = true;
         uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
         this.uWave = uWave;
+        this.updateSurgeFront(uWave);
 
-        const wavePos = this.river.getPointAt(uWave);
-        const waveTangent = this.river.getTangentAt(uWave);
-
-        this.surgeBall.position.set(wavePos.x, wavePos.y + 1.2, wavePos.z);
-        this.surgeBall.rotation.y += 0.04;
-
-        this.waveCrest.position.set(wavePos.x, wavePos.y + 1.4, wavePos.z);
-        this.waveCrest.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), waveTangent);
-
-        this.surgeLight.position.set(wavePos.x, wavePos.y + 5.0, wavePos.z);
-
-        this.debrisOrbitAngle += 0.04;
-        for (let i = 0; i < this.boulders.length; i++) {
-          const b = this.boulders[i];
-          const angle = this.debrisOrbitAngle + b.angleOffset;
-          b.mesh.position.set(
-            wavePos.x + Math.cos(angle) * b.radius,
-            wavePos.y + 1.2 + Math.sin(angle * 2.0) * 0.5,
-            wavePos.z + Math.sin(angle) * b.radius
-          );
-        }
-
-        this.river.updateFloodTrail(this.trailObj, uWave);
-
-        // Dynamic Thames Barrier rising sector gate rotation from riverbed recess to upright lock ($0 \to 90^\circ$)
         if (this.londonSectorGates && this.londonSectorGates.length > 0) {
           let gateRot = 0;
           if (uWave >= 0.20 && uWave < 0.38) {
@@ -3001,24 +2882,7 @@ export class FloodSimulation {
           }
         }
       }
-
-      // Rain animation (North Sea maritime gale)
-      if (this.rainSystem && this.rainSystem.visible) {
-        const pos = this.rainSystem.geometry.attributes.position;
-        const count = pos.count;
-        for (let i = 0; i < count; i++) {
-          let y = pos.getY(i) - 3.0;
-          if (y < 0) y = 140;
-          pos.setY(i, y);
-        }
-        pos.needsUpdate = true;
-      }
-
-      if (this.waypointRing) {
-        const wpPt = this.river.getPointAt(uWave);
-        this.waypointRing.position.set(wpPt.x, wpPt.y + 0.3, wpPt.z);
-      }
-
+      this.animateRain(3.0);
       return uWave;
     }
 
