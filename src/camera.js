@@ -56,8 +56,37 @@ export class CameraDirector {
       const isDelhi = (this.scenarioId === 'delhi');
       const isNewYork = (this.scenarioId === 'newyork');
       const isBeijing = (this.scenarioId === 'beijing');
+      const isTokyo = (this.scenarioId === 'tokyo');
 
-      if (isBeijing) {
+      if (isTokyo) {
+        if (t < 0.20) {
+          // Establish on Upper Arakawa & Saitama catchment with Shinkansen viaduct and distant megalopolis horizon
+          const p = this.river.getPointAt(0.12);
+          desiredTarget.set(p.x, p.y + 6.0, p.z);
+          desiredRadius = 135;
+          desiredPhi = 0.78;
+          desiredTheta = -1.25;
+        } else if (t <= 0.92) {
+          // Follow-cam tracking the torrential Arakawa surge past super-levees, G-CANS Silo No. 1 drop shaft,
+          // the 59-pillar Underground Temple, subway watertight portals, and Tokyo Skytree / Sumida seawalls
+          const uWave = Math.max(0, Math.min(1, (t - 0.18) / 0.78));
+          const wavePos = this.river.getPointAt(uWave);
+          desiredTarget.copy(wavePos).add(new THREE.Vector3(0, 4.0, 0));
+
+          const followAlpha = (t - 0.20) / (0.92 - 0.20);
+          desiredRadius = 115;
+          desiredPhi = 0.82;
+          desiredTheta = -1.22 + 1.15 * followAlpha;
+        } else {
+          // Pull back wide over Tokyo Bay, Edo River turbine pump outflow, and the vast zero-meter lowland protected basin
+          const pullAlpha = (t - 0.92) / (1.0 - 0.92);
+          const endTarget = this.river.getPointAt(0.75);
+          desiredTarget.lerpVectors(endTarget, new THREE.Vector3(12, 6, 12), pullAlpha);
+          desiredRadius = 115 + 120 * pullAlpha;
+          desiredPhi = 0.82 + 0.10 * pullAlpha;
+          desiredTheta = -0.07 - 0.35 * pullAlpha;
+        }
+      } else if (isBeijing) {
         if (t < 0.20) {
           // Establish high in the misty Taihang mountain gorge (Miaofengshan)
           const p = this.river.getPointAt(0.10);

@@ -224,9 +224,10 @@ export class UIManager {
     const isDelhi = (this.currentScenario.config.id === 'delhi');
     const isNewYork = (this.currentScenario.config.id === 'newyork');
     const isBeijing = (this.currentScenario.config.id === 'beijing');
+    const isTokyo = (this.currentScenario.config.id === 'tokyo');
 
     let clock = "08:37:00";
-    if (isNewYork || isDelhi || isBeijing) {
+    if (isNewYork || isDelhi || isBeijing || isTokyo) {
       const { waypoint } = getCurrentWaypoint(t, uWave);
       clock = waypoint.realTime;
     } else {
@@ -280,9 +281,11 @@ export class UIManager {
       this.elTallyMissing.textContent = displayMissing.toLocaleString();
     }
 
-    // Secondary Infrastructure (Subway tubes in NY vs Highways in Beijing vs Water works in Delhi vs Hydropower in Rasuwa)
+    // Secondary Infrastructure (Subway tubes in NY vs Highways in Beijing vs G-CANS in Tokyo vs Water works in Delhi vs Hydropower in Rasuwa)
     if (this.elTallyHydro) {
-      if (isNewYork) {
+      if (isTokyo) {
+        this.elTallyHydro.innerHTML = `${tallies.hydro} <small>M m³</small>`;
+      } else if (isNewYork) {
         this.elTallyHydro.innerHTML = `${tallies.hydro} <small>Tubes</small>`;
       } else if (isBeijing) {
         this.elTallyHydro.innerHTML = `${tallies.hydro} <small>km</small>`;
@@ -293,10 +296,13 @@ export class UIManager {
       }
     }
     if (this.elTallyHydroSub) {
-      this.elTallyHydroSub.textContent = isNewYork ? '/ 7 Tubes' : (isBeijing ? '/ 1,050 km' : (isDelhi ? '/ 234 MGD' : '/ 431 MW'));
+      this.elTallyHydroSub.textContent = isTokyo ? '/ 14.5M m³' : (isNewYork ? '/ 7 Tubes' : (isBeijing ? '/ 1,050 km' : (isDelhi ? '/ 234 MGD' : '/ 431 MW')));
     }
     if (this.elTallyHydroPct) {
-      if (isNewYork) {
+      if (isTokyo) {
+        const pct = Math.round((tallies.hydro / 14.5) * 100);
+        this.elTallyHydroPct.textContent = `${pct}% Diverted`;
+      } else if (isNewYork) {
         const pct = Math.round((tallies.hydro / 7) * 100);
         this.elTallyHydroPct.textContent = `${pct}% Submerged`;
       } else if (isBeijing) {
@@ -323,7 +329,7 @@ export class UIManager {
 
     // Economic Destruction Level
     if (this.elTallyEconUsd) {
-      if (isNewYork || isBeijing) {
+      if (isTokyo || isNewYork || isBeijing) {
         this.elTallyEconUsd.textContent = `$${(tallies.econUSD / 1000).toFixed(1)}B`;
       } else {
         this.elTallyEconUsd.textContent = `$${tallies.econUSD}M`;
@@ -511,7 +517,13 @@ export class UIManager {
       this.elBrandBadge.textContent = 'Forecasting Simulator';
     }
 
-    if (id === 'beijing') {
+    if (id === 'tokyo') {
+      if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'G-CANS Diverted';
+      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Zero-Meter Impact';
+      if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = 'fatalities';
+      if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = 'evacuated';
+      if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'Koto 5 Wards';
+    } else if (id === 'beijing') {
       if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Highways Cut';
       if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Capital Impact';
       if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = 'fatalities';
@@ -545,7 +557,15 @@ export class UIManager {
 
   getAgencyTagsHtml() {
     const id = this.currentScenario?.config?.id;
-    if (id === 'beijing') {
+    if (id === 'tokyo') {
+      return `
+        <span class="agency-badge">MLIT</span>
+        <span class="agency-badge">JSDF 1st Div</span>
+        <span class="agency-badge">Tokyo Metro</span>
+        <span class="agency-badge">Tokyo Fire Dept</span>
+        <span class="agency-badge">JMA</span>
+      `;
+    } else if (id === 'beijing') {
       return `
         <span class="agency-badge">PLA Army</span>
         <span class="agency-badge">PAP</span>

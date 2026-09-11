@@ -416,6 +416,126 @@ export function createTerrain(riverSystem, scenarioId = null) {
     return { mesh: terrainMesh, geometry, getTerrainHeight };
   }
 
+  const isTokyo = (activeScenarioId === 'tokyo');
+  if (isTokyo) {
+    // ----------------------------------------------------
+    // KANTO ALLUVIAL PLAIN & SUPER-LEVEE (TOKYO ARAKAWA)
+    // ----------------------------------------------------
+    const colRiverSilt    = new THREE.Color(0x334155); // Arakawa riverbed dark silt
+    const colLeveeGrass   = new THREE.Color(0x365314); // Super-levee manicured embankment grass
+    const colRiversidePark= new THREE.Color(0x2d5a27); // Riverside baseball fields & turf
+    const colTokyoAsphalt = new THREE.Color(0x27272a); // Tokyo metropolitan street grid
+    const colUrbanConcrete= new THREE.Color(0x52525b); // Concrete retaining walls & seawalls
+
+    for (let i = 0; i < count; i++) {
+      const x = posAttr.getX(i);
+      const z = posAttr.getZ(i);
+
+      const riverInfo = riverSystem.getClosestRiverInfo(x, z);
+      const riverDist = riverInfo.distance;
+      const bedWidth = 14.0;
+      const leveeToe = 20.0;
+      const leveeCrown = 28.0;
+
+      // Base plain elevation (slight slope from NW to SE Tokyo Bay)
+      let h = 2.4 + valueNoise(x * 0.04, z * 0.04) * 0.8;
+
+      // East Tokyo Koto 5-Ward Zero-Meter Zone depression (x > 15, z > -10)
+      if (x > 15 && z > -10) {
+        h = Math.max(1.2, h - 0.9);
+      }
+
+      // Riverbed channel & Super-Levee embankment
+      if (riverDist <= bedWidth) {
+        h = riverInfo.riverY - 1.2;
+      } else if (riverDist < leveeToe) {
+        const t = (riverDist - bedWidth) / (leveeToe - bedWidth);
+        const bedFloor = riverInfo.riverY - 1.2;
+        const leveeTop = riverInfo.riverY + 2.2;
+        h = bedFloor + (leveeTop - bedFloor) * Math.sin(t * Math.PI * 0.5);
+      } else if (riverDist < leveeCrown) {
+        const t = (riverDist - leveeToe) / (leveeCrown - leveeToe);
+        const leveeTop = riverInfo.riverY + 2.2;
+        const plainH = 2.4;
+        h = leveeTop - (leveeTop - plainH) * Math.sin(t * Math.PI * 0.5);
+      }
+
+      posAttr.setY(i, h);
+    }
+    posAttr.needsUpdate = true;
+    geometry.computeVertexNormals();
+
+    // Vertex colors for Tokyo
+    for (let i = 0; i < count; i++) {
+      const x = posAttr.getX(i);
+      const z = posAttr.getZ(i);
+      const riverInfo = riverSystem.getClosestRiverInfo(x, z);
+      const d = riverInfo.distance;
+
+      const vertexCol = new THREE.Color();
+      if (d < 14.0) {
+        vertexCol.copy(colRiverSilt);
+      } else if (d < 22.0) {
+        const t = (d - 14.0) / 8.0;
+        vertexCol.copy(colRiverSilt).lerp(colLeveeGrass, t);
+      } else if (d < 30.0) {
+        const t = (d - 22.0) / 8.0;
+        vertexCol.copy(colLeveeGrass).lerp(colRiversidePark, t);
+      } else if (d < 40.0) {
+        const t = (d - 30.0) / 10.0;
+        vertexCol.copy(colRiversidePark).lerp(colUrbanConcrete, t);
+      } else {
+        vertexCol.copy(colUrbanConcrete).lerp(colTokyoAsphalt, 0.65);
+      }
+
+      colors[i * 3 + 0] = vertexCol.r;
+      colors[i * 3 + 1] = vertexCol.g;
+      colors[i * 3 + 2] = vertexCol.b;
+    }
+
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const material = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.78,
+      metalness: 0.12,
+      flatShading: false
+    });
+
+    const terrainMesh = new THREE.Mesh(geometry, material);
+    terrainMesh.name = "TerrainMesh";
+    terrainMesh.receiveShadow = true;
+    terrainMesh.castShadow = true;
+
+    function getTerrainHeight(x, z) {
+      const riverInfo = riverSystem.getClosestRiverInfo(x, z);
+      const riverDist = riverInfo.distance;
+      const bedWidth = 14.0;
+      const leveeToe = 20.0;
+      const leveeCrown = 28.0;
+      let h = 2.4 + valueNoise(x * 0.04, z * 0.04) * 0.8;
+      if (x > 15 && z > -10) {
+        h = Math.max(1.2, h - 0.9);
+      }
+      if (riverDist <= bedWidth) {
+        h = riverInfo.riverY - 1.2;
+      } else if (riverDist < leveeToe) {
+        const t = (riverDist - bedWidth) / (leveeToe - bedWidth);
+        const bedFloor = riverInfo.riverY - 1.2;
+        const leveeTop = riverInfo.riverY + 2.2;
+        h = bedFloor + (leveeTop - bedFloor) * Math.sin(t * Math.PI * 0.5);
+      } else if (riverDist < leveeCrown) {
+        const t = (riverDist - leveeToe) / (leveeCrown - leveeToe);
+        const leveeTop = riverInfo.riverY + 2.2;
+        const plainH = 2.4;
+        h = leveeTop - (leveeTop - plainH) * Math.sin(t * Math.PI * 0.5);
+      }
+      return h;
+    }
+
+    return { mesh: terrainMesh, geometry, getTerrainHeight };
+  }
+
   // ----------------------------------------------------
   // HIMALAYAN ALPINE GORGE TERRAIN (RASUWA SCENARIO)
   // ----------------------------------------------------

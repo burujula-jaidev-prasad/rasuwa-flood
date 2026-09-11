@@ -35,6 +35,14 @@ import {
   getBeijingTallyValues
 } from './beijing.js';
 
+import {
+  TOKYO_CONFIG,
+  TOKYO_RIVER_POINTS,
+  TOKYO_WAYPOINTS,
+  TOKYO_NARRATION,
+  getTokyoTallyValues
+} from './tokyo.js';
+
 export const SCENARIOS = {
   delhi: {
     config: DELHI_CONFIG,
@@ -67,6 +75,14 @@ export const SCENARIOS = {
     narration: BEIJING_NARRATION,
     getTallyValues: getBeijingTallyValues,
     peaks: []
+  },
+  tokyo: {
+    config: TOKYO_CONFIG,
+    riverPoints: TOKYO_RIVER_POINTS,
+    waypoints: TOKYO_WAYPOINTS,
+    narration: TOKYO_NARRATION,
+    getTallyValues: getTokyoTallyValues,
+    peaks: []
   }
 };
 
@@ -74,8 +90,8 @@ export const AVAILABLE_SCENARIOS = [
   { id: 'delhi', name: 'Delhi, India', flag: '🇮🇳', hazard: 'Yamuna River Record Inundation', active: true },
   { id: 'newyork', name: 'New York, USA', flag: '🇺🇸', hazard: 'Cat-4 Hurricane Storm Surge', active: true },
   { id: 'beijing', name: 'Beijing, China', flag: '🇨🇳', hazard: 'Mentougou Flash Deluge', active: true },
+  { id: 'tokyo', name: 'Tokyo, Japan', flag: '🇯🇵', hazard: 'Arakawa Flood & G-CANS Defense', active: true },
   { id: 'rasuwa', name: 'Rasuwa, Nepal', flag: '🇳🇵', hazard: 'Langtang Avalanche Dam-Burst', active: true },
-  { id: 'tokyo', name: 'Tokyo, Japan', flag: '🇯🇵', hazard: 'Arakawa Flood & G-CANS Defense', active: false, comingSoon: true },
   { id: 'london', name: 'London, UK', flag: '🇬🇧', hazard: 'North Sea Tidal Surge & Barrier', active: false, comingSoon: true }
 ];
 
