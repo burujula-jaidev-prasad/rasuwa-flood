@@ -144,6 +144,8 @@ class ExplainerApp {
 
   updateEnvironmentForScenario(scenario) {
     const env = scenario.config.environment;
+    const isNY = (scenario.config.id === 'newyork');
+
     if (this.skyMat) {
       this.skyMat.uniforms.topColor.value.setHex(env.skyTop);
       this.skyMat.uniforms.midColor1.value.setHex(env.skyMid1);
@@ -159,6 +161,32 @@ class ExplainerApp {
     if (this.sunLight) {
       this.sunLight.color.setHex(env.sunColor);
       this.sunLight.intensity = env.sunIntensity;
+      this.sunLight.position.set(env.sunPosition[0] * 320, env.sunPosition[1] * 320, env.sunPosition[2] * 320);
+    }
+    if (this.hemiLight) {
+      if (isNY) {
+        this.hemiLight.color.setHex(0xdbeafe);
+        this.hemiLight.groundColor.setHex(0x64748b);
+        this.hemiLight.intensity = 1.15;
+      } else {
+        this.hemiLight.color.setHex(0x9fb3c0);
+        this.hemiLight.groundColor.setHex(0x33513c);
+        this.hemiLight.intensity = 0.85;
+      }
+    }
+    if (this.fillLight) {
+      if (isNY) {
+        this.fillLight.color.setHex(0x93c5fd);
+        this.fillLight.intensity = 0.65;
+        this.fillLight.position.set(-120, 100, 140);
+      } else {
+        this.fillLight.color.setHex(0x6fc0ea);
+        this.fillLight.intensity = 0.4;
+        this.fillLight.position.set(120, 80, 140);
+      }
+    }
+    if (this.renderer) {
+      this.renderer.toneMappingExposure = isNY ? 1.25 : 1.15;
     }
   }
 

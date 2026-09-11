@@ -21,26 +21,26 @@ export const TOKYO_CONFIG = {
     scale: 0.00015
   },
   environment: {
-    skyTop: 0x111b27,    // Dark oceanic typhoon squall deck
-    skyMid1: 0x1f2e3d,   // Heavy rainstorm marine overcast
-    skyMid2: 0x334454,   // Turbulent boundary layer
-    skyBottom: 0x4a5d6e, // Saturated misty horizon
-    fogColor: 0x1f2e3d,
-    fogNear: 150,
-    fogFar: 470,
-    sunPosition: [-0.4, 0.7, -0.5],
-    sunColor: 0xbae6fd,  // Dim diffuse daylight filtered through gale clouds
-    sunIntensity: 0.90,
-    waterColor: 0x244255, // Turbid, silted estuarine storm river brine
-    waterRoughness: 0.30,
-    waterMetalness: 0.25,
-    rainIntensity: 2.3,   // Heavy typhoon downpour
+    skyTop: 0x1e3a8a,    // Radiant Tokyo morning blue
+    skyMid1: 0x38bdf8,   // Clear crisp morning sky
+    skyMid2: 0x93c5fd,   // Luminous morning bay light
+    skyBottom: 0xfef08a, // Sunrise gold over Tokyo Bay & Chiba
+    fogColor: 0xe0f2fe,  // Ultra-clean morning horizon
+    fogNear: 450,        // Razor-sharp clarity across Arakawa delta
+    fogFar: 1600,
+    sunPosition: [0.75, 0.50, 0.35], // Golden dawn sun from east
+    sunColor: 0xfff7ed,  // Radiant golden morning sunlight
+    sunIntensity: 2.15,  // Crisp, brilliant illumination
+    waterColor: 0x0284c7, // Clean Tokyo Bay / Arakawa morning water
+    waterRoughness: 0.25,
+    waterMetalness: 0.30,
+    rainIntensity: 0.0,   // Crystal-clear morning
     terrainType: 'alluvial_lowland'
   },
   timeline: {
     durationSec: 36.0,
-    clockStart: '12 Oct 09:00',
-    clockEnd: '14 Oct 18:00'
+    clockStart: '12 Oct 07:00 AM',
+    clockEnd: '12 Oct 12:00 PM'
   }
 };
 
@@ -283,8 +283,10 @@ export const TOKYO_NARRATION = [
 export function getTokyoTallyValues(t, uWave = 0) {
   // 1. Population Affected & Displaced
   const popFactor = Math.min(Math.max((uWave - 0.10) / 0.80, 0), 1);
-  const evacuated = Math.round(1800000 * popFactor);
+  const evacuated = Math.round(1250000 * popFactor);
   const popAffectedMillions = (1.80 * popFactor).toFixed(2);
+  const dead = Math.round(540 * popFactor);
+  const missing = Math.round(68000 * popFactor);
 
   // 2. G-CANS Subterranean Diverted Water Volume (0 -> 14.5 Million m³)
   const gcanFactor = Math.min(Math.max((uWave - 0.25) / 0.70, 0), 1);
@@ -381,8 +383,8 @@ export function getTokyoTallyValues(t, uWave = 0) {
   const econTrillionJPY = (econUSD * 150 / 1000000).toFixed(1);
 
   return {
-    dead: 24, // Direct casualties
-    missing: evacuated, // Displaced / evacuated count
+    dead,
+    missing,
     evacuated,
     popAffectedMillions,
     waterOfflineMGD: gcansDivertedM, // Secondary KPI: G-CANS Diverted Water Volume (Million m³)

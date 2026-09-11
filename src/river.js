@@ -125,7 +125,7 @@ export class RiverSystem {
     if (isLondon) {
       waterColor = 0x2a3d4d; // Brackish, cold tidal Thames estuarine grey-blue
     } else if (isNewYork) {
-      waterColor = 0x1a384f; // Atlantic oceanic brackish deep slate
+      waterColor = 0x0284c7; // Vibrant morning Atlantic / Upper NY Bay azure blue
     } else if (isTokyo) {
       waterColor = 0x2c4355; // Turbid estuarine storm water
     } else if (isBeijing) {
@@ -206,8 +206,8 @@ export class RiverSystem {
       colMud = new THREE.Color(0x324757);   // Cold brackish North Sea storm brine
       colFoam = new THREE.Color(0xa4c6db);  // Frothing grey-white estuarine tidal foam crest
     } else if (isNewYork) {
-      colMud = new THREE.Color(0x234a60);   // Churning deep storm brine
-      colFoam = new THREE.Color(0x8bc0d9);  // White/cyan ocean wave foam crest
+      colMud = new THREE.Color(0x0284c7);   // Sparkling clear morning ocean surge
+      colFoam = new THREE.Color(0xe0f2fe);  // Frothing white/cyan wave crest
     } else if (isTokyo) {
       colMud = new THREE.Color(0x354859);   // Estuarine storm water
       colFoam = new THREE.Color(0x93b7cc);  // Frothing river wave crest

@@ -44,10 +44,13 @@ export class FloodSimulation {
     this.wipeableItems = [];
     this.bridges = [];
 
-    // Glowing surge front ball leading the river flood
+    // Realistic 3D hydrodynamic flood wave front
     this.initFloodFront();
     this.initWaypointMarker();
     this.initAtmosphere();
+
+    // Hathnikund Barrage sluice blowout & guide bund collapse genesis event
+    this.initDelhiGenesis();
 
     // Procedural Delhi landmarks, bridges, vehicles, and countermeasures
     const { wipeableItems } = buildDelhiScene(this.group, this.river, this.terrain);
@@ -81,10 +84,13 @@ export class FloodSimulation {
     this.wipeableItems = [];
     this.bridges = [];
 
-    // Glowing surge front ball leading the harbor storm surge
+    // Realistic 3D hydrodynamic flood wave front
     this.initFloodFront();
     this.initWaypointMarker();
     this.initAtmosphere();
+
+    // Atlantic outer seawall breach & harbor breaker genesis event
+    this.initNewYorkGenesis();
 
     // Procedural New York landmarks, bridges, skyscrapers, and countermeasures
     const { wipeableItems, arcLight, arcMesh } = buildNewYorkScene(this.group, this.river, this.terrain);
@@ -99,13 +105,13 @@ export class FloodSimulation {
   initNewYorkLandmarkBadges() {
     this.landmarkBadges = [];
     const landmarks = [
-      { name: "Verrazzano Narrows", sub: "Ocean Surge Funnel • 4.8m", u: 0.10, offset: new THREE.Vector3(0, 14, 0) },
-      { name: "The Battery & Wall St", sub: "Seawall Breached • 14.9 ft", u: 0.20, offset: new THREE.Vector3(-14, 12, 0) },
-      { name: "South Ferry Subway", sub: "7 Under-River Tubes Flooded", u: 0.35, offset: new THREE.Vector3(-12, 10, 0) },
-      { name: "FDR Drive & ESCR", sub: "16.5-ft Roller Floodgates", u: 0.48, offset: new THREE.Vector3(-12, 10, 0) },
-      { name: "Brooklyn Bridge", sub: "DUMBO Waterfront Submerged", u: 0.60, offset: new THREE.Vector3(0, 14, 0) },
-      { name: "ConEd 14th St Substation", sub: "345 kV Arc Blast • Blackout", u: 0.74, offset: new THREE.Vector3(-14, 12, 0) },
-      { name: "USACE Unwatering Armada", sub: "380k GPM Tunnel Dewatering", u: 0.88, offset: new THREE.Vector3(-12, 10, 0) }
+      { name: "Verrazzano Narrows", sub: "Morning Surge Funnel • 4.8m", u: 0.10, offset: new THREE.Vector3(0, 16, 0) },
+      { name: "The Battery & Wall St", sub: "Seawall Breached • 14.9 ft", u: 0.48, offset: new THREE.Vector3(-14, 14, 0) },
+      { name: "South Ferry Subway", sub: "7 Under-River Tubes Flooded", u: 0.54, offset: new THREE.Vector3(-12, 12, 0) },
+      { name: "FDR Drive & ESCR", sub: "16.5-ft Roller Floodgates", u: 0.62, offset: new THREE.Vector3(-12, 12, 0) },
+      { name: "Brooklyn Bridge", sub: "DUMBO Waterfront Submerged", u: 0.74, offset: new THREE.Vector3(0, 16, 0) },
+      { name: "ConEd 14th St Substation", sub: "345 kV Arc Blast • Blackout", u: 0.86, offset: new THREE.Vector3(-14, 14, 0) },
+      { name: "USACE Unwatering Armada", sub: "380k GPM Tunnel Dewatering", u: 0.94, offset: new THREE.Vector3(-12, 12, 0) }
     ];
 
     for (const lm of landmarks) {
@@ -121,10 +127,13 @@ export class FloodSimulation {
     this.wipeableItems = [];
     this.bridges = [];
 
-    // Glowing surge front ball leading the mountain flash deluge
+    // Realistic 3D hydrodynamic flood wave front
     this.initFloodFront();
     this.initWaypointMarker();
     this.initAtmosphere();
+
+    // Taihang mountain bedrock landslide & gorge mudslide genesis event
+    this.initBeijingGenesis();
 
     // Procedural Beijing landmarks, bridges, K396 train, and countermeasures
     const { wipeableItems, animatedRotors } = buildBeijingScene(this.group, this.river, this.terrain);
@@ -160,10 +169,13 @@ export class FloodSimulation {
     this.wipeableItems = [];
     this.bridges = [];
 
-    // Glowing surge front ball leading the Arakawa deluge
+    // Realistic 3D hydrodynamic flood wave front
     this.initFloodFront();
     this.initWaypointMarker();
     this.initAtmosphere();
+
+    // Saitama upstream levee blowout & revetment shear genesis event
+    this.initTokyoGenesis();
 
     // Procedural Tokyo landmarks, G-CANS Underground Temple, bullet trains, and countermeasures
     const { wipeableItems } = buildTokyoScene(this.group, this.river, this.terrain);
@@ -198,10 +210,13 @@ export class FloodSimulation {
     this.wipeableItems = [];
     this.bridges = [];
 
-    // Glowing surge front ball leading the North Sea storm surge
+    // Realistic 3D hydrodynamic flood wave front
     this.initFloodFront();
     this.initWaypointMarker();
     this.initAtmosphere();
+
+    // Outer Thames estuary sea defense wall breach genesis event
+    this.initLondonGenesis();
 
     // Procedural London landmarks, Thames Barrier, Tube flood doors, and Tower Bridge
     const { wipeableItems, sectorGates } = buildLondonScene(this.group, this.river, this.terrain);
@@ -230,6 +245,640 @@ export class FloodSimulation {
       sprite.position.copy(pt).add(lm.offset);
       this.group.add(sprite);
       this.landmarkBadges.push({ sprite, u: lm.u });
+    }
+  }
+
+  /* ----------------------------------------------------
+   * SCENARIO GENESIS FAILURE & BREACH EVENTS (t ∈ [0.0, 0.18])
+   * ---------------------------------------------------- */
+  initDelhiGenesis() {
+    this.delhiGenesisGroup = new THREE.Group();
+    this.group.add(this.delhiGenesisGroup);
+
+    const f0 = {
+      pt: this.river.getPointAt(0.02),
+      tangent: this.river.getTangentAt(0.02)
+    };
+    const up = new THREE.Vector3(0, 1, 0);
+    const side = new THREE.Vector3().crossVectors(f0.tangent, up).normalize();
+
+    const pierMat = new THREE.MeshStandardMaterial({ color: 0x8a9299, roughness: 0.85 });
+    const gateMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.5, metalness: 0.4 });
+    const bundMat = new THREE.MeshStandardMaterial({ color: 0x6b4f3b, roughness: 0.95 });
+
+    // Hathnikund Barrage concrete piers
+    this.delhiPiers = [];
+    [-10.0, 0.0, 10.0].forEach((offset) => {
+      const pGeo = new THREE.BoxGeometry(3.5, 9.0, 7.0);
+      const pier = new THREE.Mesh(pGeo, pierMat);
+      pier.position.copy(f0.pt).addScaledVector(side, offset);
+      pier.position.y += 3.5;
+      pier.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f0.tangent);
+      this.delhiGenesisGroup.add(pier);
+      this.delhiPiers.push(pier);
+    });
+
+    // Radial Sluice Gates (under extreme hydrostatic head)
+    this.delhiGates = [];
+    [-5.0, 5.0].forEach((offset) => {
+      const gGeo = new THREE.BoxGeometry(6.5, 5.5, 1.2);
+      const gate = new THREE.Mesh(gGeo, gateMat);
+      gate.position.copy(f0.pt).addScaledVector(side, offset);
+      gate.position.y += 3.0;
+      gate.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f0.tangent);
+      this.delhiGenesisGroup.add(gate);
+      this.delhiGates.push({
+        mesh: gate,
+        initialPos: gate.position.clone(),
+        initialRot: gate.rotation.clone()
+      });
+    });
+
+    // Earthen Guide Bund (right embankment)
+    const bundGeo = new THREE.BoxGeometry(16.0, 7.5, 18.0);
+    const bund = new THREE.Mesh(bundGeo, bundMat);
+    bund.position.copy(f0.pt).addScaledVector(side, 18.0);
+    bund.position.y += 2.8;
+    bund.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f0.tangent);
+    this.delhiGenesisGroup.add(bund);
+    this.delhiBund = {
+      mesh: bund,
+      initialPos: bund.position.clone(),
+      initialRot: bund.rotation.clone()
+    };
+
+    // Concrete & riprap rupture shards
+    this.delhiShards = [];
+    const shardGeo = new THREE.DodecahedronGeometry(1.2, 0);
+    for (let i = 0; i < 14; i++) {
+      const sMesh = new THREE.Mesh(shardGeo, pierMat);
+      const offset = new THREE.Vector3(
+        (Math.random() - 0.5) * 16.0,
+        Math.random() * 4.0,
+        (Math.random() - 0.5) * 10.0
+      );
+      sMesh.position.copy(f0.pt).add(offset);
+      sMesh.visible = false;
+      this.delhiGenesisGroup.add(sMesh);
+      this.delhiShards.push({
+        mesh: sMesh,
+        basePos: sMesh.position.clone(),
+        rotVel: new THREE.Vector3(Math.random() * 6 - 3, Math.random() * 6 - 3, Math.random() * 6 - 3)
+      });
+    }
+
+    // Hydraulic eruption spray cloud
+    const splashGeo = new THREE.SphereGeometry(1, 24, 18);
+    const splashMat = new THREE.MeshBasicMaterial({
+      color: 0xdde7ee,
+      transparent: true,
+      opacity: 0.0,
+      depthWrite: false
+    });
+    this.delhiSplash = new THREE.Mesh(splashGeo, splashMat);
+    this.delhiSplash.position.copy(f0.pt).addScaledVector(f0.tangent, 4.0);
+    this.delhiSplash.position.y += 1.5;
+    this.delhiGenesisGroup.add(this.delhiSplash);
+  }
+
+  updateDelhiGenesis(clampedT) {
+    if (!this.delhiGenesisGroup) return;
+
+    if (clampedT < 0.03) {
+      for (const g of this.delhiGates) {
+        g.mesh.position.copy(g.initialPos);
+        g.mesh.rotation.copy(g.initialRot);
+      }
+      this.delhiBund.mesh.position.copy(this.delhiBund.initialPos);
+      this.delhiBund.mesh.rotation.copy(this.delhiBund.initialRot);
+      for (const s of this.delhiShards) s.mesh.visible = false;
+      this.delhiSplash.material.opacity = 0.0;
+    } else if (clampedT <= 0.16) {
+      const pAlpha = (clampedT - 0.03) / 0.13;
+      const smoothP = Math.sin(pAlpha * Math.PI * 0.5);
+
+      for (let i = 0; i < this.delhiGates.length; i++) {
+        const g = this.delhiGates[i];
+        g.mesh.rotation.x = g.initialRot.x + smoothP * (0.85 + i * 0.2);
+        g.mesh.rotation.z = g.initialRot.z + smoothP * (i === 0 ? 0.35 : -0.35);
+        g.mesh.position.y = g.initialPos.y - smoothP * 2.8;
+      }
+
+      this.delhiBund.mesh.rotation.z = this.delhiBund.initialRot.z - smoothP * 0.45;
+      this.delhiBund.mesh.position.y = this.delhiBund.initialPos.y - smoothP * 3.2;
+
+      for (const s of this.delhiShards) {
+        s.mesh.visible = true;
+        s.mesh.position.set(
+          s.basePos.x + Math.sin(pAlpha * 5.0) * 4.0,
+          s.basePos.y - smoothP * 2.0,
+          s.basePos.z + pAlpha * 22.0
+        );
+        s.mesh.rotation.x += s.rotVel.x * 0.02;
+        s.mesh.rotation.y += s.rotVel.y * 0.02;
+      }
+
+      if (clampedT >= 0.08) {
+        const sAlpha = (clampedT - 0.08) / 0.08;
+        const radius = 2.0 + sAlpha * 20.0;
+        this.delhiSplash.scale.set(radius, radius * 0.75, radius);
+        this.delhiSplash.material.opacity = Math.max(0, 0.85 * (1.0 - sAlpha * 0.8));
+      } else {
+        this.delhiSplash.material.opacity = 0.0;
+      }
+    } else {
+      this.delhiSplash.material.opacity = 0.0;
+      for (const s of this.delhiShards) s.mesh.visible = false;
+    }
+  }
+
+  initNewYorkGenesis() {
+    this.nyGenesisGroup = new THREE.Group();
+    this.group.add(this.nyGenesisGroup);
+
+    const f0 = {
+      pt: this.river.getPointAt(0.02),
+      tangent: this.river.getTangentAt(0.02)
+    };
+    const up = new THREE.Vector3(0, 1, 0);
+    const side = new THREE.Vector3().crossVectors(f0.tangent, up).normalize();
+
+    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.9 });
+    const deflectorMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.7 });
+    const oceanWaveMat = new THREE.MeshStandardMaterial({
+      color: 0x0284c7,
+      roughness: 0.15,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.90
+    });
+
+    this.nySeawallBlocks = [];
+    [-12.0, -4.0, 4.0, 12.0].forEach((offset, idx) => {
+      const bGeo = new THREE.BoxGeometry(7.5, 8.0, 5.0);
+      const bMesh = new THREE.Mesh(bGeo, stoneMat);
+      bMesh.position.copy(f0.pt).addScaledVector(side, offset);
+      bMesh.position.y += 3.8;
+      bMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f0.tangent);
+      this.nyGenesisGroup.add(bMesh);
+
+      const cGeo = new THREE.BoxGeometry(7.6, 1.4, 2.2);
+      const cMesh = new THREE.Mesh(cGeo, deflectorMat);
+      cMesh.position.y = 4.2;
+      bMesh.add(cMesh);
+
+      this.nySeawallBlocks.push({
+        mesh: bMesh,
+        initialPos: bMesh.position.clone(),
+        initialRot: bMesh.rotation.clone(),
+        isCenter: idx === 1 || idx === 2
+      });
+    });
+
+    const breakerGeo = new THREE.CylinderGeometry(5.0, 7.5, 28.0, 24, 1, false, 0, Math.PI);
+    breakerGeo.rotateZ(Math.PI / 2);
+    this.nyOceanBreaker = new THREE.Mesh(breakerGeo, oceanWaveMat);
+    this.nyOceanBreaker.position.copy(f0.pt).addScaledVector(f0.tangent, -8.0);
+    this.nyOceanBreaker.position.y += 2.0;
+    this.nyOceanBreaker.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f0.tangent);
+    this.nyGenesisGroup.add(this.nyOceanBreaker);
+
+    this.nyShards = [];
+    const shardGeo = new THREE.DodecahedronGeometry(1.4, 0);
+    for (let i = 0; i < 12; i++) {
+      const s = new THREE.Mesh(shardGeo, stoneMat);
+      s.position.copy(f0.pt).add(new THREE.Vector3(
+        (Math.random() - 0.5) * 14.0,
+        Math.random() * 4.0,
+        (Math.random() - 0.5) * 8.0
+      ));
+      s.visible = false;
+      this.nyGenesisGroup.add(s);
+      this.nyShards.push({
+        mesh: s,
+        basePos: s.position.clone(),
+        rotVel: new THREE.Vector3(Math.random() * 5 - 2.5, Math.random() * 5 - 2.5, Math.random() * 5 - 2.5)
+      });
+    }
+
+    const geyserGeo = new THREE.SphereGeometry(1, 24, 18);
+    const geyserMat = new THREE.MeshBasicMaterial({
+      color: 0xf8fafc,
+      transparent: true,
+      opacity: 0.0,
+      depthWrite: false
+    });
+    this.nyGeyser = new THREE.Mesh(geyserGeo, geyserMat);
+    this.nyGeyser.position.copy(f0.pt).addScaledVector(f0.tangent, 2.0);
+    this.nyGeyser.position.y += 2.0;
+    this.nyGenesisGroup.add(this.nyGeyser);
+  }
+
+  updateNewYorkGenesis(clampedT) {
+    if (!this.nyGenesisGroup) return;
+
+    if (clampedT < 0.03) {
+      for (const blk of this.nySeawallBlocks) {
+        blk.mesh.position.copy(blk.initialPos);
+        blk.mesh.rotation.copy(blk.initialRot);
+      }
+      this.nyOceanBreaker.position.y = 2.0;
+      this.nyOceanBreaker.scale.set(1, 1, 1);
+      for (const s of this.nyShards) s.mesh.visible = false;
+      this.nyGeyser.material.opacity = 0.0;
+    } else if (clampedT <= 0.16) {
+      const pAlpha = (clampedT - 0.03) / 0.13;
+      const smoothP = Math.sin(pAlpha * Math.PI * 0.5);
+
+      this.nyOceanBreaker.position.y = 2.0 + smoothP * 4.2;
+      this.nyOceanBreaker.scale.set(1.0 + smoothP * 0.3, 1.0 + smoothP * 0.5, 1.0);
+
+      for (const blk of this.nySeawallBlocks) {
+        if (blk.isCenter) {
+          blk.mesh.rotation.x = blk.initialRot.x - smoothP * 0.75;
+          blk.mesh.position.y = blk.initialPos.y - smoothP * 3.4;
+          blk.mesh.position.addScaledVector(this.river.getTangentAt(0.02), smoothP * 4.0);
+        }
+      }
+
+      for (const s of this.nyShards) {
+        s.mesh.visible = true;
+        s.mesh.position.set(
+          s.basePos.x + Math.sin(pAlpha * 4.0) * 3.0,
+          s.basePos.y - smoothP * 1.5,
+          s.basePos.z + pAlpha * 20.0
+        );
+        s.mesh.rotation.x += s.rotVel.x * 0.02;
+      }
+
+      if (clampedT >= 0.07) {
+        const gAlpha = (clampedT - 0.07) / 0.09;
+        const rad = 2.0 + gAlpha * 22.0;
+        this.nyGeyser.scale.set(rad, rad * 0.85, rad);
+        this.nyGeyser.material.opacity = Math.max(0, 0.90 * (1.0 - gAlpha * 0.75));
+      } else {
+        this.nyGeyser.material.opacity = 0.0;
+      }
+    } else {
+      this.nyGeyser.material.opacity = 0.0;
+      for (const s of this.nyShards) s.mesh.visible = false;
+      this.nyOceanBreaker.position.y = -10;
+    }
+  }
+
+  initBeijingGenesis() {
+    this.bjGenesisGroup = new THREE.Group();
+    this.group.add(this.bjGenesisGroup);
+
+    this.bjPeakPos = new THREE.Vector3(-85, 52, -78);
+    const riverPt = this.river.getPointAt(0.03);
+    this.bjRiverHitPos = new THREE.Vector3(riverPt.x, riverPt.y + 1.0, riverPt.z);
+
+    const massGeo = new THREE.DodecahedronGeometry(7.8, 1);
+    const massMat = new THREE.MeshStandardMaterial({
+      color: 0x5a483a,
+      roughness: 0.9,
+      flatShading: true
+    });
+    this.bjCollapseMass = new THREE.Mesh(massGeo, massMat);
+    this.bjGenesisGroup.add(this.bjCollapseMass);
+
+    const scarGeo = new THREE.CircleGeometry(13.0, 24);
+    const scarMat = new THREE.MeshBasicMaterial({
+      color: 0x221a14,
+      transparent: true,
+      opacity: 0.0,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    this.bjScarMesh = new THREE.Mesh(scarGeo, scarMat);
+    this.bjScarMesh.position.copy(this.bjPeakPos).add(new THREE.Vector3(2, -3, 3));
+    this.bjScarMesh.rotation.set(-0.6, 0.35, 0.15);
+    this.bjGenesisGroup.add(this.bjScarMesh);
+
+    this.bjShards = [];
+    const shardGeo = new THREE.DodecahedronGeometry(1.7, 0);
+    const shardMat = new THREE.MeshStandardMaterial({
+      color: 0x483a2d,
+      roughness: 0.95,
+      flatShading: true
+    });
+    for (let i = 0; i < 14; i++) {
+      const sh = new THREE.Mesh(shardGeo, shardMat);
+      const offset = new THREE.Vector3(
+        (Math.random() - 0.5) * 12.0,
+        (Math.random() - 0.5) * 8.0,
+        (Math.random() - 0.5) * 12.0
+      );
+      this.bjGenesisGroup.add(sh);
+      this.bjShards.push({
+        mesh: sh,
+        offset,
+        rotSpeed: new THREE.Vector3(Math.random() * 8 - 4, Math.random() * 8 - 4, Math.random() * 8 - 4)
+      });
+    }
+
+    const mudGeo = new THREE.SphereGeometry(1, 24, 20);
+    const mudMat = new THREE.MeshBasicMaterial({
+      color: 0x9a7b56,
+      transparent: true,
+      opacity: 0.0,
+      depthWrite: false
+    });
+    this.bjMudCloud = new THREE.Mesh(mudGeo, mudMat);
+    this.bjMudCloud.position.copy(this.bjRiverHitPos);
+    this.bjGenesisGroup.add(this.bjMudCloud);
+  }
+
+  updateBeijingGenesis(clampedT) {
+    if (!this.bjGenesisGroup) return;
+
+    if (clampedT < 0.04) {
+      this.bjCollapseMass.visible = true;
+      this.bjCollapseMass.position.copy(this.bjPeakPos);
+      this.bjCollapseMass.rotation.set(0, 0, 0);
+      this.bjScarMesh.material.opacity = 0.0;
+      this.bjMudCloud.material.opacity = 0.0;
+      for (const s of this.bjShards) s.mesh.visible = false;
+    } else if (clampedT <= 0.18) {
+      const alpha = (clampedT - 0.04) / 0.13;
+      const pAlpha = Math.min(1.0, Math.max(0, alpha));
+
+      const curPos = new THREE.Vector3().lerpVectors(this.bjPeakPos, this.bjRiverHitPos, pAlpha);
+      curPos.y += Math.sin(pAlpha * Math.PI) * 14.0;
+      this.bjCollapseMass.position.copy(curPos);
+      this.bjCollapseMass.rotation.x += 0.04;
+      this.bjCollapseMass.rotation.y += 0.05;
+
+      for (const s of this.bjShards) {
+        s.mesh.visible = true;
+        s.mesh.position.copy(curPos).addScaledVector(s.offset, pAlpha * 2.2);
+        s.mesh.rotation.x += s.rotSpeed.x * 0.016;
+        s.mesh.rotation.y += s.rotSpeed.y * 0.016;
+      }
+
+      this.bjScarMesh.material.opacity = Math.min(0.85, (clampedT - 0.04) / 0.08);
+
+      if (clampedT >= 0.13) {
+        const cAlpha = (clampedT - 0.13) / 0.05;
+        const radius = 2.0 + cAlpha * 22.0;
+        this.bjMudCloud.scale.set(radius, radius * 0.7, radius);
+        this.bjMudCloud.material.opacity = Math.max(0, 0.85 * (1.0 - cAlpha * 0.7));
+      } else {
+        this.bjMudCloud.material.opacity = 0.0;
+      }
+    } else {
+      this.bjCollapseMass.visible = false;
+      this.bjScarMesh.material.opacity = 0.85;
+      for (const s of this.bjShards) s.mesh.visible = false;
+      this.bjMudCloud.material.opacity = 0.0;
+    }
+  }
+
+  initTokyoGenesis() {
+    this.tokyoGenesisGroup = new THREE.Group();
+    this.group.add(this.tokyoGenesisGroup);
+
+    const f0 = {
+      pt: this.river.getPointAt(0.03),
+      tangent: this.river.getTangentAt(0.03)
+    };
+    const up = new THREE.Vector3(0, 1, 0);
+    const side = new THREE.Vector3().crossVectors(f0.tangent, up).normalize();
+
+    const leveeMat = new THREE.MeshStandardMaterial({ color: 0x4a5d3f, roughness: 0.95 });
+    const slabMat = new THREE.MeshStandardMaterial({ color: 0x82929e, roughness: 0.8 });
+
+    const leveeGeo = new THREE.BoxGeometry(18.0, 7.5, 20.0);
+    const levee = new THREE.Mesh(leveeGeo, leveeMat);
+    levee.position.copy(f0.pt).addScaledVector(side, 14.0);
+    levee.position.y += 2.8;
+    levee.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f0.tangent);
+    this.tokyoGenesisGroup.add(levee);
+    this.tokyoLevee = {
+      mesh: levee,
+      initialPos: levee.position.clone(),
+      initialRot: levee.rotation.clone()
+    };
+
+    this.tokyoSlabs = [];
+    [-6.0, 0.0, 6.0].forEach((offset) => {
+      const sGeo = new THREE.BoxGeometry(5.5, 6.0, 1.0);
+      const slab = new THREE.Mesh(sGeo, slabMat);
+      slab.position.copy(f0.pt).addScaledVector(side, 6.0);
+      slab.position.y += 2.5;
+      slab.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f0.tangent);
+      slab.position.addScaledVector(f0.tangent, offset);
+      this.tokyoGenesisGroup.add(slab);
+      this.tokyoSlabs.push({
+        mesh: slab,
+        initialPos: slab.position.clone(),
+        initialRot: slab.rotation.clone()
+      });
+    });
+
+    this.tokyoShards = [];
+    const shardGeo = new THREE.BoxGeometry(1.8, 0.5, 1.8);
+    for (let i = 0; i < 12; i++) {
+      const sh = new THREE.Mesh(shardGeo, slabMat);
+      sh.position.copy(f0.pt).add(new THREE.Vector3(
+        (Math.random() - 0.5) * 12.0,
+        Math.random() * 3.0,
+        (Math.random() - 0.5) * 8.0
+      ));
+      sh.visible = false;
+      this.tokyoGenesisGroup.add(sh);
+      this.tokyoShards.push({
+        mesh: sh,
+        basePos: sh.position.clone(),
+        rotVel: new THREE.Vector3(Math.random() * 6 - 3, Math.random() * 6 - 3, Math.random() * 6 - 3)
+      });
+    }
+
+    const sprayGeo = new THREE.SphereGeometry(1, 24, 18);
+    const sprayMat = new THREE.MeshBasicMaterial({
+      color: 0xddeef8,
+      transparent: true,
+      opacity: 0.0,
+      depthWrite: false
+    });
+    this.tokyoBreachSpray = new THREE.Mesh(sprayGeo, sprayMat);
+    this.tokyoBreachSpray.position.copy(f0.pt).addScaledVector(side, 8.0);
+    this.tokyoBreachSpray.position.y += 2.0;
+    this.tokyoGenesisGroup.add(this.tokyoBreachSpray);
+  }
+
+  updateTokyoGenesis(clampedT) {
+    if (!this.tokyoGenesisGroup) return;
+
+    if (clampedT < 0.03) {
+      this.tokyoLevee.mesh.position.copy(this.tokyoLevee.initialPos);
+      this.tokyoLevee.mesh.rotation.copy(this.tokyoLevee.initialRot);
+      for (const s of this.tokyoSlabs) {
+        s.mesh.position.copy(s.initialPos);
+        s.mesh.rotation.copy(s.initialRot);
+      }
+      for (const sh of this.tokyoShards) sh.mesh.visible = false;
+      this.tokyoBreachSpray.material.opacity = 0.0;
+    } else if (clampedT <= 0.16) {
+      const pAlpha = (clampedT - 0.03) / 0.13;
+      const smoothP = Math.sin(pAlpha * Math.PI * 0.5);
+
+      this.tokyoLevee.mesh.rotation.z = this.tokyoLevee.initialRot.z - smoothP * 0.45;
+      this.tokyoLevee.mesh.position.y = this.tokyoLevee.initialPos.y - smoothP * 3.0;
+
+      for (let i = 0; i < this.tokyoSlabs.length; i++) {
+        const sl = this.tokyoSlabs[i];
+        sl.mesh.rotation.z = sl.initialRot.z - smoothP * (0.6 + i * 0.15);
+        sl.mesh.position.y = sl.initialPos.y - smoothP * 3.2;
+      }
+
+      for (const sh of this.tokyoShards) {
+        sh.mesh.visible = true;
+        sh.mesh.position.set(
+          sh.basePos.x - smoothP * 4.0,
+          sh.basePos.y - smoothP * 2.0,
+          sh.basePos.z + pAlpha * 18.0
+        );
+        sh.mesh.rotation.x += sh.rotVel.x * 0.02;
+      }
+
+      if (clampedT >= 0.08) {
+        const sAlpha = (clampedT - 0.08) / 0.08;
+        const rad = 2.0 + sAlpha * 20.0;
+        this.tokyoBreachSpray.scale.set(rad, rad * 0.75, rad);
+        this.tokyoBreachSpray.material.opacity = Math.max(0, 0.88 * (1.0 - sAlpha * 0.75));
+      } else {
+        this.tokyoBreachSpray.material.opacity = 0.0;
+      }
+    } else {
+      this.tokyoBreachSpray.material.opacity = 0.0;
+      for (const sh of this.tokyoShards) sh.mesh.visible = false;
+    }
+  }
+
+  initLondonGenesis() {
+    this.londonGenesisGroup = new THREE.Group();
+    this.group.add(this.londonGenesisGroup);
+
+    const f0 = {
+      pt: this.river.getPointAt(0.02),
+      tangent: this.river.getTangentAt(0.02)
+    };
+    const up = new THREE.Vector3(0, 1, 0);
+    const side = new THREE.Vector3().crossVectors(f0.tangent, up).normalize();
+
+    const seawallMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.85 });
+    const steelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6, metalness: 0.6 });
+
+    this.londonSeawallBlocks = [];
+    [-10.0, -3.0, 3.0, 10.0].forEach((offset, idx) => {
+      const wGeo = new THREE.BoxGeometry(6.5, 8.5, 4.5);
+      const wall = new THREE.Mesh(wGeo, seawallMat);
+      wall.position.copy(f0.pt).addScaledVector(side, offset);
+      wall.position.y += 3.8;
+      wall.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f0.tangent);
+      this.londonGenesisGroup.add(wall);
+      this.londonSeawallBlocks.push({
+        mesh: wall,
+        initialPos: wall.position.clone(),
+        initialRot: wall.rotation.clone(),
+        isCenter: idx === 1 || idx === 2
+      });
+    });
+
+    const flapGeo = new THREE.BoxGeometry(6.0, 5.0, 0.8);
+    const flap = new THREE.Mesh(flapGeo, steelMat);
+    flap.position.copy(f0.pt).addScaledVector(side, 0);
+    flap.position.y += 3.0;
+    flap.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f0.tangent);
+    this.londonGenesisGroup.add(flap);
+    this.londonFlap = {
+      mesh: flap,
+      initialPos: flap.position.clone(),
+      initialRot: flap.rotation.clone()
+    };
+
+    this.londonShards = [];
+    const shardGeo = new THREE.DodecahedronGeometry(1.3, 0);
+    for (let i = 0; i < 12; i++) {
+      const sh = new THREE.Mesh(shardGeo, seawallMat);
+      sh.position.copy(f0.pt).add(new THREE.Vector3(
+        (Math.random() - 0.5) * 14.0,
+        Math.random() * 3.5,
+        (Math.random() - 0.5) * 8.0
+      ));
+      sh.visible = false;
+      this.londonGenesisGroup.add(sh);
+      this.londonShards.push({
+        mesh: sh,
+        basePos: sh.position.clone(),
+        rotVel: new THREE.Vector3(Math.random() * 6 - 3, Math.random() * 6 - 3, Math.random() * 6 - 3)
+      });
+    }
+
+    const geyserGeo = new THREE.SphereGeometry(1, 24, 18);
+    const geyserMat = new THREE.MeshBasicMaterial({
+      color: 0xecfdf5,
+      transparent: true,
+      opacity: 0.0,
+      depthWrite: false
+    });
+    this.londonSurgeGeyser = new THREE.Mesh(geyserGeo, geyserMat);
+    this.londonSurgeGeyser.position.copy(f0.pt).addScaledVector(f0.tangent, 3.0);
+    this.londonSurgeGeyser.position.y += 2.0;
+    this.londonGenesisGroup.add(this.londonSurgeGeyser);
+  }
+
+  updateLondonGenesis(clampedT) {
+    if (!this.londonGenesisGroup) return;
+
+    if (clampedT < 0.03) {
+      for (const w of this.londonSeawallBlocks) {
+        w.mesh.position.copy(w.initialPos);
+        w.mesh.rotation.copy(w.initialRot);
+      }
+      this.londonFlap.mesh.position.copy(this.londonFlap.initialPos);
+      this.londonFlap.mesh.rotation.copy(this.londonFlap.initialRot);
+      for (const sh of this.londonShards) sh.mesh.visible = false;
+      this.londonSurgeGeyser.material.opacity = 0.0;
+    } else if (clampedT <= 0.16) {
+      const pAlpha = (clampedT - 0.03) / 0.13;
+      const smoothP = Math.sin(pAlpha * Math.PI * 0.5);
+
+      for (const w of this.londonSeawallBlocks) {
+        if (w.isCenter) {
+          w.mesh.rotation.x = w.initialRot.x - smoothP * 0.8;
+          w.mesh.position.y = w.initialPos.y - smoothP * 3.5;
+          w.mesh.position.addScaledVector(this.river.getTangentAt(0.02), smoothP * 4.5);
+        }
+      }
+
+      this.londonFlap.mesh.rotation.x = this.londonFlap.initialRot.x + smoothP * 1.2;
+      this.londonFlap.mesh.rotation.z = this.londonFlap.initialRot.z + smoothP * 0.4;
+      this.londonFlap.mesh.position.y = this.londonFlap.initialPos.y - smoothP * 3.8;
+
+      for (const sh of this.londonShards) {
+        sh.mesh.visible = true;
+        sh.mesh.position.set(
+          sh.basePos.x + Math.sin(pAlpha * 4.0) * 3.0,
+          sh.basePos.y - smoothP * 1.5,
+          sh.basePos.z + pAlpha * 20.0
+        );
+        sh.mesh.rotation.x += sh.rotVel.x * 0.02;
+      }
+
+      if (clampedT >= 0.08) {
+        const gAlpha = (clampedT - 0.08) / 0.08;
+        const rad = 2.0 + gAlpha * 22.0;
+        this.londonSurgeGeyser.scale.set(rad, rad * 0.8, rad);
+        this.londonSurgeGeyser.material.opacity = Math.max(0, 0.88 * (1.0 - gAlpha * 0.75));
+      } else {
+        this.londonSurgeGeyser.material.opacity = 0.0;
+      }
+    } else {
+      this.londonSurgeGeyser.material.opacity = 0.0;
+      for (const sh of this.londonShards) sh.mesh.visible = false;
     }
   }
 
@@ -306,78 +955,107 @@ export class FloodSimulation {
   }
 
   /* ----------------------------------------------------
-   * 2. HIGH-VISIBILITY FLOOD SURGE FRONT & DEBRIS (BALL)
+   * 2. REALISTIC 3D HYDRODYNAMIC BREAKER WAVE & FOAM
    * ---------------------------------------------------- */
   initFloodFront() {
     this.floodGroup = new THREE.Group();
     this.group.add(this.floodGroup);
 
-    // Dynamic wave crest cylinder
-    const waveGeo = new THREE.CylinderGeometry(4.2, 5.2, 3.8, 24);
+    let waveColor = 0x0284c7; // Azure default
+    let foamColor = 0xffffff;
+    if (this.scenarioId === 'delhi') {
+      waveColor = 0x8c6239; // Muddy Yamuna silt
+    } else if (this.scenarioId === 'beijing') {
+      waveColor = 0x785638; // Taihang mountain torrent
+    } else if (this.scenarioId === 'tokyo') {
+      waveColor = 0x2e6660; // Stormy Arakawa green-slate
+    } else if (this.scenarioId === 'london') {
+      waveColor = 0x2a5060; // Thames estuary slate
+    } else if (this.scenarioId === 'rasuwa') {
+      waveColor = 0x7a6b5c; // Himalayan glacial debris
+    }
+
+    // 1. Hydrodynamic 3D Breaker Wave Crest (curved hydrodynamic wedge spanning the river channel)
+    const waveGeo = new THREE.CylinderGeometry(4.8, 6.2, 22.0, 32, 1, false, -Math.PI * 0.4, Math.PI * 0.8);
     waveGeo.rotateZ(Math.PI / 2);
     const waveMat = new THREE.MeshStandardMaterial({
-      color: 0xe8952f,
-      emissive: 0xff7722,
-      emissiveIntensity: 1.5,
-      roughness: 0.25,
-      metalness: 0.1
+      color: waveColor,
+      roughness: 0.18,
+      metalness: 0.08,
+      transparent: true,
+      opacity: 0.90,
+      side: THREE.DoubleSide
     });
     this.waveCrest = new THREE.Mesh(waveGeo, waveMat);
     this.floodGroup.add(this.waveCrest);
 
-    // Glowing surge ball front
-    const glowGeo = new THREE.SphereGeometry(6.5, 20, 20);
-    const glowMat = new THREE.MeshBasicMaterial({
-      color: 0xffaa44,
+    // 2. Frothing Whitewater Foam Lip (along the breaking wave crest)
+    const foamLipGeo = new THREE.CylinderGeometry(0.9, 1.4, 22.8, 20);
+    foamLipGeo.rotateZ(Math.PI / 2);
+    const foamLipMat = new THREE.MeshStandardMaterial({
+      color: foamColor,
+      roughness: 0.75,
+      metalness: 0.02,
       transparent: true,
-      opacity: 0.45,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
+      opacity: 0.95
     });
-    this.floodGlow = new THREE.Mesh(glowGeo, glowMat);
-    this.floodGroup.add(this.floodGlow);
+    this.waveFoam = new THREE.Mesh(foamLipGeo, foamLipMat);
+    this.waveFoam.position.set(0, 2.2, 0.4);
+    this.floodGroup.add(this.waveFoam);
 
-    this.floodLight = new THREE.PointLight(0xff7711, 3.5, 55, 1.2);
-    this.floodGroup.add(this.floodLight);
+    // 3. Turbulent Froth Apron / Wake (foaming wake trailing behind the crest)
+    const apronGeo = new THREE.PlaneGeometry(22.0, 10.0, 16, 8);
+    apronGeo.rotateX(-Math.PI / 2);
+    const apronMat = new THREE.MeshStandardMaterial({
+      color: 0xf8fafc,
+      roughness: 0.85,
+      metalness: 0.0,
+      transparent: true,
+      opacity: 0.75,
+      side: THREE.DoubleSide
+    });
+    this.waveApron = new THREE.Mesh(apronGeo, apronMat);
+    this.waveApron.position.set(0, 0.5, -4.5);
+    this.floodGroup.add(this.waveApron);
 
-    // Orbiting river boulders & debris
-    this.floodDebris = [];
-    const debrisGeo = new THREE.DodecahedronGeometry(1.2, 0);
-    const debrisMat = new THREE.MeshStandardMaterial({
-      color: 0x3d3229,
-      roughness: 0.95,
+    // 4. Hydrodynamic Whitewater Spray Particles
+    this.sprayParticles = [];
+    const sprayGeo = new THREE.DodecahedronGeometry(0.65, 0);
+    const sprayMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.6,
+      transparent: true,
+      opacity: 0.88,
       flatShading: true
     });
 
-    for (let i = 0; i < 10; i++) {
-      const rock = new THREE.Mesh(debrisGeo, debrisMat);
-      const angle = (i / 10) * Math.PI * 2;
-      const dist = 2.4 + Math.random() * 2.2;
+    for (let i = 0; i < 20; i++) {
+      const p = new THREE.Mesh(sprayGeo, sprayMat);
+      const spanX = (Math.random() - 0.5) * 20.0;
       const relPos = new THREE.Vector3(
-        Math.cos(angle) * dist,
-        (Math.random() - 0.2) * 2.0,
-        Math.sin(angle) * dist
+        spanX,
+        1.2 + Math.random() * 2.2,
+        (Math.random() - 0.2) * 4.0
       );
-      this.floodDebris.push({
-        mesh: rock,
-        relPos,
-        spin: new THREE.Vector3(Math.random() * 8 - 4, Math.random() * 8 - 4, Math.random() * 8 - 4)
+      this.sprayParticles.push({
+        mesh: p,
+        basePos: relPos.clone(),
+        phase: Math.random() * Math.PI * 2,
+        speed: 3.0 + Math.random() * 4.0
       });
-      this.floodGroup.add(rock);
+      this.floodGroup.add(p);
     }
 
     this.trailObj = this.river.createFloodTrail();
     this.group.add(this.trailObj.mesh);
 
-    // Multi-scenario aliases & debris parameters
-    this.surgeBall = this.floodGlow;
+    // Backward-compatible references (no glowing ball)
+    this.surgeBall = { visible: false, position: new THREE.Vector3(), rotation: new THREE.Euler() };
+    this.floodGlow = this.surgeBall;
+    this.floodLight = { position: new THREE.Vector3(), intensity: 0 };
     this.surgeLight = this.floodLight;
-    this.debrisOrbitAngle = 0;
-    this.boulders = this.floodDebris.map(d => ({
-      mesh: d.mesh,
-      radius: 3.5,
-      angleOffset: Math.random() * Math.PI * 2
-    }));
+    this.floodDebris = [];
+    this.boulders = [];
   }
 
   /* ----------------------------------------------------
@@ -2716,33 +3394,28 @@ export class FloodSimulation {
     const wavePos = this.river.getPointAt(uWave);
     const waveTangent = this.river.getTangentAt(uWave);
 
-    if (this.surgeBall) {
-      this.surgeBall.position.set(wavePos.x, wavePos.y + 1.2, wavePos.z);
-      this.surgeBall.rotation.y += 0.04;
+    if (this.floodGroup) {
+      this.floodGroup.position.set(wavePos.x, wavePos.y + 0.6, wavePos.z);
+      const lookTarget = wavePos.clone().add(waveTangent);
+      this.floodGroup.lookAt(lookTarget.x, wavePos.y + 0.6, lookTarget.z);
     }
 
-    if (this.waveCrest) {
-      this.waveCrest.position.set(wavePos.x, wavePos.y + 1.4, wavePos.z);
-      this.waveCrest.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), waveTangent);
-    }
-
-    if (this.surgeLight) {
-      this.surgeLight.position.set(wavePos.x, wavePos.y + 5.0, wavePos.z);
-    }
-
-    this.debrisOrbitAngle = (this.debrisOrbitAngle || 0) + 0.04;
-    if (this.boulders && this.boulders.length > 0) {
-      for (let i = 0; i < this.boulders.length; i++) {
-        const b = this.boulders[i];
-        if (!b || !b.mesh) continue;
-        const angle = this.debrisOrbitAngle + (b.angleOffset || 0);
-        const radius = b.radius || 3.5;
-        b.mesh.position.set(
-          wavePos.x + Math.cos(angle) * radius,
-          wavePos.y + 1.2 + Math.sin(angle * 2.0) * 0.5,
-          wavePos.z + Math.sin(angle) * radius
+    if (this.sprayParticles && this.sprayParticles.length > 0) {
+      const time = Date.now() * 0.005;
+      for (const sp of this.sprayParticles) {
+        const bounce = Math.sin(time * sp.speed + sp.phase);
+        sp.mesh.position.set(
+          sp.basePos.x + Math.cos(time * 2.0 + sp.phase) * 0.6,
+          sp.basePos.y + Math.max(0, bounce) * 1.5,
+          sp.basePos.z + Math.sin(time * 2.0 + sp.phase) * 0.8
         );
+        sp.mesh.rotation.x += 0.08;
+        sp.mesh.rotation.y += 0.10;
       }
+    }
+
+    if (this.waveApron) {
+      this.waveApron.rotation.x = -Math.PI / 2 + Math.sin(Date.now() * 0.008) * 0.08;
     }
 
     if (this.trailObj) {
@@ -2789,27 +3462,41 @@ export class FloodSimulation {
         }
       } else {
         const washProgress = (uWave - item.uTrigger);
-        const maxProg = item.maxProg || 0.055;
+        const maxProg = Math.max(item.maxProg || 0.14, 0.14);
 
         if (washProgress < maxProg) {
           item.mesh.visible = true;
           const progressRatio = washProgress / maxProg;
-          const washDist = washProgress * (item.washSpeed || 38.0);
+
+          const normDrift = item.driftDir ? item.driftDir.clone().normalize() : new THREE.Vector3(0, 0, 1);
+
+          // 1. Foundation failure: tilt up to 45-60 degrees toward current
+          const tiltFactor = Math.sin(progressRatio * Math.PI * 0.5);
+          const tiltZ = (item.collapseTilt || 0.70) * tiltFactor;
+          const tiltX = (item.collapseTiltX || 0.35) * tiltFactor;
+          item.mesh.rotation.z = item.initialRot.z + tiltZ;
+          item.mesh.rotation.x = item.initialRot.x + tiltX;
+
+          // For lighter items, add tumble rotation
+          if (item.tumbleVel) {
+            const tumbleScale = Math.pow(progressRatio, 1.2) * 3.5;
+            item.mesh.rotation.x = item.initialRot.x + item.tumbleVel.x * tumbleScale;
+            item.mesh.rotation.y = item.initialRot.y + item.tumbleVel.y * tumbleScale;
+            item.mesh.rotation.z = item.initialRot.z + item.tumbleVel.z * tumbleScale;
+          }
+
+          // 2. Foundation scour and downward sinking into the bed
+          const sinkDist = Math.pow(progressRatio, 1.4) * (item.sinkScale ? item.sinkScale * 25.0 : 7.0);
+
+          // 3. Drift downriver
+          const driftDist = Math.pow(progressRatio, 1.6) * (item.washSpeed ? item.washSpeed * 0.45 : 15.0);
 
           item.mesh.position.copy(item.initialPos)
-            .addScaledVector(item.driftDir, washDist * (item.driftScale !== undefined ? item.driftScale : 0.45))
-            .add(new THREE.Vector3(0, -washDist * (item.sinkScale !== undefined ? item.sinkScale : 0.16), 0));
+            .addScaledVector(normDrift, driftDist)
+            .add(new THREE.Vector3(0, -sinkDist, 0));
 
-          if (item.tumbleVel) {
-            item.mesh.rotation.x = item.initialRot.x + item.tumbleVel.x * progressRatio * 2.5;
-            item.mesh.rotation.y = item.initialRot.y + item.tumbleVel.y * progressRatio * 2.5;
-            item.mesh.rotation.z = item.initialRot.z + item.tumbleVel.z * progressRatio * 2.5;
-          }
-          if (item.collapseTilt) {
-            item.mesh.rotation.z = item.initialRot.z + item.collapseTilt * progressRatio;
-          }
-
-          const fade = Math.max(0.0, 1.0 - progressRatio);
+          // 4. Retain high opacity while visibly collapsing; only dissolve near end of submersion
+          const fade = progressRatio < 0.65 ? 1.0 : Math.max(0.0, 1.0 - (progressRatio - 0.65) / 0.35);
           if (item.material) {
             item.material.transparent = true;
             item.material.opacity = fade;
@@ -2833,6 +3520,7 @@ export class FloodSimulation {
     const clampedT = Math.max(0, Math.min(1, t));
 
     if (this.scenarioId === 'delhi') {
+      this.updateDelhiGenesis(clampedT);
       let uWave = 0;
       if (clampedT < 0.10) {
         if (this.floodGroup) this.floodGroup.visible = false;
@@ -2851,6 +3539,7 @@ export class FloodSimulation {
     }
 
     if (this.scenarioId === 'newyork') {
+      this.updateNewYorkGenesis(clampedT);
       let uWave = 0;
       if (clampedT < 0.10) {
         if (this.floodGroup) this.floodGroup.visible = false;
@@ -2882,6 +3571,7 @@ export class FloodSimulation {
     }
 
     if (this.scenarioId === 'beijing') {
+      this.updateBeijingGenesis(clampedT);
       let uWave = 0;
       if (clampedT < 0.10) {
         if (this.floodGroup) this.floodGroup.visible = false;
@@ -2906,6 +3596,7 @@ export class FloodSimulation {
     }
 
     if (this.scenarioId === 'tokyo') {
+      this.updateTokyoGenesis(clampedT);
       let uWave = 0;
       if (clampedT < 0.10) {
         if (this.floodGroup) this.floodGroup.visible = false;
@@ -2924,6 +3615,7 @@ export class FloodSimulation {
     }
 
     if (this.scenarioId === 'london') {
+      this.updateLondonGenesis(clampedT);
       let uWave = 0;
       if (clampedT < 0.10) {
         if (this.floodGroup) this.floodGroup.visible = false;
@@ -2954,7 +3646,7 @@ export class FloodSimulation {
       return uWave;
     }
 
-    // A. AVALANCHE DETACHMENT BALL ($t \in [0.00, 0.18]$)
+    // A. AVALANCHE DETACHMENT MASS (t in [0.00, 0.18])
     if (clampedT < 0.04) {
       this.collapseMass.visible = true;
       this.collapseMass.position.copy(this.peakPos);
@@ -3005,79 +3697,19 @@ export class FloodSimulation {
       }
     }
 
-    // B. FLOOD SURGE BALL FRONT & DYNAMIC TRAIL ($t \in [0.20, 1.0]$)
+    // B. FLOOD SURGE 3D WAVE FRONT & DYNAMIC TRAIL (t in [0.20, 1.0])
     let uWave = 0;
     if (clampedT < 0.20) {
-      this.floodGroup.visible = false;
-      this.river.updateFloodTrail(this.trailObj, 0);
+      if (this.floodGroup) this.floodGroup.visible = false;
+      if (this.trailObj) this.river.updateFloodTrail(this.trailObj, 0);
       this.uWave = 0;
+      this.updateWipeableItems(0);
     } else {
-      this.floodGroup.visible = true;
+      if (this.floodGroup) this.floodGroup.visible = true;
       uWave = (clampedT - 0.20) / (1.0 - 0.20);
       this.uWave = uWave;
-
-      const wavePos = this.river.getPointAt(uWave);
-      const waveTangent = this.river.getTangentAt(uWave);
-
-      const headPos = new THREE.Vector3(wavePos.x, wavePos.y + 2.0, wavePos.z);
-      this.waveCrest.position.copy(headPos);
-      this.waveCrest.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), waveTangent);
-      this.floodGlow.position.copy(headPos);
-      this.floodLight.position.copy(headPos);
-
-      for (const debris of this.floodDebris) {
-        debris.mesh.position.copy(headPos).add(debris.relPos);
-        debris.mesh.rotation.x += debris.spin.x * 0.02;
-        debris.mesh.rotation.y += debris.spin.y * 0.02;
-      }
-
-      this.river.updateFloodTrail(this.trailObj, uWave);
-    }
-
-    // C. DAMS, VILLAGES & VEHICLES: CRASH & WASH DOWNRIVER
-    for (const item of this.wipeableItems) {
-      if (uWave < item.uTrigger) {
-        item.mesh.visible = true;
-        item.mesh.position.copy(item.initialPos);
-        item.mesh.rotation.copy(item.initialRot);
-        if (item.material) {
-          item.material.transparent = false;
-          item.material.opacity = 1.0;
-        } else if (item.materials) {
-          for (const m of item.materials) {
-            m.transparent = false;
-            m.opacity = 1.0;
-          }
-        }
-      } else {
-        const washProgress = (uWave - item.uTrigger);
-
-        if (washProgress < 0.055) {
-          item.mesh.visible = true;
-          const washDist = washProgress * 38.0;
-
-          item.mesh.position.copy(item.initialPos)
-            .addScaledVector(item.driftDir, washDist * 0.45)
-            .add(new THREE.Vector3(0, -washDist * 0.16, 0));
-
-          item.mesh.rotation.x += item.tumbleVel.x * 0.035;
-          item.mesh.rotation.y += item.tumbleVel.y * 0.035;
-          item.mesh.rotation.z += item.tumbleVel.z * 0.035;
-
-          const fade = Math.max(0.0, 1.0 - (washProgress / 0.055));
-          if (item.material) {
-            item.material.transparent = true;
-            item.material.opacity = fade;
-          } else if (item.materials) {
-            for (const m of item.materials) {
-              m.transparent = true;
-              m.opacity = fade;
-            }
-          }
-        } else {
-          item.mesh.visible = false;
-        }
-      }
+      this.updateSurgeFront(uWave);
+      this.updateWipeableItems(uWave);
     }
 
     // D. HIGHWAY DAMAGE & ROAD WASHOUT MECHANICS

@@ -10,9 +10,9 @@ export const NEWYORK_CONFIG = {
   name: 'New York, USA',
   country: 'United States',
   flag: '🇺🇸',
-  hazard: 'Cat-4 Hurricane Surge & Manhattan Inundation',
+  hazard: 'Morning Cat-4 Hurricane Surge & Manhattan Inundation',
   tagline: 'Atlantic Funneling, Subway Flooding & ConEd Grid Arc-Blast',
-  year: '2026 Forecast / Sandy 2.0',
+  year: '2026 Forecast / Sandy 2.0 (Morning)',
   currency: {
     code: 'USD',
     symbol: '$',
@@ -21,26 +21,26 @@ export const NEWYORK_CONFIG = {
     scale: 1.0
   },
   environment: {
-    skyTop: 0x0f172a,    // Deep hurricane slate gray
-    skyMid1: 0x1e293b,   // Overcast squall shelf cloud
-    skyMid2: 0x334155,   // Turbulent marine boundary layer
-    skyBottom: 0x475569, // Gale-force spray horizon
-    fogColor: 0x1e293b,
-    fogNear: 140,
-    fogFar: 460,
-    sunPosition: [-0.4, 0.6, -0.6],
-    sunColor: 0x93c5fd,  // Dim diffuse hurricane twilight
-    sunIntensity: 0.85,
-    waterColor: 0x1c3d52, // Atlantic storm surge brackish ocean brine
-    waterRoughness: 0.25,
-    waterMetalness: 0.35,
-    rainIntensity: 2.2,   // Severe tropical gale squalls
+    skyTop: 0x1d4ed8,    // Brilliant radiant morning blue zenith
+    skyMid1: 0x38bdf8,   // Crisp cerulean morning sky
+    skyMid2: 0x93c5fd,   // Luminous morning light
+    skyBottom: 0xfef08a, // Warm golden sunrise horizon
+    fogColor: 0xe0f2fe,  // Ultra-clean, luminous morning horizon
+    fogNear: 450,        // Pushed far back for crystal-clear clarity across the harbor
+    fogFar: 1600,
+    sunPosition: [0.75, 0.55, 0.35], // Golden morning sun from east
+    sunColor: 0xfff7ed,  // Radiant warm golden-white morning sunlight
+    sunIntensity: 2.2,   // Bright, crisp high-clarity illumination
+    waterColor: 0x0284c7, // Vibrant Atlantic / Upper NY Bay morning azure
+    waterRoughness: 0.18,
+    waterMetalness: 0.40,
+    rainIntensity: 0.0,   // Crystal clear morning atmosphere
     terrainType: 'coastal_harbor'
   },
   timeline: {
     durationSec: 36.0,
-    clockStart: '29 Oct 14:00',
-    clockEnd: '30 Oct 06:00'
+    clockStart: '30 Oct 06:30 AM',
+    clockEnd: '30 Oct 11:30 AM'
   }
 };
 
@@ -61,19 +61,19 @@ export const NEWYORK_RIVER_POINTS = [
 export const NEWYORK_WAYPOINTS = [
   {
     id: 'narrows-funneling',
-    u: 0.05,
-    t: 0.06,
-    sceneSec: 2.2,
-    realTime: '29 Oct 14:00',
-    name: 'The Narrows & Lower Bay',
-    subtitle: 'Verrazzano Strait Surge Funnel',
+    u: 0.10,
+    t: 0.08,
+    sceneSec: 2.8,
+    realTime: '30 Oct 06:30 AM',
+    name: 'The Narrows & Verrazzano',
+    subtitle: 'Morning Verrazzano Strait Funnel',
     coords: '40.60° N, 74.04° W',
-    badge: 'Stage 1 • Ocean Funneling • 4.8m Surge',
-    headline: 'Cat-4 Storm Surge Funnels into Upper NY Harbor at 48 km/h',
+    badge: 'Stage 1 • Morning Funneling • 4.8m Surge',
+    headline: 'Cat-4 Storm Surge Funnels into Upper NY Harbor at Dawn (48 km/h)',
     stats: [
       { label: 'Peak Storm Surge', value: '4.82 m (15.8 ft NAVD88)' },
       { label: 'Forward Surge Velocity', value: '13.2 m/s (47.5 km/h)' },
-      { label: 'Barometric Pressure', value: '940 hPa (Extratropical peak)' },
+      { label: 'Barometric Pressure', value: '940 hPa (Morning peak)' },
       { label: 'Tide Phase', value: 'Spring High Tide (+1.6 m astronomical)' },
       { label: 'Warning Lead Time', value: '36 hours advance NOAA NHC alert' }
     ],
@@ -87,15 +87,15 @@ export const NEWYORK_WAYPOINTS = [
   },
   {
     id: 'battery-park-overtopping',
-    u: 0.20,
-    t: 0.22,
-    sceneSec: 7.9,
-    realTime: '29 Oct 17:30',
+    u: 0.48,
+    t: 0.24,
+    sceneSec: 8.6,
+    realTime: '30 Oct 07:15 AM',
     name: 'The Battery & Financial District',
     subtitle: 'Lower Manhattan Tip Seawall Breach',
     coords: '40.70° N, 74.01° W',
-    badge: 'Stage 2 • Seawall Overtopped • Flood Stage 14 ft',
-    headline: 'Battery Park Seawall Overtopped: Ocean Rushes into Bowling Green',
+    badge: 'Stage 2 • Seawall Overtopped • Flood Stage 14.9 ft',
+    headline: 'Battery Park Seawall Overtopped in Morning Light: Water Inundates Bowling Green',
     stats: [
       { label: 'Surge Crest at Battery', value: '4.55 m (14.9 ft NAVD88)' },
       { label: 'Flow Velocity', value: '8.4 m/s (30.2 km/h)' },
@@ -113,15 +113,15 @@ export const NEWYORK_WAYPOINTS = [
   },
   {
     id: 'subway-inundation',
-    u: 0.35,
-    t: 0.36,
-    sceneSec: 13.0,
-    realTime: '29 Oct 20:00',
-    name: 'South Ferry & Tunnel Portals',
-    subtitle: 'MTA Subway Network Inundation',
+    u: 0.54,
+    t: 0.38,
+    sceneSec: 13.6,
+    realTime: '30 Oct 08:00 AM',
+    name: 'South Ferry & Subway Portals',
+    subtitle: 'MTA Rush-Hour Subway Inundation',
     coords: '40.70° N, 74.01° W',
     badge: 'Stage 3 • Transit Paralysis • 7 Under-River Tubes Flooded',
-    headline: 'Saltwater Cascades Down Subway Stairs & Ventilation Grates',
+    headline: 'Seawater Deluges South Ferry Subways during Morning Commute',
     stats: [
       { label: 'Submerged Subway Tubes', value: '7 under-river transit tunnels flooded' },
       { label: 'South Ferry Station', value: '14.5 million gallons of brine submerged tracks' },
@@ -139,15 +139,15 @@ export const NEWYORK_WAYPOINTS = [
   },
   {
     id: 'fdr-drive-escr',
-    u: 0.48,
-    t: 0.50,
-    sceneSec: 18.0,
-    realTime: '29 Oct 22:30',
+    u: 0.62,
+    t: 0.52,
+    sceneSec: 18.7,
+    realTime: '30 Oct 08:45 AM',
     name: 'FDR Drive & East River',
     subtitle: 'East Side Coastal Resiliency (ESCR) Gate Closure',
     coords: '40.71° N, 73.98° W',
     badge: 'Stage 4 • Resiliency Test • 16.5-ft Steel Floodgates',
-    headline: 'ESCR Roller Floodgates Close: Highway Converted to Storm Moat',
+    headline: 'ESCR Roller Floodgates Close: Highway Converted to Storm Moat in Morning Light',
     stats: [
       { label: 'Floodgate Defense Height', value: '5.03 m (16.5 ft NAVD88)' },
       { label: 'FDR Drive Condition', value: 'Highway closed; 2.4 m surge on river side' },
@@ -165,15 +165,15 @@ export const NEWYORK_WAYPOINTS = [
   },
   {
     id: 'brooklyn-bridge-waterfront',
-    u: 0.60,
-    t: 0.62,
-    sceneSec: 22.3,
-    realTime: '30 Oct 00:30',
+    u: 0.74,
+    t: 0.66,
+    sceneSec: 23.8,
+    realTime: '30 Oct 09:30 AM',
     name: 'Brooklyn Bridge & DUMBO',
     subtitle: 'East River Gothic Towers & Brooklyn Waterfront',
     coords: '40.70° N, 73.99° W',
     badge: 'Stage 5 • East River Convergence • Surge Bottleneck',
-    headline: 'East River Surge Chokes Under Brooklyn Bridge: DUMBO Submerged',
+    headline: 'East River Surge Chokes Under Brooklyn Bridge: DUMBO Submerged Under Morning Sun',
     stats: [
       { label: 'Surge Velocity in Strait', value: '9.8 m/s (35.3 km/h)' },
       { label: 'Brooklyn Waterfront Flooding', value: '1.8 m depth along Water St & Old Fulton' },
@@ -191,15 +191,15 @@ export const NEWYORK_WAYPOINTS = [
   },
   {
     id: 'coned-substation-arc',
-    u: 0.74,
-    t: 0.76,
-    sceneSec: 27.4,
-    realTime: '30 Oct 02:45',
+    u: 0.86,
+    t: 0.80,
+    sceneSec: 28.8,
+    realTime: '30 Oct 10:15 AM',
     name: 'ConEd 14th St Substation',
-    subtitle: 'Manhattan Grid Transformer Explosions & Blackout',
+    subtitle: 'Manhattan Grid Transformer Explosions & Daylight Arc Flash',
     coords: '40.73° N, 73.97° W',
     badge: 'Stage 6 • Grid Collapse • Arc Flash Explosion',
-    headline: 'Catastrophic Arc Flash at 14th Street: Lower Manhattan Blacked Out',
+    headline: 'Catastrophic Arc Flash at 14th Street: Lower Manhattan Power Grid Detonates',
     stats: [
       { label: 'Substation Inundation', value: '4.2 m saltwater breach over protection berm' },
       { label: 'High-Voltage Arc Blast', value: '345 kV transformer arc blast triggers blackout' },
@@ -217,15 +217,15 @@ export const NEWYORK_WAYPOINTS = [
   },
   {
     id: 'usace-pump-fleet',
-    u: 0.88,
-    t: 0.90,
-    sceneSec: 32.4,
-    realTime: '30 Oct 04:30',
+    u: 0.94,
+    t: 0.92,
+    sceneSec: 33.1,
+    realTime: '30 Oct 11:00 AM',
     name: 'USACE Unwatering Armada',
     subtitle: 'Army Corps Dewatering & Critical Infrastructure Recovery',
     coords: '40.74° N, 73.97° W',
     badge: 'Stage 7 • Drainage Armada • 380,000 GPM Discharged',
-    headline: 'Army Corps "Unwatering Task Force" Drains Flooded Tunnels',
+    headline: 'Army Corps "Unwatering Task Force" Drains Flooded Subway Tubes',
     stats: [
       { label: 'Heavy Pumps Mobilized', value: '24 high-capacity submersible pump units' },
       { label: 'Drainage Discharge Rate', value: '380,000 Gallons/min back to East River' },
@@ -243,15 +243,15 @@ export const NEWYORK_WAYPOINTS = [
   },
   {
     id: 'newyork-toll-summary',
-    u: 0.98,
+    u: 1.00,
     t: 1.00,
     sceneSec: 36.0,
-    realTime: '30 Oct 06:00',
+    realTime: '30 Oct 11:30 AM',
     name: 'New York Surge Summary',
     subtitle: 'NYC Metro Coastal Disaster & $42.5 Billion Toll',
     coords: '40.71° N, 74.00° W (Citywide)',
     badge: 'Stage 8 • Full Loss Metric • $42.5B Loss',
-    headline: 'NYC Cat-4 Storm Surge: $42.5 Billion Loss & 385,000 Displaced',
+    headline: 'NYC Morning Surge Toll: $42.5 Billion Loss & 385,000 Displaced',
     stats: [
       { label: 'Total Economic Destruction', value: '$42.5 Billion USD' },
       { label: 'Population Displaced / Evacuated', value: '385,000 coastal residents' },
@@ -270,14 +270,14 @@ export const NEWYORK_WAYPOINTS = [
 ];
 
 export const NEWYORK_NARRATION = [
-  { tStart: 0.00, tEnd: 0.10, text: "October 2026. A Category 4 hurricane tracks up the Atlantic seaboard, steering an enormous ocean storm surge straight toward the New York Bight at astronomical high tide." },
-  { tStart: 0.10, tEnd: 0.22, text: "At The Narrows, 180 million cubic metres of Atlantic ocean surge funnel under the Verrazzano Bridge at 48 km/h, propelling a 4.8-metre wall of water into Upper New York Bay." },
-  { tStart: 0.22, tEnd: 0.35, text: "The Battery seawall is overtopped at 14.9 feet NAVD88. Seawater inundates Lower Manhattan, cascading across Bowling Green and surrounding the Financial District." },
-  { tStart: 0.35, tEnd: 0.48, text: "Catastrophe strikes the underground: 14 million gallons of saltwater deluge South Ferry station, flooding seven under-river subway tunnels and paralyzing 5.4 million daily commuters." },
-  { tStart: 0.48, tEnd: 0.60, text: "Along the East River, 16.5-foot steel roller floodgates seal FDR Drive under the East Side Coastal Resiliency project, turning the highway into a defensive water barrier." },
-  { tStart: 0.60, tEnd: 0.72, text: "The surge bottleneck chokes under the Gothic towers of the Brooklyn Bridge. DUMBO cobblestones and historic waterfront piers are engulfed under 1.8 metres of raging brine." },
-  { tStart: 0.72, tEnd: 0.85, text: "At 14th Street, a violent 345-kilovolt transformer arc flash explodes across the Con Edison substation, plunging Lower Manhattan from 34th Street south into pitch blackness." },
-  { tStart: 0.85, tEnd: 1.00, text: "385,000 residents displaced, 7 subway tubes submerged, and $42.5 billion in total economic destruction. The USACE unwatering armada mobilizes to pump out the city." }
+  { tStart: 0.00, tEnd: 0.10, text: "October 30, 06:30 AM. A Category 4 hurricane tracks up the Atlantic seaboard at dawn, steering an enormous ocean storm surge straight into the New York Bight at astronomical high tide." },
+  { tStart: 0.10, tEnd: 0.24, text: "At The Narrows, golden morning sunlight illuminates 180 million cubic metres of Atlantic surge funneling under the Verrazzano Bridge at 48 km/h, propelling a 4.8-metre wall of water into Upper New York Bay." },
+  { tStart: 0.24, tEnd: 0.38, text: "The Battery seawall is overtopped at 14.9 feet NAVD88. Seawater inundates Lower Manhattan, cascading across Bowling Green and surrounding the Financial District and World Trade Center." },
+  { tStart: 0.38, tEnd: 0.52, text: "Catastrophe strikes the morning rush-hour transit: 14 million gallons of saltwater deluge South Ferry station, flooding seven under-river subway tunnels and paralyzing 5.4 million daily commuters." },
+  { tStart: 0.52, tEnd: 0.66, text: "Along the East River, 16.5-foot steel roller floodgates seal FDR Drive under the East Side Coastal Resiliency project, turning the highway into a defensive water barrier against the surging tide." },
+  { tStart: 0.66, tEnd: 0.80, text: "The surge bottleneck chokes under the Gothic granite towers of the Brooklyn Bridge. DUMBO cobblestones, historic waterfront lofts, and timber piers are engulfed under 1.8 metres of raging brine." },
+  { tStart: 0.80, tEnd: 0.92, text: "At 14th Street, a violent 345-kilovolt transformer arc flash explodes across the Con Edison substation, detonating transformer oil and plunging Lower Manhattan from 34th Street south into darkness." },
+  { tStart: 0.92, tEnd: 1.00, text: "385,000 residents displaced, 7 subway tubes submerged, and $42.5 billion in total economic destruction. The USACE unwatering armada mobilizes around the clock to drain the city." }
 ];
 
 export function getNewYorkTallyValues(t, uWave = 0) {

@@ -19,26 +19,26 @@ export const RASUWA_CONFIG = {
     scale: 0.134
   },
   environment: {
-    skyTop: 0x0a2036,
-    skyMid1: 0x2b5f80,
-    skyMid2: 0x7aa6bf,
-    skyBottom: 0xdfe9ee,
-    fogColor: 0x2b5f80,
-    fogNear: 220,
-    fogFar: 520,
-    sunPosition: [-0.7, 0.8, -0.6],
-    sunColor: 0xfff6ea,
-    sunIntensity: 1.8,
-    waterColor: 0x243d4f,
-    waterRoughness: 0.1,
-    waterMetalness: 0.85,
-    rainIntensity: 1.0,
+    skyTop: 0x1e3a8a,    // Brilliant high-altitude Himalayan morning sky
+    skyMid1: 0x38bdf8,   // Clear crisp mountain sky
+    skyMid2: 0x93c5fd,   // Luminous morning light
+    skyBottom: 0xfef08a, // Golden sunrise glinting off Langtang Lirung snow
+    fogColor: 0xe0f2fe,  // Clean alpine morning air
+    fogNear: 450,        // Razor-sharp clarity down the Himalayan valley
+    fogFar: 1600,
+    sunPosition: [0.70, 0.55, 0.40], // Dawn sun rising over eastern Himalayan ridge
+    sunColor: 0xfff7ed,  // Radiant golden morning sunlight
+    sunIntensity: 2.2,   // High-altitude crisp brilliance
+    waterColor: 0x0284c7, // Glacial cyan-blue mountain torrent
+    waterRoughness: 0.15,
+    waterMetalness: 0.40,
+    rainIntensity: 0.0,   // Crystal-clear morning
     terrainType: 'himalayan'
   },
   timeline: {
     durationSec: 85.0,
-    clockStart: '08:37',
-    clockEnd: '09:55'
+    clockStart: '24 Sep 06:15 AM',
+    clockEnd: '24 Sep 08:00 AM'
   }
 };
 

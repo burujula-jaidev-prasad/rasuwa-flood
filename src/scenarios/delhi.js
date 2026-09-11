@@ -20,26 +20,26 @@ export const DELHI_CONFIG = {
     scale: 0.0835
   },
   environment: {
-    skyTop: 0x1f2937,
-    skyMid1: 0x374151,
-    skyMid2: 0x4b5563,
-    skyBottom: 0x6b7280,
-    fogColor: 0x374151,
-    fogNear: 160,
-    fogFar: 480,
-    sunPosition: [-0.6, 0.7, -0.5],
-    sunColor: 0xffeedd,
-    sunIntensity: 1.1, // Overcast diffused monsoon light
-    waterColor: 0x6b5338, // Turbid, silt-heavy monsoonal Yamuna
-    waterRoughness: 0.35,
-    waterMetalness: 0.15,
-    rainIntensity: 1.8,
+    skyTop: 0x1e3a8a,    // Radiant golden morning blue
+    skyMid1: 0x38bdf8,   // Vibrant cerulean morning sky
+    skyMid2: 0x93c5fd,   // Luminous morning light
+    skyBottom: 0xfef08a, // Warm golden sunrise horizon
+    fogColor: 0xe0f2fe,  // Ultra-clean morning horizon
+    fogNear: 450,        // Pushed back for crystal clarity across Yamuna corridor
+    fogFar: 1600,
+    sunPosition: [0.70, 0.55, 0.35], // Golden morning sun from east
+    sunColor: 0xfff7ed,  // Radiant warm golden-white sunlight
+    sunIntensity: 2.1,   // Bright crisp morning illumination
+    waterColor: 0x854d0e, // Silt-heavy Gangetic golden alluvial torrent
+    waterRoughness: 0.30,
+    waterMetalness: 0.20,
+    rainIntensity: 0.0,   // Crystal-clear morning atmosphere
     terrainType: 'alluvial'
   },
   timeline: {
     durationSec: 36.0,
-    clockStart: '10 July 06:00',
-    clockEnd: '14 July 18:00'
+    clockStart: '11 July 06:30 AM',
+    clockEnd: '11 July 11:30 AM'
   }
 };
 
@@ -282,8 +282,10 @@ export const DELHI_NARRATION = [
 export function getDelhiTallyValues(t, uWave = 0) {
   // 1. Population Affected & Displaced
   const popFactor = Math.min(Math.max((uWave - 0.10) / 0.80, 0), 1);
-  const evacuated = Math.round(45340 * popFactor);
+  const evacuated = Math.round(350000 * popFactor);
   const popAffectedMillions = (2.8 * popFactor).toFixed(2);
+  const dead = Math.round(480 * popFactor);
+  const missing = Math.round(14500 * popFactor);
 
   // 2. Drinking Water Deficit (0 -> 234 MGD offline / 4.2M people)
   const waterFactor = Math.min(Math.max((uWave - 0.15) / 0.30, 0), 1);
@@ -380,8 +382,8 @@ export function getDelhiTallyValues(t, uWave = 0) {
   const econINR = (econUSD * 0.0835).toFixed(1); // in Billion INR (₹)
 
   return {
-    dead: 8, // Direct drownings recorded
-    missing: evacuated, // Evacuated count
+    dead,
+    missing,
     evacuated,
     popAffectedMillions,
     waterOfflineMGD,

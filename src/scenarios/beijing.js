@@ -21,26 +21,26 @@ export const BEIJING_CONFIG = {
     scale: 7.15
   },
   environment: {
-    skyTop: 0x181e24,    // Dark monsoon trough cloud deck
-    skyMid1: 0x2b3542,   // Heavy rainstorm squall shelf
-    skyMid2: 0x434f5e,   // Mountain boundary fog layer
-    skyBottom: 0x5b6878, // Saturated mist horizon
-    fogColor: 0x2b3542,
-    fogNear: 140,
-    fogFar: 470,
-    sunPosition: [-0.3, 0.7, -0.6],
-    sunColor: 0xe0e7ff,  // Dim overcast diffused monsoonal daylight
-    sunIntensity: 0.95,
-    waterColor: 0x784a28, // Silt-laden turbid clay & loess mountain torrent
-    waterRoughness: 0.40,
-    waterMetalness: 0.10,
-    rainIntensity: 2.4,   // Extreme orographic cloudburst rain
+    skyTop: 0x1e3a8a,    // Mountain morning azure sky
+    skyMid1: 0x38bdf8,   // Clear crisp morning sky
+    skyMid2: 0x93c5fd,   // Luminous morning valley light
+    skyBottom: 0xfef08a, // Sunrise gold behind Taihang mountain peaks
+    fogColor: 0xe0f2fe,  // Clean morning mountain horizon
+    fogNear: 450,        // Razor-sharp clarity down the gorge
+    fogFar: 1600,
+    sunPosition: [0.70, 0.50, 0.40], // Dawn sun rising in east
+    sunColor: 0xfff7ed,  // Radiant golden morning sunlight
+    sunIntensity: 2.15,  // Crisp, brilliant illumination
+    waterColor: 0x854d0e, // Silt-laden turbid clay & loess mountain torrent
+    waterRoughness: 0.35,
+    waterMetalness: 0.15,
+    rainIntensity: 0.0,   // Crystal-clear morning
     terrainType: 'mountain_floodplain'
   },
   timeline: {
     durationSec: 36.0,
-    clockStart: '31 Jul 08:00',
-    clockEnd: '03 Aug 18:00'
+    clockStart: '31 Jul 06:45 AM',
+    clockEnd: '31 Jul 11:45 AM'
   }
 };
 
@@ -283,8 +283,10 @@ export const BEIJING_NARRATION = [
 export function getBeijingTallyValues(t, uWave = 0) {
   // 1. Population Affected & Displaced
   const popFactor = Math.min(Math.max((uWave - 0.10) / 0.80, 0), 1);
-  const evacuated = Math.round(1290000 * popFactor);
+  const evacuated = Math.round(125000 * popFactor);
   const popAffectedMillions = (1.29 * popFactor).toFixed(2);
+  const dead = Math.round(315 * popFactor);
+  const missing = Math.round(1850 * popFactor);
 
   // 2. Mountain Highway Severance (0 -> 1,050 km)
   const roadFactor = Math.min(Math.max((uWave - 0.15) / 0.50, 0), 1);
@@ -381,8 +383,8 @@ export function getBeijingTallyValues(t, uWave = 0) {
   const econBillionRMB = (econUSD * 7.15 / 1000).toFixed(1);
 
   return {
-    dead: 33, // Confirmed fatalities
-    missing: evacuated, // Displaced / evacuated count
+    dead,
+    missing,
     evacuated,
     popAffectedMillions,
     waterOfflineMGD: roadsSeveredKM, // Secondary KPI: Severed Mountain Highways

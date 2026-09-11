@@ -184,11 +184,11 @@ export function createTerrain(riverSystem, scenarioId = null) {
     // ----------------------------------------------------
     // COASTAL HARBOR & TIDAL STRAIT TERRAIN (NEW YORK CITY)
     // ----------------------------------------------------
-    const colHarborMud  = new THREE.Color(0x1e293b); // Estuarine deep silt/mud
-    const colSeawall    = new THREE.Color(0x475569); // Granite seawall / rip-rap
-    const colAsphalt    = new THREE.Color(0x27272a); // Manhattan street grid asphalt
-    const colSidewalk   = new THREE.Color(0x64748b); // Urban concrete sidewalk
-    const colParkLawn   = new THREE.Color(0x234e32); // Battery Park & Brooklyn Bridge Park turf
+    const colHarborMud  = new THREE.Color(0x0f283d); // Clean deep harbor floor
+    const colSeawall    = new THREE.Color(0x94a3b8); // Bright granite seawall / rip-rap
+    const colAsphalt    = new THREE.Color(0x374151); // Clean Manhattan street grid asphalt
+    const colSidewalk   = new THREE.Color(0xcbd5e1); // Bright clean concrete sidewalk
+    const colParkLawn   = new THREE.Color(0x22c55e); // Vibrant lush Battery Park & Brooklyn lawn
 
     for (let i = 0; i < count; i++) {
       const x = posAttr.getX(i);
@@ -259,8 +259,8 @@ export function createTerrain(riverSystem, scenarioId = null) {
 
     const material = new THREE.MeshStandardMaterial({
       vertexColors: true,
-      roughness: 0.75,
-      metalness: 0.15,
+      roughness: 0.65,
+      metalness: 0.05,
       flatShading: false
     });
 

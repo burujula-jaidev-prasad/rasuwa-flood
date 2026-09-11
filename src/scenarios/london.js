@@ -21,26 +21,26 @@ export const LONDON_CONFIG = {
     scale: 0.77
   },
   environment: {
-    skyTop: 0x182430,    // Polar gale squall overcast
-    skyMid1: 0x283848,   // Cold maritime storm front
-    skyMid2: 0x3d4f61,   // Low-lying turbulent drizzle deck
-    skyBottom: 0x5a6d80, // Misty estuary horizon
-    fogColor: 0x283848,
-    fogNear: 150,
-    fogFar: 480,
-    sunPosition: [-0.3, 0.65, -0.6],
-    sunColor: 0xcfd8dc,  // Cold diffuse northern daylight
-    sunIntensity: 0.85,
-    waterColor: 0x2a3d4d, // Brackish, silted tidal Thames surge
-    waterRoughness: 0.35,
-    waterMetalness: 0.20,
-    rainIntensity: 1.8,   // Persistent North Sea gale rain
+    skyTop: 0x1e3a8a,    // Chilly crisp London morning blue
+    skyMid1: 0x38bdf8,   // Clear crisp morning sky
+    skyMid2: 0x93c5fd,   // Luminous morning light
+    skyBottom: 0xfef08a, // Sunrise gold over Thames Estuary
+    fogColor: 0xe0f2fe,  // Ultra-clean morning horizon
+    fogNear: 450,        // Razor-sharp clarity along Thames Tideway
+    fogFar: 1600,
+    sunPosition: [0.70, 0.45, 0.35], // Dawn sun rising over North Sea
+    sunColor: 0xfff7ed,  // Radiant golden morning sunlight
+    sunIntensity: 2.15,  // Crisp, brilliant illumination
+    waterColor: 0x0284c7, // Vibrant Thames Tideway morning blue
+    waterRoughness: 0.28,
+    waterMetalness: 0.25,
+    rainIntensity: 0.0,   // Crystal-clear morning
     terrainType: 'tidal_estuary'
   },
   timeline: {
     durationSec: 36.0,
-    clockStart: '31 Jan 12:00',
-    clockEnd: '02 Feb 06:00'
+    clockStart: '01 Feb 07:15 AM',
+    clockEnd: '01 Feb 12:15 PM'
   }
 };
 
@@ -283,8 +283,10 @@ export const LONDON_NARRATION = [
 export function getLondonTallyValues(t, uWave = 0) {
   // 1. Population Affected & Displaced
   const popFactor = Math.min(Math.max((uWave - 0.10) / 0.80, 0), 1);
-  const evacuated = Math.round(750000 * popFactor);
+  const evacuated = Math.round(45000 * popFactor);
   const popAffectedMillions = (1.40 * popFactor).toFixed(2);
+  const dead = Math.round(380 * popFactor);
+  const missing = Math.round(4500 * popFactor);
 
   // 2. Under-River Rail & Tube Tunnels Protected / Sealed (0 -> 16)
   const tubeFactor = Math.min(Math.max((uWave - 0.25) / 0.70, 0), 1);
@@ -381,8 +383,8 @@ export function getLondonTallyValues(t, uWave = 0) {
   const econBillionGBP = (econUSD / 1.30 / 1000).toFixed(1);
 
   return {
-    dead: 12, // Direct casualties in outer estuary
-    missing: evacuated, // Evacuated count
+    dead,
+    missing,
     evacuated,
     popAffectedMillions,
     waterOfflineMGD: tubesSealed, // Secondary KPI: Tubes Sealed
