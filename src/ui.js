@@ -20,12 +20,29 @@ export class UIManager {
     this.elIntroSkip = document.getElementById('intro-skip-btn');
     this.elIntroTimer = document.getElementById('intro-timer');
 
+    // KPI Command Dashboard elements
+    this.elTallyEconUsd = document.getElementById('tally-econ-usd');
+    this.elTallyEconNpr = document.getElementById('tally-econ-npr');
+    this.elTallyEconLevel = document.getElementById('tally-econ-level');
+
+    this.elTallySpeedMs = document.getElementById('tally-speed-ms');
+    this.elTallySpeedKmh = document.getElementById('tally-speed-kmh');
+    this.elTallySpeedTag = document.getElementById('tally-speed-tag');
+
+    this.elTallyIntensityVal = document.getElementById('tally-intensity-val');
+    this.elTallyIntensityTag = document.getElementById('tally-intensity-tag');
+    this.elTallyPressure = document.getElementById('tally-pressure');
+
+    this.elTallyHydro = document.getElementById('tally-hydro');
+    this.elTallyHydroPct = document.getElementById('tally-hydro-pct');
+
     this.elTallyDead = document.getElementById('tally-dead');
     this.elTallyMissing = document.getElementById('tally-missing');
-    this.elTallyHydro = document.getElementById('tally-hydro');
 
     this.elWaypointList = document.getElementById('waypoint-list');
     this.elRightPanel = document.getElementById('analytics-card');
+    this.elRightSidebar = document.querySelector('.right-sidebar');
+    this.elToggleMetricsPill = document.getElementById('toggle-metrics-pill');
 
     this.elPlayBtn = document.getElementById('play-btn');
     this.elPlayIcon = document.getElementById('play-icon');
@@ -111,6 +128,12 @@ export class UIManager {
         this.options.onSetSpeed(this.speed);
       }
     });
+
+    if (this.elToggleMetricsPill) {
+      this.elToggleMetricsPill.addEventListener('click', () => {
+        this.toggleSidebar(true);
+      });
+    }
   }
 
   updatePlayBtnState() {
@@ -210,11 +233,37 @@ export class UIManager {
     }
     this.elRealClock.textContent = clock;
 
-    // 2. Running Tallies strictly synced to uWave!
+    // 2. Running Tallies & KPIs strictly synced to uWave!
     const tallies = getTallyValues(t, uWave);
-    this.elTallyDead.textContent = tallies.dead.toLocaleString();
-    this.elTallyMissing.textContent = tallies.missing.toLocaleString();
-    this.elTallyHydro.textContent = `${tallies.hydro} MW`;
+
+    // Human Toll
+    if (this.elTallyDead) this.elTallyDead.textContent = tallies.dead.toLocaleString();
+    if (this.elTallyMissing) this.elTallyMissing.textContent = tallies.missing.toLocaleString();
+
+    // Hydropower
+    if (this.elTallyHydro) this.elTallyHydro.innerHTML = `${tallies.hydro} <small>MW</small>`;
+    if (this.elTallyHydroPct) {
+      const pct = Math.round((parseFloat(tallies.hydro) / 431) * 100);
+      this.elTallyHydroPct.textContent = `${pct}% Grid Lost`;
+    }
+
+    // Water Speed
+    if (this.elTallySpeedMs) this.elTallySpeedMs.innerHTML = `${tallies.speedMS} <small>m/s</small>`;
+    if (this.elTallySpeedKmh) this.elTallySpeedKmh.textContent = `${tallies.speedKMH} km/h`;
+    if (this.elTallySpeedTag) this.elTallySpeedTag.textContent = tallies.intensityTag;
+
+    // Intensity & Kinetic Pressure
+    if (this.elTallyIntensityVal) this.elTallyIntensityVal.innerHTML = tallies.intensityVal;
+    if (this.elTallyPressure) this.elTallyPressure.textContent = `${tallies.pressureKPa} kPa`;
+    if (this.elTallyIntensityTag) this.elTallyIntensityTag.textContent = tallies.intensityClass.toUpperCase();
+
+    // Economic Destruction Level
+    if (this.elTallyEconUsd) this.elTallyEconUsd.textContent = `$${tallies.econUSD}M`;
+    if (this.elTallyEconNpr) this.elTallyEconNpr.textContent = `${tallies.econNPR}B NPR`;
+    if (this.elTallyEconLevel) {
+      this.elTallyEconLevel.textContent = tallies.econLevel;
+      this.elTallyEconLevel.className = `kpi-badge badge-econ level-${tallies.econClass}`;
+    }
 
     // 3. Active Waypoint & Analytics Panel synced with ZERO latency to uWave
     const { index, waypoint } = getCurrentWaypoint(t, uWave);
@@ -242,6 +291,7 @@ export class UIManager {
   }
 
   renderAnalytics(wp) {
+    if (!this.elRightPanel) return;
     this.elRightPanel.style.opacity = '0';
 
     setTimeout(() => {
@@ -254,43 +304,64 @@ export class UIManager {
 
       this.elRightPanel.innerHTML = `
         <div class="panel-header">
-          <div class="badge-row">
-            <span class="pulse-beacon"></span>
-            <span class="badge-text">${wp.badge}</span>
+          <div class="header-top-row">
+            <div class="badge-row">
+              <span class="pulse-beacon"></span>
+              <span class="badge-text">${wp.badge}</span>
+            </div>
+            <button class="panel-close-btn" id="panel-close-btn" title="Minimize Info Panel">✕</button>
           </div>
           <h2 class="panel-title">${wp.name}</h2>
           <div class="panel-subtitle">${wp.subtitle} • <code>${wp.coords}</code></div>
         </div>
 
         <div class="stats-container">
-          <div class="section-label">VERIFIED SATELLITE & SENSOR METRICS</div>
+          <div class="section-label">METRICS & SENSOR READOUT</div>
           ${statsHtml}
         </div>
 
-        <div class="science-card">
-          <div class="science-title">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+        <details class="compact-detail science-detail">
+          <summary class="detail-summary">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2L2 22h20L12 2zm0 4.2L18.8 19H5.2L12 6.2zM11 10h2v4h-2zm0 6h2v2h-2z"/>
             </svg>
-            SCIENTIFIC ANALYSIS
-          </div>
-          <p class="science-body">${wp.scientificNote}</p>
-        </div>
+            <span>Scientific Analysis</span>
+          </summary>
+          <p class="detail-body">${wp.scientificNote}</p>
+        </details>
 
-        <div class="warning-gap-card">
-          <div class="warning-title">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <details class="compact-detail warning-detail">
+          <summary class="detail-summary">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/>
               <line x1="12" y1="8" x2="12" y2="12"/>
               <line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
-            LATENCY & WARNING GAP
-          </div>
-          <p class="warning-body">${wp.warningGap}</p>
-        </div>
+            <span>Early Warning Gap</span>
+          </summary>
+          <p class="detail-body">${wp.warningGap}</p>
+        </details>
       `;
 
+      // Re-attach close button listener
+      const closeBtn = document.getElementById('panel-close-btn');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          this.toggleSidebar(false);
+        });
+      }
+
       this.elRightPanel.style.opacity = '1';
-    }, 120);
+    }, 100);
+  }
+
+  toggleSidebar(show) {
+    this.isSidebarOpen = show;
+    if (this.elRightSidebar) {
+      this.elRightSidebar.style.display = show ? 'flex' : 'none';
+    }
+    if (this.elToggleMetricsPill) {
+      this.elToggleMetricsPill.style.display = show ? 'none' : 'flex';
+    }
   }
 }

@@ -211,19 +211,127 @@ export const NARRATION_SCRIPT = [
 ];
 
 export function getTallyValues(t, uWave = 0) {
-  // Dead = 1,355 * clamp((uWave - 0.30)/0.60)
+  // 1. Casualties
   const deadFactor = Math.min(Math.max((uWave - 0.30) / 0.60, 0), 1);
   const dead = Math.round(1355 * deadFactor);
 
-  // Missing = 4,996 * clamp((uWave - 0.30)/0.60)
   const missingFactor = Math.min(Math.max((uWave - 0.30) / 0.60, 0), 1);
   const missing = Math.round(4996 * missingFactor);
 
-  // Hydropower offline = 431 MW * clamp((uWave - 0.10)/0.35)
+  // 2. Hydropower offline (0 to 431 MW)
   const hydroFactor = Math.min(Math.max((uWave - 0.10) / 0.35, 0), 1);
   const hydro = (431 * hydroFactor).toFixed(1);
 
-  return { dead, missing, hydro };
+  // 3. Water Speed (m/s and km/h) dynamically based on gorge gradient & constriction
+  let speedMS = 0;
+  let intensityVal = "0 m³/s";
+  let intensityClass = "low";
+  let intensityTag = "Pre-burst";
+  let pressureKPa = 0;
+
+  if (t < 0.04) {
+    speedMS = 0;
+    intensityVal = "120 m³/s";
+    intensityTag = "Base Flow";
+    intensityClass = "low";
+    pressureKPa = 2;
+  } else if (t < 0.20) {
+    // Avalanche falling down mountain face
+    const aAlpha = (t - 0.04) / 0.16;
+    speedMS = +(38 + aAlpha * 14).toFixed(1); // 38 - 52 m/s rock-ice plunge
+    intensityVal = "Rock Avalanche";
+    intensityTag = "Alpine Fall";
+    intensityClass = "extreme";
+    pressureKPa = +(45 + aAlpha * 80).toFixed(0);
+  } else {
+    // Flood wave along river
+    if (uWave < 0.12) {
+      // Dam burst at Rasuwagadhi
+      const f = uWave / 0.12;
+      speedMS = +(32 + f * 12).toFixed(1); // 32 -> 44 m/s
+      intensityVal = Math.round(3500 + f * 3350) + " m³/s";
+      intensityTag = "Dam-Burst Wave";
+      intensityClass = "extreme";
+      pressureKPa = Math.round(110 + f * 55);
+    } else if (uWave < 0.38) {
+      // Deep Langtang / Bhotekoshi Gorge constriction (highest velocity & scour)
+      const f = (uWave - 0.12) / 0.26;
+      speedMS = +(44 + Math.sin(f * Math.PI) * 7.5).toFixed(1); // Peaks at ~51.5 m/s (185 km/h)
+      intensityVal = "6,850 m³/s";
+      intensityTag = "Extreme Bore";
+      intensityClass = "catastrophic";
+      pressureKPa = Math.round(165 + Math.sin(f * Math.PI) * 20); // up to 185 kPa
+    } else if (uWave < 0.65) {
+      // Syabrubesi & hydro cascade
+      const f = (uWave - 0.38) / 0.27;
+      speedMS = +(42 - f * 14).toFixed(1); // 42 -> 28 m/s
+      intensityVal = Math.round(6850 - f * 2400) + " m³/s";
+      intensityTag = "Debris Torrent";
+      intensityClass = "severe";
+      pressureKPa = Math.round(150 - f * 60);
+    } else {
+      // Alluvial widening at Betrawati / Galchhi
+      const f = Math.min(1.0, (uWave - 0.65) / 0.35);
+      speedMS = +(28 - f * 13).toFixed(1); // 28 -> 15 m/s
+      intensityVal = Math.round(4450 - f * 1950) + " m³/s";
+      intensityTag = "Major Inundation";
+      intensityClass = "high";
+      pressureKPa = Math.round(90 - f * 45);
+    }
+  }
+
+  const speedKMH = Math.round(speedMS * 3.6);
+
+  // 4. Economic Destruction Level ($0 -> $482M USD / ~64.5 Billion NPR)
+  let econUSD = 0;
+  let econLevel = "Normal";
+  let econClass = "low";
+
+  if (uWave >= 0.05) {
+    if (uWave < 0.15) {
+      // Rasuwagadhi dam (111 MW) + customs dry port + friendship bridge
+      const f = (uWave - 0.05) / 0.10;
+      econUSD = Math.round(15 + f * 135); // up to $150M
+      econLevel = "Dam & Port Obliterated";
+      econClass = "severe";
+    } else if (uWave < 0.45) {
+      // Gorge scour + Syabrubesi lodges + footbridges + road corridors
+      const f = (uWave - 0.15) / 0.30;
+      econUSD = Math.round(150 + f * 130); // up to $280M
+      econLevel = "Infrastructure Failure";
+      econClass = "extreme";
+    } else if (uWave < 0.75) {
+      // Trishuli cascade powerhouses + Mailung Bailey bridge + Betrawati shophouses
+      const f = (uWave - 0.45) / 0.30;
+      econUSD = Math.round(280 + f * 125); // up to $405M
+      econLevel = "Grid & Highway Severance";
+      econClass = "catastrophic";
+    } else {
+      // Lower Trishuli & regional disruption
+      const f = Math.min(1.0, (uWave - 0.75) / 0.25);
+      econUSD = Math.round(405 + f * 77); // up to $482M
+      econLevel = "National Disaster ($482M+)";
+      econClass = "catastrophic";
+    }
+  }
+
+  const econNPR = (econUSD * 0.134).toFixed(1); // 1 USD ~ 134 NPR in Billion NPR
+
+  return {
+    dead,
+    missing,
+    hydro,
+    speedMS,
+    speedKMH,
+    intensityVal,
+    intensityTag,
+    intensityClass,
+    pressureKPa,
+    econUSD,
+    econNPR,
+    econLevel,
+    econClass
+  };
 }
 
 // ZERO-LAG ACTIVE WAYPOINT: Triggers directly based on the wave front position uWave!

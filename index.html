@@ -30,19 +30,64 @@
     </div>
   </header>
 
-  <!-- Toll Counters (§6) -->
+  <!-- KPI Disaster Command Dashboard -->
   <div class="tally-container">
-    <div class="tally-card tally-dead">
-      <span class="tally-label">Confirmed Dead</span>
-      <span class="tally-number" id="tally-dead">0</span>
+    <div class="tally-card tally-econ" title="Estimated Total Economic Destruction (USD & NPR)">
+      <span class="tally-label">Economic Loss</span>
+      <div class="tally-value-row">
+        <span class="tally-number" id="tally-econ-usd">$0M</span>
+        <span class="tally-sub" id="tally-econ-npr">0.0B NPR</span>
+      </div>
+      <div class="kpi-tag-row">
+        <span class="kpi-badge badge-econ" id="tally-econ-level">Normal</span>
+      </div>
     </div>
-    <div class="tally-card tally-missing">
-      <span class="tally-label">Missing Persons</span>
-      <span class="tally-number" id="tally-missing">0</span>
+
+    <div class="tally-card tally-speed" title="Hydrodynamic Surge Velocity">
+      <span class="tally-label">Water Speed</span>
+      <div class="tally-value-row">
+        <span class="tally-number" id="tally-speed-ms">0.0 <small>m/s</small></span>
+        <span class="tally-sub" id="tally-speed-kmh">0 km/h</span>
+      </div>
+      <div class="kpi-tag-row">
+        <span class="kpi-badge badge-speed" id="tally-speed-tag">Pre-burst</span>
+      </div>
     </div>
-    <div class="tally-card tally-hydro">
-      <span class="tally-label">Hydropower Offline</span>
-      <span class="tally-number" id="tally-hydro">0.0 MW</span>
+
+    <div class="tally-card tally-intensity" title="Peak Discharge & Kinetic Pressure">
+      <span class="tally-label">Surge Intensity</span>
+      <div class="tally-value-row">
+        <span class="tally-number" id="tally-intensity-val">120 <small>m³/s</small></span>
+        <span class="tally-sub" id="tally-pressure">2 kPa</span>
+      </div>
+      <div class="kpi-tag-row">
+        <span class="kpi-badge badge-intensity" id="tally-intensity-tag">Base Flow</span>
+      </div>
+    </div>
+
+    <div class="tally-card tally-hydro" title="National Hydropower Offline">
+      <span class="tally-label">Hydro Offline</span>
+      <div class="tally-value-row">
+        <span class="tally-number" id="tally-hydro">0.0 <small>MW</small></span>
+        <span class="tally-sub">/ 431 MW</span>
+      </div>
+      <div class="kpi-tag-row">
+        <span class="kpi-badge badge-hydro" id="tally-hydro-pct">0% Grid</span>
+      </div>
+    </div>
+
+    <div class="tally-card tally-dead" title="Estimated Human Casualties">
+      <span class="tally-label">Human Toll</span>
+      <div class="tally-value-row">
+        <span class="tally-number red-num" id="tally-dead">0</span>
+        <span class="tally-sub">dead</span>
+        <span class="divider">/</span>
+        <span class="tally-number amber-num" id="tally-missing">0</span>
+        <span class="tally-sub">missing</span>
+      </div>
+      <div class="kpi-tag-row">
+        <span class="kpi-badge badge-human">Trishuli Corridor</span>
+      </div>
     </div>
   </div>
 
@@ -52,7 +97,13 @@
     <div id="waypoint-list"></div>
   </aside>
 
-  <!-- Right Analytics Readout Panel (§6, §9) -->
+  <!-- Floating Metrics Pill when Sidebar is Closed -->
+  <button id="toggle-metrics-pill" class="metrics-toggle-pill" style="display: none;" title="Open Metrics Panel">
+    <span>📊</span>
+    <span>Metrics & Info</span>
+  </button>
+
+  <!-- Right Analytics Readout Panel (Streamlined & Compact) -->
   <aside class="right-sidebar">
     <div class="analytics-card" id="analytics-card">
       <!-- Injected dynamically by UIManager -->
