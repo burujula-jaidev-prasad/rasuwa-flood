@@ -1,4 +1,4 @@
-import { WAYPOINTS, TIMELINE_CONFIG, getTallyValues, getCurrentWaypoint, getCurrentNarration } from './data.js';
+import { WAYPOINTS, TIMELINE_CONFIG, getTallyValues, getCurrentWaypoint, getCurrentNarration, getScenario } from './data.js';
 
 export class UIManager {
   constructor(options) {
@@ -9,6 +9,9 @@ export class UIManager {
     this.speed = 1.0;
     this.isGuided = true;
     this.rainActive = true;
+    this.isSidebarOpen = true;
+    this.activeTab = 'impact'; // 'impact' | 'countermeasures'
+    this.currentScenario = getScenario();
 
     this.initDOMElements();
     this.attachEventListeners();
@@ -19,6 +22,10 @@ export class UIManager {
     this.elIntroCard = document.getElementById('intro-card');
     this.elIntroSkip = document.getElementById('intro-skip-btn');
     this.elIntroTimer = document.getElementById('intro-timer');
+
+    this.elBrandBadge = document.getElementById('brand-badge');
+    this.elBrandTitle = document.getElementById('brand-title');
+    this.elBrandSubtitle = document.getElementById('brand-subtitle');
 
     // KPI Command Dashboard elements
     this.elTallyEconUsd = document.getElementById('tally-econ-usd');
@@ -33,11 +40,17 @@ export class UIManager {
     this.elTallyIntensityTag = document.getElementById('tally-intensity-tag');
     this.elTallyPressure = document.getElementById('tally-pressure');
 
+    this.elTallyHydroLabel = document.getElementById('tally-hydro-label');
     this.elTallyHydro = document.getElementById('tally-hydro');
+    this.elTallyHydroSub = document.getElementById('tally-hydro-sub');
     this.elTallyHydroPct = document.getElementById('tally-hydro-pct');
 
+    this.elTallyHumanLabel = document.getElementById('tally-human-label');
     this.elTallyDead = document.getElementById('tally-dead');
+    this.elTallyDeadUnit = document.getElementById('tally-dead-unit');
     this.elTallyMissing = document.getElementById('tally-missing');
+    this.elTallyMissingUnit = document.getElementById('tally-missing-unit');
+    this.elTallyHumanRegion = document.getElementById('tally-human-region');
 
     this.elWaypointList = document.getElementById('waypoint-list');
     this.elRightPanel = document.getElementById('analytics-card');
@@ -58,7 +71,8 @@ export class UIManager {
 
   renderWaypointNav() {
     this.elWaypointList.innerHTML = '';
-    WAYPOINTS.forEach((wp) => {
+    const waypoints = this.currentScenario.waypoints || WAYPOINTS;
+    waypoints.forEach((wp) => {
       const item = document.createElement('button');
       item.className = 'waypoint-nav-item';
       item.dataset.id = wp.id;
@@ -134,6 +148,20 @@ export class UIManager {
         this.toggleSidebar(true);
       });
     }
+
+    // Scenario switcher buttons
+    const scenarioBtns = document.querySelectorAll('.scenario-btn');
+    scenarioBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.classList.contains('disabled')) return;
+        const id = btn.dataset.id;
+        scenarioBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (this.options.onSelectScenario) {
+          this.options.onSelectScenario(id);
+        }
+      });
+    });
   }
 
   updatePlayBtnState() {
@@ -236,15 +264,33 @@ export class UIManager {
     // 2. Running Tallies & KPIs strictly synced to uWave!
     const tallies = getTallyValues(t, uWave);
 
-    // Human Toll
+    // Human Toll / Evacuees
     if (this.elTallyDead) this.elTallyDead.textContent = tallies.dead.toLocaleString();
-    if (this.elTallyMissing) this.elTallyMissing.textContent = tallies.missing.toLocaleString();
+    if (this.elTallyMissing) {
+      const displayMissing = (tallies.evacuated !== undefined) ? tallies.evacuated : tallies.missing;
+      this.elTallyMissing.textContent = displayMissing.toLocaleString();
+    }
 
-    // Hydropower
-    if (this.elTallyHydro) this.elTallyHydro.innerHTML = `${tallies.hydro} <small>MW</small>`;
+    // Secondary Infrastructure (Water works in Delhi vs Hydropower in Rasuwa)
+    const isDelhi = (this.currentScenario.config.id === 'delhi');
+    if (this.elTallyHydro) {
+      if (isDelhi) {
+        this.elTallyHydro.innerHTML = `${tallies.waterOfflineMGD} <small>MGD</small>`;
+      } else {
+        this.elTallyHydro.innerHTML = `${tallies.hydro} <small>MW</small>`;
+      }
+    }
+    if (this.elTallyHydroSub) {
+      this.elTallyHydroSub.textContent = isDelhi ? '/ 234 MGD' : '/ 431 MW';
+    }
     if (this.elTallyHydroPct) {
-      const pct = Math.round((parseFloat(tallies.hydro) / 431) * 100);
-      this.elTallyHydroPct.textContent = `${pct}% Grid Lost`;
+      if (isDelhi) {
+        const pct = Math.round((tallies.waterOfflineMGD / 234) * 100);
+        this.elTallyHydroPct.textContent = `${pct}% Water Cut`;
+      } else {
+        const pct = Math.round((parseFloat(tallies.hydro) / 431) * 100);
+        this.elTallyHydroPct.textContent = `${pct}% Grid Lost`;
+      }
     }
 
     // Water Speed
@@ -259,7 +305,7 @@ export class UIManager {
 
     // Economic Destruction Level
     if (this.elTallyEconUsd) this.elTallyEconUsd.textContent = `$${tallies.econUSD}M`;
-    if (this.elTallyEconNpr) this.elTallyEconNpr.textContent = `${tallies.econNPR}B NPR`;
+    if (this.elTallyEconNpr) this.elTallyEconNpr.textContent = tallies.econLocal || `${tallies.econNPR}B`;
     if (this.elTallyEconLevel) {
       this.elTallyEconLevel.textContent = tallies.econLevel;
       this.elTallyEconLevel.className = `kpi-badge badge-econ level-${tallies.econClass}`;
@@ -302,6 +348,74 @@ export class UIManager {
         </div>
       `).join('');
 
+      let contentHtml = '';
+      if (this.activeTab === 'impact') {
+        contentHtml = `
+          <div class="stats-container">
+            <div class="section-label">VERIFIED METRICS & SENSOR READOUT</div>
+            ${statsHtml}
+          </div>
+
+          <details class="compact-detail science-detail">
+            <summary class="detail-summary">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 22h20L12 2zm0 4.2L18.8 19H5.2L12 6.2zM11 10h2v4h-2zm0 6h2v2h-2z"/>
+              </svg>
+              <span>Scientific Analysis</span>
+            </summary>
+            <p class="detail-body">${wp.scientificNote}</p>
+          </details>
+
+          <details class="compact-detail warning-detail">
+            <summary class="detail-summary">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span>Early Warning Gap</span>
+            </summary>
+            <p class="detail-body">${wp.warningGap}</p>
+          </details>
+        `;
+      } else {
+        // Countermeasures & Municipal Defense Telemetry
+        const readiness = wp.countermeasure?.readiness || '75%';
+        contentHtml = `
+          <div class="countermeasure-container">
+            <div class="countermeasure-status-row">
+              <span class="defense-pulse"></span>
+              <span class="defense-status-text">${wp.countermeasure?.status || 'Active Monitoring'}</span>
+            </div>
+            
+            <div class="readiness-box">
+              <div class="readiness-label-row">
+                <span>Municipal Defense Readiness</span>
+                <strong>${readiness}</strong>
+              </div>
+              <div class="readiness-track">
+                <div class="readiness-fill" style="width: ${readiness};"></div>
+              </div>
+            </div>
+
+            <div class="countermeasure-action-box">
+              <div class="action-heading">EMERGENCY MITIGATION ACTION</div>
+              <p class="action-text">${wp.countermeasure?.action || 'Coordinated emergency response deployed.'}</p>
+            </div>
+
+            <div class="agency-deployment-box">
+              <div class="action-heading">AGENCIES DEPLOYED</div>
+              <div class="agency-tags">
+                <span class="agency-badge">NDRF</span>
+                <span class="agency-badge">Army Corps</span>
+                <span class="agency-badge">DJB</span>
+                <span class="agency-badge">CWC</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
       this.elRightPanel.innerHTML = `
         <div class="panel-header">
           <div class="header-top-row">
@@ -313,34 +427,14 @@ export class UIManager {
           </div>
           <h2 class="panel-title">${wp.name}</h2>
           <div class="panel-subtitle">${wp.subtitle} • <code>${wp.coords}</code></div>
+
+          <div class="panel-tabs">
+            <button class="panel-tab ${this.activeTab === 'impact' ? 'active' : ''}" id="tab-impact-btn">Impact Readout</button>
+            <button class="panel-tab ${this.activeTab === 'countermeasures' ? 'active' : ''}" id="tab-counter-btn">City Defenses 🛡️</button>
+          </div>
         </div>
 
-        <div class="stats-container">
-          <div class="section-label">METRICS & SENSOR READOUT</div>
-          ${statsHtml}
-        </div>
-
-        <details class="compact-detail science-detail">
-          <summary class="detail-summary">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L2 22h20L12 2zm0 4.2L18.8 19H5.2L12 6.2zM11 10h2v4h-2zm0 6h2v2h-2z"/>
-            </svg>
-            <span>Scientific Analysis</span>
-          </summary>
-          <p class="detail-body">${wp.scientificNote}</p>
-        </details>
-
-        <details class="compact-detail warning-detail">
-          <summary class="detail-summary">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            <span>Early Warning Gap</span>
-          </summary>
-          <p class="detail-body">${wp.warningGap}</p>
-        </details>
+        ${contentHtml}
       `;
 
       // Re-attach close button listener
@@ -351,8 +445,25 @@ export class UIManager {
         });
       }
 
+      // Attach Tab Listeners
+      const tabImpact = document.getElementById('tab-impact-btn');
+      const tabCounter = document.getElementById('tab-counter-btn');
+
+      if (tabImpact) {
+        tabImpact.addEventListener('click', () => {
+          this.activeTab = 'impact';
+          this.renderAnalytics(wp);
+        });
+      }
+      if (tabCounter) {
+        tabCounter.addEventListener('click', () => {
+          this.activeTab = 'countermeasures';
+          this.renderAnalytics(wp);
+        });
+      }
+
       this.elRightPanel.style.opacity = '1';
-    }, 100);
+    }, 80);
   }
 
   toggleSidebar(show) {
@@ -362,6 +473,42 @@ export class UIManager {
     }
     if (this.elToggleMetricsPill) {
       this.elToggleMetricsPill.style.display = show ? 'none' : 'flex';
+    }
+  }
+
+  setScenario(id) {
+    this.currentScenario = getScenario(id);
+    this.activeWaypointId = null;
+
+    if (this.elBrandTitle) {
+      this.elBrandTitle.textContent = this.currentScenario.config.name + ': ' + this.currentScenario.config.hazard;
+    }
+    if (this.elBrandSubtitle) {
+      this.elBrandSubtitle.textContent = this.currentScenario.config.tagline;
+    }
+    if (this.elBrandBadge) {
+      this.elBrandBadge.textContent = 'Forecasting Simulator';
+    }
+
+    if (this.elTallyHydroLabel) {
+      this.elTallyHydroLabel.textContent = (id === 'delhi') ? 'Works Offline' : 'Hydro Offline';
+    }
+    if (this.elTallyHumanLabel) {
+      this.elTallyHumanLabel.textContent = (id === 'delhi') ? 'Human Impact' : 'Human Toll';
+    }
+    if (this.elTallyDeadUnit) {
+      this.elTallyDeadUnit.textContent = (id === 'delhi') ? 'drowned' : 'dead';
+    }
+    if (this.elTallyMissingUnit) {
+      this.elTallyMissingUnit.textContent = (id === 'delhi') ? 'evacuated' : 'missing';
+    }
+    if (this.elTallyHumanRegion) {
+      this.elTallyHumanRegion.textContent = (id === 'delhi') ? 'Yamuna Corridor' : 'Trishuli Corridor';
+    }
+
+    this.renderWaypointNav();
+    if (this.currentScenario.waypoints && this.currentScenario.waypoints.length > 0) {
+      this.renderAnalytics(this.currentScenario.waypoints[0]);
     }
   }
 }

@@ -4,12 +4,16 @@ import { createTerrain } from './src/terrain.js';
 import { FloodSimulation } from './src/simulation.js';
 import { CameraDirector } from './src/camera.js';
 import { UIManager } from './src/ui.js';
-import { TIMELINE_CONFIG } from './src/data.js';
+import { TIMELINE_CONFIG, getScenario, setCurrentScenarioId, getCurrentScenarioId } from './src/data.js';
 
 class ExplainerApp {
   constructor() {
     this.container = document.getElementById('canvas-container');
     this.clock = new THREE.Clock();
+
+    // Default starting scenario is Delhi
+    this.currentScenarioId = 'delhi';
+    setCurrentScenarioId('delhi');
 
     // Timeline state
     this.t = 0.0;
@@ -51,19 +55,20 @@ class ExplainerApp {
   }
 
   initEnvironment() {
-    // 1. Sky vertical gradient (§9: #0a2036 -> #2b5f80 -> #7aa6bf -> #dfe9ee)
+    // 1. Sky vertical gradient
     const skyGeo = new THREE.SphereGeometry(600, 32, 32);
-    // Invert geometry faces inside
     skyGeo.scale(-1, 1, 1);
 
-    // Custom shader for vertical gradient sky
-    const skyMat = new THREE.ShaderMaterial({
+    const initialScenario = getScenario(this.currentScenarioId);
+    const env = initialScenario.config.environment;
+
+    this.skyMat = new THREE.ShaderMaterial({
       uniforms: {
-        topColor: { value: new THREE.Color(0x0a2036) },
-        midColor1: { value: new THREE.Color(0x2b5f80) },
-        midColor2: { value: new THREE.Color(0x7aa6bf) },
-        bottomColor: { value: new THREE.Color(0xdfe9ee) },
-        sunPosition: { value: new THREE.Vector3(-0.7, 0.8, -0.6).normalize() }
+        topColor: { value: new THREE.Color(env.skyTop) },
+        midColor1: { value: new THREE.Color(env.skyMid1) },
+        midColor2: { value: new THREE.Color(env.skyMid2) },
+        bottomColor: { value: new THREE.Color(env.skyBottom) },
+        sunPosition: { value: new THREE.Vector3(env.sunPosition[0], env.sunPosition[1], env.sunPosition[2]).normalize() }
       },
       vertexShader: `
         varying vec3 vWorldPosition;
@@ -94,7 +99,6 @@ class ExplainerApp {
             sky = mix(bottomColor, midColor2, y / 0.25);
           }
 
-          // Subtle sun glow disc top-left
           float sunDot = max(0.0, dot(dir, sunPosition));
           float sunGlow = pow(sunDot, 120.0) * 1.6;
           vec3 sunCol = vec3(1.0, 0.95, 0.85);
@@ -106,15 +110,15 @@ class ExplainerApp {
       depthWrite: false
     });
 
-    const skyMesh = new THREE.Mesh(skyGeo, skyMat);
+    const skyMesh = new THREE.Mesh(skyGeo, this.skyMat);
     this.scene.add(skyMesh);
 
-    // 2. Fog (§9: fog 220–520)
-    const fogColor = new THREE.Color(0x2b5f80);
-    this.scene.fog = new THREE.Fog(fogColor, 220, 520);
+    // 2. Fog
+    const fogColor = new THREE.Color(env.fogColor);
+    this.scene.fog = new THREE.Fog(fogColor, env.fogNear, env.fogFar);
 
-    // 3. Directional Sun Light top-left
-    this.sunLight = new THREE.DirectionalLight(0xfff6ea, 1.8);
+    // 3. Directional Sun Light
+    this.sunLight = new THREE.DirectionalLight(env.sunColor, env.sunIntensity);
     this.sunLight.position.set(-180, 240, -120);
     this.sunLight.castShadow = true;
     this.sunLight.shadow.mapSize.width = 2048;
@@ -129,30 +133,57 @@ class ExplainerApp {
     this.scene.add(this.sunLight);
 
     // 4. Ambient / Hemisphere Light
-    const hemiLight = new THREE.HemisphereLight(0x9fb3c0, 0x33513c, 0.85);
-    this.scene.add(hemiLight);
+    this.hemiLight = new THREE.HemisphereLight(0x9fb3c0, 0x33513c, 0.85);
+    this.scene.add(this.hemiLight);
 
-    // 5. Subtle fill light for valley shadows
-    const fillLight = new THREE.DirectionalLight(0x6fc0ea, 0.4);
-    fillLight.position.set(120, 80, 140);
-    this.scene.add(fillLight);
+    // 5. Fill Light
+    this.fillLight = new THREE.DirectionalLight(0x6fc0ea, 0.4);
+    this.fillLight.position.set(120, 80, 140);
+    this.scene.add(this.fillLight);
+  }
+
+  updateEnvironmentForScenario(scenario) {
+    const env = scenario.config.environment;
+    if (this.skyMat) {
+      this.skyMat.uniforms.topColor.value.setHex(env.skyTop);
+      this.skyMat.uniforms.midColor1.value.setHex(env.skyMid1);
+      this.skyMat.uniforms.midColor2.value.setHex(env.skyMid2);
+      this.skyMat.uniforms.bottomColor.value.setHex(env.skyBottom);
+      this.skyMat.uniforms.sunPosition.value.set(env.sunPosition[0], env.sunPosition[1], env.sunPosition[2]).normalize();
+    }
+    if (this.scene.fog) {
+      this.scene.fog.color.setHex(env.fogColor);
+      this.scene.fog.near = env.fogNear;
+      this.scene.fog.far = env.fogFar;
+    }
+    if (this.sunLight) {
+      this.sunLight.color.setHex(env.sunColor);
+      this.sunLight.intensity = env.sunIntensity;
+    }
   }
 
   initSceneObjects() {
+    const scenario = getScenario(this.currentScenarioId);
+
     // 1. River System
-    this.riverSystem = new RiverSystem();
+    this.riverSystem = new RiverSystem(scenario.riverPoints, { scenarioId: this.currentScenarioId });
     this.waterMesh = this.riverSystem.createWaterMesh();
     this.scene.add(this.waterMesh);
 
     // 2. Terrain System
-    this.terrainSystem = createTerrain(this.riverSystem);
+    this.terrainSystem = createTerrain(this.riverSystem, this.currentScenarioId);
     this.scene.add(this.terrainSystem.mesh);
 
     // 3. Flood & Physics Simulation
-    this.simulation = new FloodSimulation(this.scene, this.riverSystem, this.terrainSystem);
+    this.simulation = new FloodSimulation(this.scene, this.riverSystem, this.terrainSystem, this.currentScenarioId);
 
     // 4. Camera Choreography Director
-    this.cameraDirector = new CameraDirector(this.camera, this.renderer.domElement, this.riverSystem);
+    this.cameraDirector = new CameraDirector(this.camera, this.renderer.domElement, this.riverSystem, this.currentScenarioId);
+    if (this.ui) {
+      this.cameraDirector.onModeChange = (isGuided) => {
+        this.ui.setGuided(isGuided);
+      };
+    }
   }
 
   initUI() {
@@ -172,6 +203,9 @@ class ExplainerApp {
       },
       onSetSpeed: (speed) => {
         this.speed = speed;
+      },
+      onSelectScenario: (scenarioId) => {
+        this.switchScenario(scenarioId);
       }
     });
 
@@ -199,6 +233,28 @@ class ExplainerApp {
     this.ui.elIntroSkip.addEventListener('click', () => {
       this.dismissIntro();
     });
+  }
+
+  switchScenario(scenarioId) {
+    if (this.currentScenarioId === scenarioId) return;
+    this.currentScenarioId = scenarioId;
+    setCurrentScenarioId(scenarioId);
+
+    // 1. Clean up existing objects
+    if (this.waterMesh) this.scene.remove(this.waterMesh);
+    if (this.terrainSystem && this.terrainSystem.mesh) this.scene.remove(this.terrainSystem.mesh);
+    if (this.simulation && this.simulation.group) this.scene.remove(this.simulation.group);
+
+    // 2. Re-create objects for new scenario
+    this.initSceneObjects();
+
+    // 3. Update environment (sky, fog, sun)
+    this.updateEnvironmentForScenario(getScenario(scenarioId));
+
+    // 4. Update UI
+    this.t = 0.0;
+    this.ui.setScenario(scenarioId);
+    this.updateSimulationState(0.016);
   }
 
   dismissIntro() {
@@ -230,7 +286,6 @@ class ExplainerApp {
     const effectiveDelta = Math.min(delta, 0.1);
 
     if (this.isPlaying) {
-      // Step timeline forward: t in [0, 1] over DUR = 34s
       const step = (effectiveDelta * this.speed) / TIMELINE_CONFIG.DUR;
       this.t += step;
 

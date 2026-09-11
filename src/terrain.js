@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { PEAKS } from './data.js';
+import { PEAKS, getScenario } from './data.js';
 
 // Deterministic 2D noise generator
 function hash2D(x, z) {
@@ -51,7 +51,10 @@ function rockCrags(x, z) {
   return n;
 }
 
-export function createTerrain(riverSystem) {
+export function createTerrain(riverSystem, scenarioId = null) {
+  const activeScenarioId = scenarioId || getScenario().config.id;
+  const isDelhi = (activeScenarioId === 'delhi');
+
   const GRID_SIZE = 168; // 168 quads per side
   const AREA = 120;      // 240x240 unit plane, bounds [-120, +120]
 
@@ -60,8 +63,125 @@ export function createTerrain(riverSystem) {
 
   const posAttr = geometry.attributes.position;
   const count = posAttr.count;
+  const colors = new Float32Array(count * 3);
 
-  // Elevation color palette
+  if (isDelhi) {
+    // ----------------------------------------------------
+    // ALLUVIAL FLOODPLAIN TERRAIN (DELHI YAMUNA CORRIDOR)
+    // ----------------------------------------------------
+    const colMud        = new THREE.Color(0x735c42); // Yamuna silt & wet mud
+    const colFloodplain = new THREE.Color(0x425732); // Alluvial green floodplain
+    const colUrban      = new THREE.Color(0x615c54); // Urban soil & tarmac
+    const colBund       = new THREE.Color(0x857766); // Stone embankment / retaining wall
+    const colSandstone  = new THREE.Color(0x873e2d); // Red sandstone soil & ramparts
+
+    for (let i = 0; i < count; i++) {
+      const x = posAttr.getX(i);
+      const z = posAttr.getZ(i);
+
+      const riverInfo = riverSystem.getClosestRiverInfo(x, z);
+      const riverDist = riverInfo.distance;
+      const bedWidth = 12.0;
+      const bankWidth = 24.0;
+
+      // Base flat urban topography (elevation ~2.5 - 4.5m)
+      let h = 3.2 + valueNoise(x * 0.04, z * 0.04) * 1.6;
+
+      // Northern Delhi Ridge spur (far northwest x < -60, z < -20)
+      if (x < -60 && z < -20) {
+        const ridgeDist = Math.sqrt((x + 85) * (x + 85) + (z + 45) * (z + 45));
+        if (ridgeDist < 45) {
+          h += (1.0 - ridgeDist / 45) * 8.5;
+        }
+      }
+
+      // Riverbed channel & riverbanks
+      if (riverDist <= bedWidth) {
+        h = riverInfo.riverY - 1.2;
+      } else if (riverDist < bankWidth) {
+        const t = (riverDist - bedWidth) / (bankWidth - bedWidth);
+        const bedFloor = riverInfo.riverY - 1.2;
+        const bankTop = riverInfo.riverY + 1.6;
+        h = bedFloor + (bankTop - bedFloor) * Math.sin(t * Math.PI * 0.5);
+      }
+
+      posAttr.setY(i, h);
+    }
+    posAttr.needsUpdate = true;
+    geometry.computeVertexNormals();
+
+    // Color assignment for Delhi
+    for (let i = 0; i < count; i++) {
+      const x = posAttr.getX(i);
+      const z = posAttr.getZ(i);
+      const riverInfo = riverSystem.getClosestRiverInfo(x, z);
+      const d = riverInfo.distance;
+
+      const vertexCol = new THREE.Color();
+      if (d < 14.0) {
+        vertexCol.copy(colMud);
+      } else if (d < 28.0) {
+        const t = (d - 14.0) / 14.0;
+        vertexCol.copy(colMud).lerp(colBund, t);
+      } else if (d < 45.0) {
+        const t = (d - 28.0) / 17.0;
+        vertexCol.copy(colBund).lerp(colFloodplain, t);
+      } else {
+        vertexCol.copy(colFloodplain).lerp(colUrban, 0.45);
+      }
+
+      // Red Fort vicinity sandstone accent
+      const distToRedFort = Math.sqrt(x * x + z * z);
+      if (distToRedFort < 24.0 && x > 4.0) {
+        vertexCol.lerp(colSandstone, 0.65);
+      }
+
+      colors[i * 3 + 0] = vertexCol.r;
+      colors[i * 3 + 1] = vertexCol.g;
+      colors[i * 3 + 2] = vertexCol.b;
+    }
+
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const material = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.85,
+      metalness: 0.08,
+      flatShading: false
+    });
+
+    const terrainMesh = new THREE.Mesh(geometry, material);
+    terrainMesh.name = "TerrainMesh";
+    terrainMesh.receiveShadow = true;
+    terrainMesh.castShadow = true;
+
+    function getTerrainHeight(x, z) {
+      const riverInfo = riverSystem.getClosestRiverInfo(x, z);
+      const riverDist = riverInfo.distance;
+      const bedWidth = 12.0;
+      const bankWidth = 24.0;
+      let h = 3.2 + valueNoise(x * 0.04, z * 0.04) * 1.6;
+      if (x < -60 && z < -20) {
+        const ridgeDist = Math.sqrt((x + 85) * (x + 85) + (z + 45) * (z + 45));
+        if (ridgeDist < 45) h += (1.0 - ridgeDist / 45) * 8.5;
+      }
+      if (riverDist <= bedWidth) {
+        h = riverInfo.riverY - 1.2;
+      } else if (riverDist < bankWidth) {
+        const t = (riverDist - bedWidth) / (bankWidth - bedWidth);
+        const bedFloor = riverInfo.riverY - 1.2;
+        const bankTop = riverInfo.riverY + 1.6;
+        h = bedFloor + (bankTop - bedFloor) * Math.sin(t * Math.PI * 0.5);
+      }
+      return h;
+    }
+
+    return { mesh: terrainMesh, geometry, getTerrainHeight };
+  }
+
+  // ----------------------------------------------------
+  // HIMALAYAN ALPINE GORGE TERRAIN (RASUWA SCENARIO)
+  // ----------------------------------------------------
   const colValley    = new THREE.Color(0x2d4a34); // Valley greenery
   const colForest    = new THREE.Color(0x3a5d3b); // Subalpine forest
   const colAlpine    = new THREE.Color(0x5f5f44); // Alpine meadows
@@ -72,9 +192,6 @@ export function createTerrain(riverSystem) {
   const colSnow      = new THREE.Color(0xf5f8fa); // Pure Himalayan snow
   const colGorgeRock = new THREE.Color(0x45423c); // Scoured canyon bedrock
 
-  const colors = new Float32Array(count * 3);
-
-  // 1. Calculate heights with ZERO hills in the river path
   for (let i = 0; i < count; i++) {
     const x = posAttr.getX(i);
     const z = posAttr.getZ(i);
@@ -83,9 +200,8 @@ export function createTerrain(riverSystem) {
     const riverDist = riverInfo.distance;
     const u = riverInfo.u;
 
-    // Valley widens downstream as the river flows from the gorge into open plains
-    const bedWidth = 7.0 + u * 6.0;      // 7.0 at source -> 13.0 downstream
-    const valleyWidth = 24.0 + u * 28.0; // 24.0 at source -> 52.0 downstream
+    const bedWidth = 7.0 + u * 6.0;
+    const valleyWidth = 24.0 + u * 28.0;
 
     // Base relief: suppress noise bumps inside the river valley corridor
     const valleyNoiseSuppression = Math.min(1.0, Math.pow(riverDist / valleyWidth, 1.5));

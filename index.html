@@ -24,19 +24,51 @@
   <!-- Top Navigation / Title Bar -->
   <header class="top-nav">
     <div class="brand-container">
-      <span class="brand-badge">Scientific Explainer</span>
-      <h1 class="brand-title">The 2026 Rasuwa–Bhotekoshi Flood</h1>
-      <span class="brand-subtitle">Langtang Lirung Avalanche & River Dam-Burst</span>
+      <span class="brand-badge" id="brand-badge">Forecasting Simulator</span>
+      <h1 class="brand-title" id="brand-title">Delhi Yamuna Inundation</h1>
+      <span class="brand-subtitle" id="brand-subtitle">Record 208.66m Stage & Barrage Overtopping</span>
     </div>
+
+    <!-- Multi-City Scenario Selector Bar -->
+    <nav class="scenario-selector" id="scenario-selector">
+      <button class="scenario-btn active" data-id="delhi" title="Delhi: Yamuna River Record Inundation">
+        <span class="sc-flag">🇮🇳</span>
+        <span class="sc-name">Delhi</span>
+      </button>
+      <button class="scenario-btn" data-id="rasuwa" title="Nepal: Langtang Avalanche & Dam-Burst">
+        <span class="sc-flag">🇳🇵</span>
+        <span class="sc-name">Rasuwa</span>
+      </button>
+      <button class="scenario-btn disabled" data-id="newyork" title="New York: Cat-4 Hurricane Storm Surge (In Queue)">
+        <span class="sc-flag">🇺🇸</span>
+        <span class="sc-name">New York</span>
+        <span class="sc-badge">Soon</span>
+      </button>
+      <button class="scenario-btn disabled" data-id="beijing" title="Beijing: Mentougou Mountain Flash Deluge (In Queue)">
+        <span class="sc-flag">🇨🇳</span>
+        <span class="sc-name">Beijing</span>
+        <span class="sc-badge">Soon</span>
+      </button>
+      <button class="scenario-btn disabled" data-id="tokyo" title="Tokyo: Arakawa Flood & G-CANS Defense (In Queue)">
+        <span class="sc-flag">🇯🇵</span>
+        <span class="sc-name">Tokyo</span>
+        <span class="sc-badge">Soon</span>
+      </button>
+      <button class="scenario-btn disabled" data-id="london" title="London: North Sea Tidal Surge & Barrier (In Queue)">
+        <span class="sc-flag">🇬🇧</span>
+        <span class="sc-name">London</span>
+        <span class="sc-badge">Soon</span>
+      </button>
+    </nav>
   </header>
 
   <!-- KPI Disaster Command Dashboard -->
   <div class="tally-container">
-    <div class="tally-card tally-econ" title="Estimated Total Economic Destruction (USD & NPR)">
+    <div class="tally-card tally-econ" title="Estimated Total Economic Destruction (USD & Local Currency)">
       <span class="tally-label">Economic Loss</span>
       <div class="tally-value-row">
         <span class="tally-number" id="tally-econ-usd">$0M</span>
-        <span class="tally-sub" id="tally-econ-npr">0.0B NPR</span>
+        <span class="tally-sub" id="tally-econ-npr">0.0B ₹</span>
       </div>
       <div class="kpi-tag-row">
         <span class="kpi-badge badge-econ" id="tally-econ-level">Normal</span>
@@ -65,28 +97,28 @@
       </div>
     </div>
 
-    <div class="tally-card tally-hydro" title="National Hydropower Offline">
-      <span class="tally-label">Hydro Offline</span>
+    <div class="tally-card tally-hydro" title="Critical Infrastructure Offline">
+      <span class="tally-label" id="tally-hydro-label">Works Offline</span>
       <div class="tally-value-row">
-        <span class="tally-number" id="tally-hydro">0.0 <small>MW</small></span>
-        <span class="tally-sub">/ 431 MW</span>
+        <span class="tally-number" id="tally-hydro">0 <small>MGD</small></span>
+        <span class="tally-sub" id="tally-hydro-sub">/ 234 MGD</span>
       </div>
       <div class="kpi-tag-row">
-        <span class="kpi-badge badge-hydro" id="tally-hydro-pct">0% Grid</span>
+        <span class="kpi-badge badge-hydro" id="tally-hydro-pct">Water Supply</span>
       </div>
     </div>
 
-    <div class="tally-card tally-dead" title="Estimated Human Casualties">
-      <span class="tally-label">Human Toll</span>
+    <div class="tally-card tally-dead" title="Estimated Human Impact & Evacuation">
+      <span class="tally-label" id="tally-human-label">Human Impact</span>
       <div class="tally-value-row">
         <span class="tally-number red-num" id="tally-dead">0</span>
-        <span class="tally-sub">dead</span>
+        <span class="tally-sub" id="tally-dead-unit">drowned</span>
         <span class="divider">/</span>
         <span class="tally-number amber-num" id="tally-missing">0</span>
-        <span class="tally-sub">missing</span>
+        <span class="tally-sub" id="tally-missing-unit">evacuated</span>
       </div>
       <div class="kpi-tag-row">
-        <span class="kpi-badge badge-human">Trishuli Corridor</span>
+        <span class="kpi-badge badge-human" id="tally-human-region">Yamuna Corridor</span>
       </div>
     </div>
   </div>
@@ -161,20 +193,20 @@
     <button class="transport-btn" id="speed-btn" title="Playback Speed">1.0x</button>
   </footer>
 
-  <!-- Climate Establishing Intro Card (§3) -->
+  <!-- Scenario Context Intro Card -->
   <div class="intro-card-overlay" id="intro-card">
     <div class="intro-modal">
-      <div class="intro-badge">Background & Attribution Context</div>
-      <h2 class="intro-title">The 2026 Rasuwa–Bhotekoshi Flood</h2>
-      <p class="intro-p">
-        In early September 2026, a catastrophic flood surge traversed over 100 km down the Bhotekoshi–Trishuli corridor in central Nepal, claiming over 1,350 lives and severing a tenth of the national power grid.
+      <div class="intro-badge" id="intro-badge">Disaster Scenario Forecast</div>
+      <h2 class="intro-title" id="intro-title">Delhi Yamuna Record Inundation</h2>
+      <p class="intro-p" id="intro-p">
+        In July 2023 / 2026, an extraordinary monsoon deluge in the upper Himalayan catchment triggered unprecedented discharges from Hathnikund Barrage, sending a 10,000 m³/s surge down the Yamuna into Delhi. The river surged to an all-time record 208.66 metres, submerging the Ring Road, water treatment works, and the walls of the Red Fort.
       </p>
-      <div class="intro-alert">
-        <strong>Core scientific finding:</strong> This was an <strong>ice–rock avalanche that dammed and burst a river</strong>, NOT a classic Glacial Lake Outburst Flood (GLOF). Rapid Himalayan warming doubled ice loss rates since 2000, destabilizing the high-altitude cirque.
+      <div class="intro-alert" id="intro-alert">
+        <strong>Core scientific finding:</strong> This was a compound urban disaster exacerbated by <strong>floodplain encroachment, jammed barrage gates, and stormwater regulator backflow</strong>. Over 2.8 million residents were impacted.
       </div>
       <div class="intro-actions">
         <span class="intro-timer-tag" id="intro-timer">Autoplaying in 3.4s...</span>
-        <button class="intro-btn" id="intro-skip-btn">Start Interactive Explainer</button>
+        <button class="intro-btn" id="intro-skip-btn">Start Simulation & Telemetry</button>
       </div>
     </div>
   </div>

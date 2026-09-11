@@ -104,6 +104,220 @@ html, body {
   margin-left: 6px;
 }
 
+/* Multi-City Scenario Selector Bar */
+.scenario-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.scenario-btn {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.scenario-btn:hover:not(.disabled) {
+  background: rgba(232, 149, 47, 0.2);
+  border-color: rgba(232, 149, 47, 0.5);
+  transform: translateY(-1px);
+}
+
+.scenario-btn.active {
+  background: rgba(232, 149, 47, 0.25);
+  border-color: var(--amber);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(232, 149, 47, 0.35);
+}
+
+.scenario-btn.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.sc-flag {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.sc-name {
+  font-size: 11px;
+}
+
+.sc-badge {
+  font-size: 8px;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 4px;
+  border-radius: 4px;
+  color: var(--sub);
+  letter-spacing: 0.04em;
+}
+
+/* Dual-Tab View in Analytics Panel */
+.panel-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.panel-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--sub);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.panel-tab:hover {
+  color: var(--ink);
+}
+
+.panel-tab.active {
+  background: rgba(232, 149, 47, 0.22);
+  color: var(--amber);
+  border: 1px solid rgba(232, 149, 47, 0.4);
+}
+
+/* City Countermeasures & Municipal Defense Telemetry */
+.countermeasure-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.countermeasure-status-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  border-radius: 6px;
+  padding: 5px 8px;
+}
+
+.defense-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+  animation: pulse 1.5s infinite;
+}
+
+.defense-status-text {
+  font-size: 10px;
+  font-weight: 700;
+  color: #4ade80;
+  letter-spacing: 0.04em;
+}
+
+.readiness-box {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.readiness-label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: var(--sub);
+  margin-bottom: 4px;
+}
+
+.readiness-label-row strong {
+  color: var(--ink);
+  font-family: var(--font-mono);
+}
+
+.readiness-track {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.readiness-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #eab308, #22c55e);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.countermeasure-action-box {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.action-heading {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--amber);
+  margin-bottom: 3px;
+}
+
+.action-text {
+  font-size: 9.5px;
+  line-height: 1.35;
+  color: #cbd5e1;
+}
+
+.agency-deployment-box {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.agency-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+}
+
+.agency-badge {
+  font-size: 8.5px;
+  font-weight: 700;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 3px;
+  padding: 1px 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 /* Tally & KPI Command Dashboard */
 .tally-container {
   position: absolute;

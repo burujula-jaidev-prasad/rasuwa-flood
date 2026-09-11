@@ -1,25 +1,68 @@
 import * as THREE from 'three';
-import { WAYPOINTS } from './data.js';
+import { WAYPOINTS, getScenario } from './data.js';
+import { buildDelhiScene } from './scenarios/delhi_models.js';
 
 export class FloodSimulation {
-  constructor(scene, riverSystem, terrainSystem) {
+  constructor(scene, riverSystem, terrainSystem, scenarioId = null) {
     this.scene = scene;
     this.river = riverSystem;
     this.terrain = terrainSystem;
+    this.scenarioId = scenarioId || getScenario().config.id;
 
     this.group = new THREE.Group();
     this.scene.add(this.group);
 
     this.uWave = 0;
 
-    this.initCollapse();
+    if (this.scenarioId === 'delhi') {
+      this.initDelhiSimulation();
+    } else {
+      this.initCollapse();
+      this.initFloodFront();
+      this.initHighwaySystem();
+      this.initStructuresAndVehicles();
+      this.initLandmarkBadges();
+      this.initWaypointMarker();
+      this.initAtmosphere();
+      this.initRealisticClouds();
+    }
+  }
+
+  initDelhiSimulation() {
+    this.wipeableItems = [];
+    this.bridges = [];
+
+    // Glowing surge front ball leading the river flood
     this.initFloodFront();
-    this.initHighwaySystem();
-    this.initStructuresAndVehicles();
-    this.initLandmarkBadges();
     this.initWaypointMarker();
     this.initAtmosphere();
-    this.initRealisticClouds();
+
+    // Procedural Delhi landmarks, bridges, vehicles, and countermeasures
+    const { wipeableItems } = buildDelhiScene(this.group, this.river, this.terrain);
+    this.wipeableItems = wipeableItems;
+
+    // Delhi landmark badges
+    this.initDelhiLandmarkBadges();
+  }
+
+  initDelhiLandmarkBadges() {
+    this.landmarkBadges = [];
+    const landmarks = [
+      { name: "Wazirabad Barrage", sub: "Water Works Submerged", u: 0.20, offset: new THREE.Vector3(0, 10, 0) },
+      { name: "Old Iron Bridge", sub: "Loha Pul (1866) • 208.08m", u: 0.35, offset: new THREE.Vector3(0, 12, 0) },
+      { name: "Kashmere Gate", sub: "Ring Road Submerged", u: 0.48, offset: new THREE.Vector3(-12, 10, 0) },
+      { name: "Red Fort (Lal Qila)", sub: "Historic 208.66m Record Peak", u: 0.60, offset: new THREE.Vector3(-18, 14, 0) },
+      { name: "ITO Barrage", sub: "Regulator 12 Breach & Bund", u: 0.74, offset: new THREE.Vector3(-12, 10, 0) },
+      { name: "Rajghat & Relief Camp", sub: "1,000 HP Dewatering Fleet", u: 0.88, offset: new THREE.Vector3(-12, 10, 0) }
+    ];
+
+    for (const lm of landmarks) {
+      const sprite = this.createBadgeSprite(lm.name, lm.sub);
+      const pt = this.river.getPointAt(lm.u);
+      sprite.position.copy(pt).add(lm.offset);
+      this.group.add(sprite);
+      this.landmarkBadges.push({ sprite, u: lm.u });
+    }
   }
 
   /* ----------------------------------------------------
@@ -2495,6 +2538,62 @@ export class FloodSimulation {
    * ---------------------------------------------------- */
   update(t, deltaSec = 0.016) {
     const clampedT = Math.max(0, Math.min(1, t));
+
+    if (this.scenarioId === 'delhi') {
+      let uWave = 0;
+      if (clampedT < 0.10) {
+        this.floodGroup.visible = false;
+        this.river.updateFloodTrail(this.trailObj, 0);
+        this.uWave = 0;
+      } else {
+        this.floodGroup.visible = true;
+        uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
+        this.uWave = uWave;
+
+        const wavePos = this.river.getPointAt(uWave);
+        const waveTangent = this.river.getTangentAt(uWave);
+
+        this.surgeBall.position.set(wavePos.x, wavePos.y + 1.2, wavePos.z);
+        this.surgeBall.rotation.y += 0.04;
+
+        this.waveCrest.position.set(wavePos.x, wavePos.y + 1.4, wavePos.z);
+        this.waveCrest.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), waveTangent);
+
+        this.surgeLight.position.set(wavePos.x, wavePos.y + 5.0, wavePos.z);
+
+        this.debrisOrbitAngle += 0.04;
+        for (let i = 0; i < this.boulders.length; i++) {
+          const b = this.boulders[i];
+          const angle = this.debrisOrbitAngle + b.angleOffset;
+          b.mesh.position.set(
+            wavePos.x + Math.cos(angle) * b.radius,
+            wavePos.y + 1.2 + Math.sin(angle * 2.0) * 0.5,
+            wavePos.z + Math.sin(angle) * b.radius
+          );
+        }
+
+        this.river.updateFloodTrail(this.trailObj, uWave);
+      }
+
+      // Rain animation
+      if (this.rainSystem && this.rainSystem.visible) {
+        const pos = this.rainSystem.geometry.attributes.position;
+        const count = pos.count;
+        for (let i = 0; i < count; i++) {
+          let y = pos.getY(i) - 2.8;
+          if (y < 0) y = 140;
+          pos.setY(i, y);
+        }
+        pos.needsUpdate = true;
+      }
+
+      if (this.waypointRing) {
+        const wpPt = this.river.getPointAt(uWave);
+        this.waypointRing.position.set(wpPt.x, wpPt.y + 0.3, wpPt.z);
+      }
+
+      return uWave;
+    }
 
     // A. AVALANCHE DETACHMENT BALL ($t \in [0.00, 0.18]$)
     if (clampedT < 0.04) {

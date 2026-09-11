@@ -1,9 +1,14 @@
 import * as THREE from 'three';
-import { RIVER_CONTROL_POINTS } from './data.js';
+import { getScenario } from './data.js';
 
 export class RiverSystem {
-  constructor() {
-    const vectors = RIVER_CONTROL_POINTS.map(p => new THREE.Vector3(p.x, p.y, p.z));
+  constructor(controlPoints = null, options = {}) {
+    const scenario = getScenario();
+    const pts = controlPoints || scenario.riverPoints;
+    this.options = options;
+    this.scenarioId = options.scenarioId || scenario.config.id;
+
+    const vectors = pts.map(p => new THREE.Vector3(p.x, p.y, p.z));
     this.curve = new THREE.CatmullRomCurve3(vectors, false, 'catmullrom', 0.5);
 
     this.sampleCount = 420;
@@ -73,9 +78,10 @@ export class RiverSystem {
     };
   }
 
-  // High-visibility Himalayan glacial torrent water ribbon
+  // River water ribbon
   createWaterMesh() {
-    const width = 5.2; // Wide and clearly visible from altitude
+    const isDelhi = (this.scenarioId === 'delhi');
+    const width = isDelhi ? 11.5 : 5.2; // Broad Yamuna river vs narrow Himalayan gorge
     const geometry = new THREE.BufferGeometry();
     const vertices = [];
     const uvs = [];
@@ -88,7 +94,7 @@ export class RiverSystem {
       const left = new THREE.Vector3().copy(pt).addScaledVector(side, -width * 0.5);
       const right = new THREE.Vector3().copy(pt).addScaledVector(side, width * 0.5);
 
-      // Elevated slightly above flat gorge floor
+      // Elevated slightly above floor
       left.y += 0.2;
       right.y += 0.2;
 
@@ -111,12 +117,13 @@ export class RiverSystem {
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
 
+    const waterColor = isDelhi ? 0x5a4835 : 0x22809e; // Silt mud vs glacial cyan
     const material = new THREE.MeshStandardMaterial({
-      color: 0x22809e, // Vibrant glacial cyan-blue
-      roughness: 0.18,
+      color: waterColor,
+      roughness: isDelhi ? 0.35 : 0.18,
       metalness: 0.15,
       transparent: true,
-      opacity: 0.92,
+      opacity: 0.94,
       side: THREE.DoubleSide
     });
 
@@ -125,7 +132,7 @@ export class RiverSystem {
     return mesh;
   }
 
-  // Dynamic muddy, churning flood surge ribbon that inundates the gorge
+  // Dynamic muddy, churning flood surge ribbon that inundates the riverbed & floodplain
   createFloodTrail() {
     const maxPoints = this.sampleCount + 1;
     const geometry = new THREE.BufferGeometry();
@@ -145,7 +152,7 @@ export class RiverSystem {
 
     const material = new THREE.MeshStandardMaterial({
       vertexColors: true,
-      roughness: 0.4,
+      roughness: 0.45,
       metalness: 0.1,
       transparent: true,
       opacity: 0.96,
@@ -169,12 +176,12 @@ export class RiverSystem {
     const pos = trailObj.positions;
     const col = trailObj.colors;
 
-    // Wide surge ribbon filling the canyon (+2.2 surge stage rise)
-    const baseWidth = 8.5;
-    const surgeStage = 1.8;
+    const isDelhi = (this.scenarioId === 'delhi');
+    const baseWidth = isDelhi ? 22.0 : 8.5; // Wide alluvial floodplain inundation
+    const surgeStage = isDelhi ? 1.5 : 1.8;
 
-    const colMud = new THREE.Color(0xb0581e); // Churning brown-amber sediment
-    const colFoam = new THREE.Color(0xffaa44); // Foaming crest
+    const colMud = isDelhi ? new THREE.Color(0x7a4d25) : new THREE.Color(0xb0581e);
+    const colFoam = isDelhi ? new THREE.Color(0xdca358) : new THREE.Color(0xffaa44);
 
     for (let i = 0; i <= targetIdx; i++) {
       const pt = this.points[i];
