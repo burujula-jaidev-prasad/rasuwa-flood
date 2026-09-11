@@ -84,7 +84,8 @@ export class RiverSystem {
     const isNewYork = (this.scenarioId === 'newyork');
     const isBeijing = (this.scenarioId === 'beijing');
     const isTokyo = (this.scenarioId === 'tokyo');
-    const width = isNewYork ? 19.5 : (isTokyo ? 15.5 : (isBeijing ? 12.5 : (isDelhi ? 11.5 : 5.2)));
+    const isLondon = (this.scenarioId === 'london');
+    const width = isLondon ? 17.5 : (isNewYork ? 19.5 : (isTokyo ? 15.5 : (isBeijing ? 12.5 : (isDelhi ? 11.5 : 5.2))));
     const geometry = new THREE.BufferGeometry();
     const vertices = [];
     const uvs = [];
@@ -121,7 +122,9 @@ export class RiverSystem {
     geometry.computeVertexNormals();
 
     let waterColor = 0x22809e; // Glacial cyan default
-    if (isNewYork) {
+    if (isLondon) {
+      waterColor = 0x2a3d4d; // Brackish, cold tidal Thames estuarine grey-blue
+    } else if (isNewYork) {
       waterColor = 0x1a384f; // Atlantic oceanic brackish deep slate
     } else if (isTokyo) {
       waterColor = 0x2c4355; // Turbid estuarine storm water
@@ -133,8 +136,8 @@ export class RiverSystem {
 
     const material = new THREE.MeshStandardMaterial({
       color: waterColor,
-      roughness: isNewYork ? 0.22 : (isTokyo ? 0.28 : (isBeijing ? 0.38 : (isDelhi ? 0.35 : 0.18))),
-      metalness: isNewYork ? 0.25 : (isTokyo ? 0.20 : 0.15),
+      roughness: isLondon ? 0.32 : (isNewYork ? 0.22 : (isTokyo ? 0.28 : (isBeijing ? 0.38 : (isDelhi ? 0.35 : 0.18)))),
+      metalness: isLondon ? 0.20 : (isNewYork ? 0.25 : (isTokyo ? 0.20 : 0.15)),
       transparent: true,
       opacity: 0.94,
       side: THREE.DoubleSide
@@ -193,12 +196,16 @@ export class RiverSystem {
     const isNewYork = (this.scenarioId === 'newyork');
     const isBeijing = (this.scenarioId === 'beijing');
     const isTokyo = (this.scenarioId === 'tokyo');
-    const baseWidth = isNewYork ? 26.0 : (isTokyo ? 22.0 : (isBeijing ? 20.0 : (isDelhi ? 22.0 : 8.5)));
-    const surgeStage = isNewYork ? 2.2 : (isTokyo ? 1.8 : (isBeijing ? 1.9 : (isDelhi ? 1.5 : 1.8)));
+    const isLondon = (this.scenarioId === 'london');
+    const baseWidth = isLondon ? 24.0 : (isNewYork ? 26.0 : (isTokyo ? 22.0 : (isBeijing ? 20.0 : (isDelhi ? 22.0 : 8.5))));
+    const surgeStage = isLondon ? 2.0 : (isNewYork ? 2.2 : (isTokyo ? 1.8 : (isBeijing ? 1.9 : (isDelhi ? 1.5 : 1.8))));
 
     let colMud = new THREE.Color(0xb0581e);
     let colFoam = new THREE.Color(0xffaa44);
-    if (isNewYork) {
+    if (isLondon) {
+      colMud = new THREE.Color(0x324757);   // Cold brackish North Sea storm brine
+      colFoam = new THREE.Color(0xa4c6db);  // Frothing grey-white estuarine tidal foam crest
+    } else if (isNewYork) {
       colMud = new THREE.Color(0x234a60);   // Churning deep storm brine
       colFoam = new THREE.Color(0x8bc0d9);  // White/cyan ocean wave foam crest
     } else if (isTokyo) {

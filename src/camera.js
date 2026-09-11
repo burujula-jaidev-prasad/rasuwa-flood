@@ -57,8 +57,38 @@ export class CameraDirector {
       const isNewYork = (this.scenarioId === 'newyork');
       const isBeijing = (this.scenarioId === 'beijing');
       const isTokyo = (this.scenarioId === 'tokyo');
+      const isLondon = (this.scenarioId === 'london');
 
-      if (isTokyo) {
+      if (isLondon) {
+        if (t < 0.20) {
+          // Establish on North Sea Estuary & Southend approach looking toward Woolwich Reach
+          const p = this.river.getPointAt(0.12);
+          desiredTarget.set(p.x + 8.0, p.y + 5.0, p.z);
+          desiredRadius = 135;
+          desiredPhi = 0.78;
+          desiredTheta = -1.25;
+        } else if (t <= 0.92) {
+          // Follow-cam tracking the storm surge as it reaches Woolwich Reach,
+          // witnesses the Thames Barrier 10 sector gates rising, passes Canary Wharf,
+          // Tube tunnel flood doors, Tower Bridge, and HMS Belfast
+          const uWave = Math.max(0, Math.min(1, (t - 0.18) / 0.78));
+          const wavePos = this.river.getPointAt(uWave);
+          desiredTarget.copy(wavePos).add(new THREE.Vector3(2.0, 4.0, 0));
+
+          const followAlpha = (t - 0.20) / (0.92 - 0.20);
+          desiredRadius = 115;
+          desiredPhi = 0.82;
+          desiredTheta = -1.22 + 1.15 * followAlpha;
+        } else {
+          // Pull back wide over Westminster, Victoria Embankment, and the Houses of Parliament
+          const pullAlpha = (t - 0.92) / (1.0 - 0.92);
+          const endTarget = this.river.getPointAt(0.75);
+          desiredTarget.lerpVectors(endTarget, new THREE.Vector3(10, 6, 14), pullAlpha);
+          desiredRadius = 115 + 120 * pullAlpha;
+          desiredPhi = 0.82 + 0.10 * pullAlpha;
+          desiredTheta = -0.07 - 0.35 * pullAlpha;
+        }
+      } else if (isTokyo) {
         if (t < 0.20) {
           // Establish on Upper Arakawa & Saitama catchment with Shinkansen viaduct and distant megalopolis horizon
           const p = this.river.getPointAt(0.12);

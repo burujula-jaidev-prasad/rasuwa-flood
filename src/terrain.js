@@ -536,6 +536,126 @@ export function createTerrain(riverSystem, scenarioId = null) {
     return { mesh: terrainMesh, geometry, getTerrainHeight };
   }
 
+  const isLondon = (activeScenarioId === 'london');
+  if (isLondon) {
+    // ----------------------------------------------------
+    // TIDAL ESTUARY & EMBANKMENTS (LONDON THAMES CORRIDOR)
+    // ----------------------------------------------------
+    const colThamesMud   = new THREE.Color(0x3e3730); // Brackish tidal silt & riverbed mud
+    const colGraniteWall = new THREE.Color(0x64748b); // Victorian Bazalgette stone river walls
+    const colEmbankment  = new THREE.Color(0x3f532a); // Victoria Embankment gardens & park turf
+    const colLondonPave  = new THREE.Color(0x475569); // Whitehall & City granite flagstones
+    const colAsphalt     = new THREE.Color(0x27272a); // London road network & docks
+
+    for (let i = 0; i < count; i++) {
+      const x = posAttr.getX(i);
+      const z = posAttr.getZ(i);
+
+      const riverInfo = riverSystem.getClosestRiverInfo(x, z);
+      const riverDist = riverInfo.distance;
+      const bedWidth = 15.0;
+      const wallToe = 22.0;
+      const terraceDist = 30.0;
+
+      // Base undulating London Basin clay plain (gentle 1.8 - 3.2m elevation)
+      let h = 2.2 + valueNoise(x * 0.035, z * 0.035) * 1.0;
+
+      // Docklands cut-ins / impounded basins near Canary Wharf (x in [-50, -10], z in [-30, 0])
+      if (x > -50 && x < -10 && z > -30 && z < 0 && riverDist > 16.0 && riverDist < 26.0) {
+        h = 1.4;
+      }
+
+      // Riverbed channel & Stone Embankments
+      if (riverDist <= bedWidth) {
+        h = riverInfo.riverY - 1.4;
+      } else if (riverDist < wallToe) {
+        const t = (riverDist - bedWidth) / (wallToe - bedWidth);
+        const bedFloor = riverInfo.riverY - 1.4;
+        const wallTop = riverInfo.riverY + 2.0;
+        h = bedFloor + (wallTop - bedFloor) * Math.sin(t * Math.PI * 0.5);
+      } else if (riverDist < terraceDist) {
+        const t = (riverDist - wallToe) / (terraceDist - wallToe);
+        const wallTop = riverInfo.riverY + 2.0;
+        const plainH = 2.2;
+        h = wallTop - (wallTop - plainH) * Math.sin(t * Math.PI * 0.5);
+      }
+
+      posAttr.setY(i, h);
+    }
+    posAttr.needsUpdate = true;
+    geometry.computeVertexNormals();
+
+    // Vertex colors for London
+    for (let i = 0; i < count; i++) {
+      const x = posAttr.getX(i);
+      const z = posAttr.getZ(i);
+      const riverInfo = riverSystem.getClosestRiverInfo(x, z);
+      const d = riverInfo.distance;
+
+      const vertexCol = new THREE.Color();
+      if (d < 15.0) {
+        vertexCol.copy(colThamesMud);
+      } else if (d < 22.0) {
+        const t = (d - 15.0) / 7.0;
+        vertexCol.copy(colThamesMud).lerp(colGraniteWall, t);
+      } else if (d < 30.0) {
+        const t = (d - 22.0) / 8.0;
+        vertexCol.copy(colGraniteWall).lerp(colEmbankment, t);
+      } else if (d < 42.0) {
+        const t = (d - 30.0) / 12.0;
+        vertexCol.copy(colEmbankment).lerp(colLondonPave, t);
+      } else {
+        vertexCol.copy(colLondonPave).lerp(colAsphalt, 0.60);
+      }
+
+      colors[i * 3 + 0] = vertexCol.r;
+      colors[i * 3 + 1] = vertexCol.g;
+      colors[i * 3 + 2] = vertexCol.b;
+    }
+
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const material = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.80,
+      metalness: 0.10,
+      flatShading: false
+    });
+
+    const terrainMesh = new THREE.Mesh(geometry, material);
+    terrainMesh.name = "TerrainMesh";
+    terrainMesh.receiveShadow = true;
+    terrainMesh.castShadow = true;
+
+    function getTerrainHeight(x, z) {
+      const riverInfo = riverSystem.getClosestRiverInfo(x, z);
+      const riverDist = riverInfo.distance;
+      const bedWidth = 15.0;
+      const wallToe = 22.0;
+      const terraceDist = 30.0;
+      let h = 2.2 + valueNoise(x * 0.035, z * 0.035) * 1.0;
+      if (x > -50 && x < -10 && z > -30 && z < 0 && riverDist > 16.0 && riverDist < 26.0) {
+        return 1.4;
+      }
+      if (riverDist <= bedWidth) {
+        h = riverInfo.riverY - 1.4;
+      } else if (riverDist < wallToe) {
+        const t = (riverDist - bedWidth) / (wallToe - bedWidth);
+        const bedFloor = riverInfo.riverY - 1.4;
+        const wallTop = riverInfo.riverY + 2.0;
+        h = bedFloor + (wallTop - bedFloor) * Math.sin(t * Math.PI * 0.5);
+      } else if (riverDist < terraceDist) {
+        const t = (riverDist - wallToe) / (terraceDist - wallToe);
+        const wallTop = riverInfo.riverY + 2.0;
+        const plainH = 2.2;
+        h = wallTop - (wallTop - plainH) * Math.sin(t * Math.PI * 0.5);
+      }
+      return h;
+    }
+
+    return { mesh: terrainMesh, geometry, getTerrainHeight };
+  }
+
   // ----------------------------------------------------
   // HIMALAYAN ALPINE GORGE TERRAIN (RASUWA SCENARIO)
   // ----------------------------------------------------

@@ -4,6 +4,7 @@ import { buildDelhiScene } from './scenarios/delhi_models.js';
 import { buildNewYorkScene } from './scenarios/newyork_models.js';
 import { buildBeijingScene } from './scenarios/beijing_models.js';
 import { buildTokyoScene } from './scenarios/tokyo_models.js';
+import { buildLondonScene } from './scenarios/london_models.js';
 
 export class FloodSimulation {
   constructor(scene, riverSystem, terrainSystem, scenarioId = null) {
@@ -25,6 +26,8 @@ export class FloodSimulation {
       this.initBeijingSimulation();
     } else if (this.scenarioId === 'tokyo') {
       this.initTokyoSimulation();
+    } else if (this.scenarioId === 'london') {
+      this.initLondonSimulation();
     } else {
       this.initCollapse();
       this.initFloodFront();
@@ -180,6 +183,45 @@ export class FloodSimulation {
       { name: "Tokyo Metro Portals", sub: "180 Watertight Rolling Gates", u: 0.60, offset: new THREE.Vector3(-12, 10, 0) },
       { name: "Sumida River & Skytree", sub: "Koto Zero-Meter Tidal Defense", u: 0.74, offset: new THREE.Vector3(16, 16, 0) },
       { name: "JSDF & Edo River Station", sub: "Amphibious Fleet • 14.5M m³ Flushed", u: 0.88, offset: new THREE.Vector3(-14, 10, 0) }
+    ];
+
+    for (const lm of landmarks) {
+      const sprite = this.createBadgeSprite(lm.name, lm.sub);
+      const pt = this.river.getPointAt(lm.u);
+      sprite.position.copy(pt).add(lm.offset);
+      this.group.add(sprite);
+      this.landmarkBadges.push({ sprite, u: lm.u });
+    }
+  }
+
+  initLondonSimulation() {
+    this.wipeableItems = [];
+    this.bridges = [];
+
+    // Glowing surge front ball leading the North Sea storm surge
+    this.initFloodFront();
+    this.initWaypointMarker();
+    this.initAtmosphere();
+
+    // Procedural London landmarks, Thames Barrier, Tube flood doors, and Tower Bridge
+    const { wipeableItems, sectorGates } = buildLondonScene(this.group, this.river, this.terrain);
+    this.wipeableItems = wipeableItems;
+    this.londonSectorGates = sectorGates || [];
+
+    // London landmark badges
+    this.initLondonLandmarkBadges();
+  }
+
+  initLondonLandmarkBadges() {
+    this.landmarkBadges = [];
+    const landmarks = [
+      { name: "Thames Estuary", sub: "North Sea Surge Funnel • +5.2m", u: 0.05, offset: new THREE.Vector3(0, 14, 0) },
+      { name: "Woolwich Reach", sub: "PLA Navigation Halted • Sirens", u: 0.20, offset: new THREE.Vector3(-14, 12, 0) },
+      { name: "The Thames Barrier", sub: "10 Rising Sector Gates Locked", u: 0.35, offset: new THREE.Vector3(0, 14, 0) },
+      { name: "Canary Wharf & Docks", sub: "£320B Financial Assets Shielded", u: 0.48, offset: new THREE.Vector3(-16, 16, 0) },
+      { name: "Under-River Tube Portals", sub: "16 Hydraulic Flood Doors Sealed", u: 0.60, offset: new THREE.Vector3(-12, 10, 0) },
+      { name: "Tower Bridge & Heritage", sub: "Embankment Walls Deflect Swell", u: 0.74, offset: new THREE.Vector3(0, 14, 0) },
+      { name: "Victoria Embankment", sub: "Parliament & Whitehall Safe", u: 0.88, offset: new THREE.Vector3(-14, 10, 0) }
     ];
 
     for (const lm of landmarks) {
@@ -2896,6 +2938,76 @@ export class FloodSimulation {
         const count = pos.count;
         for (let i = 0; i < count; i++) {
           let y = pos.getY(i) - 3.2;
+          if (y < 0) y = 140;
+          pos.setY(i, y);
+        }
+        pos.needsUpdate = true;
+      }
+
+      if (this.waypointRing) {
+        const wpPt = this.river.getPointAt(uWave);
+        this.waypointRing.position.set(wpPt.x, wpPt.y + 0.3, wpPt.z);
+      }
+
+      return uWave;
+    }
+
+    if (this.scenarioId === 'london') {
+      let uWave = 0;
+      if (clampedT < 0.10) {
+        this.floodGroup.visible = false;
+        this.river.updateFloodTrail(this.trailObj, 0);
+        this.uWave = 0;
+      } else {
+        this.floodGroup.visible = true;
+        uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
+        this.uWave = uWave;
+
+        const wavePos = this.river.getPointAt(uWave);
+        const waveTangent = this.river.getTangentAt(uWave);
+
+        this.surgeBall.position.set(wavePos.x, wavePos.y + 1.2, wavePos.z);
+        this.surgeBall.rotation.y += 0.04;
+
+        this.waveCrest.position.set(wavePos.x, wavePos.y + 1.4, wavePos.z);
+        this.waveCrest.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), waveTangent);
+
+        this.surgeLight.position.set(wavePos.x, wavePos.y + 5.0, wavePos.z);
+
+        this.debrisOrbitAngle += 0.04;
+        for (let i = 0; i < this.boulders.length; i++) {
+          const b = this.boulders[i];
+          const angle = this.debrisOrbitAngle + b.angleOffset;
+          b.mesh.position.set(
+            wavePos.x + Math.cos(angle) * b.radius,
+            wavePos.y + 1.2 + Math.sin(angle * 2.0) * 0.5,
+            wavePos.z + Math.sin(angle) * b.radius
+          );
+        }
+
+        this.river.updateFloodTrail(this.trailObj, uWave);
+
+        // Dynamic Thames Barrier rising sector gate rotation from riverbed recess to upright lock ($0 \to 90^\circ$)
+        if (this.londonSectorGates && this.londonSectorGates.length > 0) {
+          let gateRot = 0;
+          if (uWave >= 0.20 && uWave < 0.38) {
+            const alpha = (uWave - 0.20) / 0.18;
+            gateRot = alpha * (Math.PI * 0.5);
+          } else if (uWave >= 0.38) {
+            gateRot = Math.PI * 0.5;
+          }
+          for (const gate of this.londonSectorGates) {
+            gate.rotation.x = gateRot;
+          }
+        }
+      }
+
+      // Rain animation (North Sea maritime gale)
+      if (this.rainSystem && this.rainSystem.visible) {
+        const pos = this.rainSystem.geometry.attributes.position;
+        const count = pos.count;
+        for (let i = 0; i < count; i++) {
+          let y = pos.getY(i) - 3.0;
           if (y < 0) y = 140;
           pos.setY(i, y);
         }
