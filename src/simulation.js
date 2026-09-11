@@ -2768,6 +2768,64 @@ export class FloodSimulation {
     }
   }
 
+  updateWipeableItems(uWave) {
+    if (!this.wipeableItems || this.wipeableItems.length === 0) return;
+
+    for (const item of this.wipeableItems) {
+      if (!item || !item.mesh) continue;
+
+      if (uWave < item.uTrigger) {
+        item.mesh.visible = true;
+        item.mesh.position.copy(item.initialPos);
+        item.mesh.rotation.copy(item.initialRot);
+        if (item.material) {
+          item.material.transparent = false;
+          item.material.opacity = 1.0;
+        } else if (item.materials) {
+          for (const m of item.materials) {
+            m.transparent = false;
+            m.opacity = 1.0;
+          }
+        }
+      } else {
+        const washProgress = (uWave - item.uTrigger);
+        const maxProg = item.maxProg || 0.055;
+
+        if (washProgress < maxProg) {
+          item.mesh.visible = true;
+          const progressRatio = washProgress / maxProg;
+          const washDist = washProgress * (item.washSpeed || 38.0);
+
+          item.mesh.position.copy(item.initialPos)
+            .addScaledVector(item.driftDir, washDist * (item.driftScale !== undefined ? item.driftScale : 0.45))
+            .add(new THREE.Vector3(0, -washDist * (item.sinkScale !== undefined ? item.sinkScale : 0.16), 0));
+
+          if (item.tumbleVel) {
+            item.mesh.rotation.x = item.initialRot.x + item.tumbleVel.x * progressRatio * 2.5;
+            item.mesh.rotation.y = item.initialRot.y + item.tumbleVel.y * progressRatio * 2.5;
+            item.mesh.rotation.z = item.initialRot.z + item.tumbleVel.z * progressRatio * 2.5;
+          }
+          if (item.collapseTilt) {
+            item.mesh.rotation.z = item.initialRot.z + item.collapseTilt * progressRatio;
+          }
+
+          const fade = Math.max(0.0, 1.0 - progressRatio);
+          if (item.material) {
+            item.material.transparent = true;
+            item.material.opacity = fade;
+          } else if (item.materials) {
+            for (const m of item.materials) {
+              m.transparent = true;
+              m.opacity = fade;
+            }
+          }
+        } else {
+          item.mesh.visible = false;
+        }
+      }
+    }
+  }
+
   /* ----------------------------------------------------
    * 8. FRAME SIMULATION UPDATE
    * ---------------------------------------------------- */
@@ -2780,11 +2838,13 @@ export class FloodSimulation {
         if (this.floodGroup) this.floodGroup.visible = false;
         if (this.trailObj) this.river.updateFloodTrail(this.trailObj, 0);
         this.uWave = 0;
+        this.updateWipeableItems(0);
       } else {
         if (this.floodGroup) this.floodGroup.visible = true;
         uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
         this.uWave = uWave;
         this.updateSurgeFront(uWave);
+        this.updateWipeableItems(uWave);
       }
       this.animateRain(2.8);
       return uWave;
