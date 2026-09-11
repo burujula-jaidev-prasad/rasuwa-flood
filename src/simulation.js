@@ -2856,11 +2856,13 @@ export class FloodSimulation {
         if (this.floodGroup) this.floodGroup.visible = false;
         if (this.trailObj) this.river.updateFloodTrail(this.trailObj, 0);
         this.uWave = 0;
+        this.updateWipeableItems(0);
       } else {
         if (this.floodGroup) this.floodGroup.visible = true;
         uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
         this.uWave = uWave;
         this.updateSurgeFront(uWave);
+        this.updateWipeableItems(uWave);
 
         if (this.nyArcLight && this.nyArcMesh) {
           if (uWave >= 0.70 && uWave <= 0.82) {
@@ -2885,11 +2887,13 @@ export class FloodSimulation {
         if (this.floodGroup) this.floodGroup.visible = false;
         if (this.trailObj) this.river.updateFloodTrail(this.trailObj, 0);
         this.uWave = 0;
+        this.updateWipeableItems(0);
       } else {
         if (this.floodGroup) this.floodGroup.visible = true;
         uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
         this.uWave = uWave;
         this.updateSurgeFront(uWave);
+        this.updateWipeableItems(uWave);
 
         if (this.bjRotors && this.bjRotors.length > 0) {
           for (const rotor of this.bjRotors) {
@@ -2907,11 +2911,13 @@ export class FloodSimulation {
         if (this.floodGroup) this.floodGroup.visible = false;
         if (this.trailObj) this.river.updateFloodTrail(this.trailObj, 0);
         this.uWave = 0;
+        this.updateWipeableItems(0);
       } else {
         if (this.floodGroup) this.floodGroup.visible = true;
         uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
         this.uWave = uWave;
         this.updateSurgeFront(uWave);
+        this.updateWipeableItems(uWave);
       }
       this.animateRain(3.2);
       return uWave;
@@ -2923,11 +2929,13 @@ export class FloodSimulation {
         if (this.floodGroup) this.floodGroup.visible = false;
         if (this.trailObj) this.river.updateFloodTrail(this.trailObj, 0);
         this.uWave = 0;
+        this.updateWipeableItems(0);
       } else {
         if (this.floodGroup) this.floodGroup.visible = true;
         uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
         this.uWave = uWave;
         this.updateSurgeFront(uWave);
+        this.updateWipeableItems(uWave);
 
         if (this.londonSectorGates && this.londonSectorGates.length > 0) {
           let gateRot = 0;
