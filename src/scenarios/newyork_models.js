@@ -321,6 +321,412 @@ export function buildNewYorkScene(group, river, terrain) {
     return { group: bundGroup, materials, primaryMat: sandbagMat };
   }
 
+  /**
+   * Authentic NYC Subway Station Entrance (South Ferry / 1 Train)
+   * With ornate cast-iron hood, illuminated MTA green/red globe lamps,
+   * mosaic station sign, descending tiled stairs, and cascading floodwater.
+   */
+  function createNYCSubwayEntrance() {
+    const subGroup = new THREE.Group();
+    const materials = [];
+
+    const ironMat = new THREE.MeshStandardMaterial({ color: 0x064e3b, roughness: 0.45, metalness: 0.6 });
+    const tileMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 });
+    const darkTunnelMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9 });
+    const greenGlobeMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, emissive: 0x15803d, emissiveIntensity: 0.8, roughness: 0.2 });
+    const redGlobeMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xb91c1c, emissiveIntensity: 0.8, roughness: 0.2 });
+    const signMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5 });
+    const signTextMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 });
+    const mtaRedBullet = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.3 });
+    const waterSheetMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.82 });
+    const brassRodMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.3, metalness: 0.8 });
+
+    materials.push(ironMat, tileMat, darkTunnelMat, greenGlobeMat, redGlobeMat, signMat, signTextMat, mtaRedBullet, waterSheetMat, brassRodMat);
+
+    const w = 4.2;
+    const d = 6.4;
+
+    // 1. Granite Street Curb Perimeter
+    const curb = new THREE.Mesh(new THREE.BoxGeometry(w + 0.6, 0.4, d + 0.6), concreteMat);
+    curb.position.y = 0.2;
+    curb.castShadow = true;
+    subGroup.add(curb);
+
+    // 2. Descending Stairwell Cavity into Ground
+    const cavity = new THREE.Mesh(new THREE.BoxGeometry(w - 0.4, 2.8, d - 0.4), darkTunnelMat);
+    cavity.position.y = -1.4;
+    subGroup.add(cavity);
+
+    // Stair Steps descending down toward negative Z
+    const numSteps = 7;
+    for (let s = 0; s < numSteps; s++) {
+      const step = new THREE.Mesh(new THREE.BoxGeometry(w - 0.8, 0.3, (d - 1.0) / numSteps), concreteMat);
+      step.position.set(0, -0.2 - s * 0.35, -d * 0.38 + s * ((d - 1.2) / numSteps));
+      subGroup.add(step);
+    }
+
+    // White ceramic tiled sidewalls
+    [-w * 0.5 + 0.15, w * 0.5 - 0.15].forEach(wx => {
+      const tileWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.4, d - 0.8), tileMat);
+      tileWall.position.set(wx, -1.0, 0);
+      subGroup.add(tileWall);
+    });
+
+    // 3. Ornate Cast-Iron Perimeter Railings (sides and back)
+    [-w * 0.5 + 0.05, w * 0.5 - 0.05].forEach(rx => {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.2, d), ironMat);
+      rail.position.set(rx, 1.0, 0);
+      rail.castShadow = true;
+      subGroup.add(rail);
+    });
+    const backRail = new THREE.Mesh(new THREE.BoxGeometry(w, 1.2, 0.12), ironMat);
+    backRail.position.set(0, 1.0, -d * 0.5 + 0.05);
+    backRail.castShadow = true;
+    subGroup.add(backRail);
+
+    // 4. Arched Cast-Iron Entrance Hood & Overhead Marquee (front entrance)
+    const postGeo = new THREE.BoxGeometry(0.22, 2.8, 0.22);
+    [-w * 0.5 + 0.1, w * 0.5 - 0.1].forEach((px, pIdx) => {
+      const post = new THREE.Mesh(postGeo, ironMat);
+      post.position.set(px, 1.4, d * 0.5 - 0.1);
+      post.castShadow = true;
+      subGroup.add(post);
+
+      // Brass lamp stanchion extending upward
+      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.7, 6), brassRodMat);
+      rod.position.set(px, 3.0, d * 0.5 - 0.1);
+      subGroup.add(rod);
+
+      // Globe lamp (Green on left for 24/7 entrance, Red on right)
+      const globe = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 12), (pIdx === 0 ? greenGlobeMat : redGlobeMat));
+      globe.position.set(px, 3.4, d * 0.5 - 0.1);
+      subGroup.add(globe);
+    });
+
+    // Decorative Cast-Iron Overhead Arch
+    const archBar = new THREE.Mesh(new THREE.BoxGeometry(w + 0.2, 0.25, 0.35), ironMat);
+    archBar.position.set(0, 2.7, d * 0.5 - 0.1);
+    archBar.castShadow = true;
+    subGroup.add(archBar);
+
+    // 5. Crisp Illuminated Subway Station Nameplate: "SUBWAY • SOUTH FERRY • (1)"
+    const signBoard = new THREE.Mesh(new THREE.BoxGeometry(w * 0.88, 0.65, 0.14), signMat);
+    signBoard.position.set(0, 2.2, d * 0.5 - 0.08);
+    subGroup.add(signBoard);
+
+    const signStripe = new THREE.Mesh(new THREE.BoxGeometry(w * 0.82, 0.32, 0.16), signTextMat);
+    signStripe.position.set(-0.35, 2.2, d * 0.5 - 0.07);
+    subGroup.add(signStripe);
+
+    // Red MTA (1) Train Bullet circle
+    const bullet = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.18, 12), mtaRedBullet);
+    bullet.rotation.x = Math.PI * 0.5;
+    bullet.position.set(w * 0.35, 2.2, d * 0.5 - 0.06);
+    subGroup.add(bullet);
+
+    // 6. Cascading Inundation Waterfall Sheet pouring down into stairs
+    const cascadeWater = new THREE.Mesh(new THREE.BoxGeometry(w - 0.7, 0.35, d * 0.75), waterSheetMat);
+    cascadeWater.rotation.x = -0.32;
+    cascadeWater.position.set(0, -0.4, 0.2);
+    subGroup.add(cascadeWater);
+
+    return { group: subGroup, materials, primaryMat: ironMat };
+  }
+
+  /**
+   * Wall Street Neoclassical Bank / Stock Exchange Facade
+   * Grand Greek-Revival facade with 6 fluted limestone Corinthian columns,
+   * pediment frieze, bronze double entry doors, and carved entablature.
+   */
+  function createWallStreetBank() {
+    const bankGroup = new THREE.Group();
+    const materials = [];
+
+    const stonePodiumMat = new THREE.MeshStandardMaterial({ color: 0xd6d3d1, roughness: 0.85 });
+    const colMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f4, roughness: 0.65 });
+    const pedimentMat = new THREE.MeshStandardMaterial({ color: 0xe7e5e4, roughness: 0.7 });
+    const bronzeDoorMat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.3, metalness: 0.85 });
+    const darkWinMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.15, metalness: 0.8 });
+    const goldLetterMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.3, metalness: 0.8 });
+    materials.push(stonePodiumMat, colMat, pedimentMat, bronzeDoorMat, darkWinMat, goldLetterMat);
+
+    const bw = 16.0;
+    const bh = 15.0;
+    const bd = 11.0;
+
+    // 1. Raised Granite Base & Approach Steps
+    const base = new THREE.Mesh(new THREE.BoxGeometry(bw, 1.8, bd), stonePodiumMat);
+    base.position.y = 0.9;
+    base.castShadow = true;
+    base.receiveShadow = true;
+    bankGroup.add(base);
+
+    // Approach Steps on front
+    for (let st = 0; st < 4; st++) {
+      const step = new THREE.Mesh(new THREE.BoxGeometry(bw * 0.9, 0.3, 1.0), stonePodiumMat);
+      step.position.set(0, 0.15 + st * 0.3, bd * 0.5 + 0.5 + (3 - st) * 0.6);
+      bankGroup.add(step);
+    }
+
+    // 2. Main Building Core Wall behind colonnade
+    const core = new THREE.Mesh(new THREE.BoxGeometry(bw * 0.95, bh, bd * 0.75), stonePodiumMat);
+    core.position.set(0, bh * 0.5 + 1.8, -bd * 0.12);
+    core.castShadow = true;
+    bankGroup.add(core);
+
+    // 3. Colonnade of 6 Massive Fluted Classical Columns along the portico
+    const numCols = 6;
+    const colSpacing = (bw - 2.8) / (numCols - 1);
+    const colH = 9.8;
+    for (let c = 0; c < numCols; c++) {
+      const cX = -((bw - 2.8) * 0.5) + c * colSpacing;
+      // Column Base
+      const cBase = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.45, 1.5), colMat);
+      cBase.position.set(cX, 2.0, bd * 0.4);
+      bankGroup.add(cBase);
+
+      // Fluted Shaft
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.65, colH, 12), colMat);
+      shaft.position.set(cX, 2.0 + colH * 0.5, bd * 0.4);
+      shaft.castShadow = true;
+      bankGroup.add(shaft);
+
+      // Capital
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.55, 1.4), colMat);
+      cap.position.set(cX, 2.0 + colH + 0.25, bd * 0.4);
+      bankGroup.add(cap);
+    }
+
+    // 4. Grand Entablature Beam across the columns
+    const entablature = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.6, 1.4, 3.2), pedimentMat);
+    entablature.position.set(0, 2.0 + colH + 1.1, bd * 0.35);
+    entablature.castShadow = true;
+    bankGroup.add(entablature);
+
+    // Inscribed Frieze Gold Strip
+    const frieze = new THREE.Mesh(new THREE.BoxGeometry(bw * 0.75, 0.5, 0.1), goldLetterMat);
+    frieze.position.set(0, 2.0 + colH + 1.1, bd * 0.35 + 1.62);
+    bankGroup.add(frieze);
+
+    // 5. Grand Triangular Pediment with carved cornice
+    const pedW = bw + 0.8;
+    const pedH = 3.6;
+    const pedD = 3.0;
+    const pedSlopeLen = (pedW * 0.5) / Math.cos(0.42);
+    [-1, 1].forEach(sideDir => {
+      const slab = new THREE.Mesh(new THREE.BoxGeometry(pedSlopeLen, 0.3, pedD), pedimentMat);
+      slab.position.set(sideDir * pedW * 0.25, 2.0 + colH + 1.8 + pedH * 0.48, bd * 0.35);
+      slab.rotation.z = -sideDir * 0.42;
+      slab.castShadow = true;
+      bankGroup.add(slab);
+    });
+    // Pediment Tympanum infill wall
+    const tympanum = new THREE.Mesh(new THREE.BoxGeometry(pedW * 0.85, pedH * 0.85, 0.4), pedimentMat);
+    tympanum.position.set(0, 2.0 + colH + 1.8 + pedH * 0.4, bd * 0.35 + 0.8);
+    bankGroup.add(tympanum);
+
+    // 6. Bronze Double Entry Portals & Lofty Windows
+    const doors = new THREE.Mesh(new THREE.BoxGeometry(3.6, 4.4, 0.2), bronzeDoorMat);
+    doors.position.set(0, 4.0, bd * 0.25 + 0.1);
+    bankGroup.add(doors);
+
+    [-4.5, 4.5].forEach(wx => {
+      const win = new THREE.Mesh(new THREE.BoxGeometry(2.0, 5.0, 0.15), darkWinMat);
+      win.position.set(wx, 4.5, bd * 0.25 + 0.1);
+      bankGroup.add(win);
+    });
+
+    return { group: bankGroup, materials, primaryMat: stonePodiumMat };
+  }
+
+  /**
+   * Financial District Modern Reflective Glass High-Rise / Trading Pavilion
+   * Blue curtain wall, dark steel spaceframe cross-bracing, ground-floor atrium.
+   */
+  function createFinancialGlassPavilion() {
+    const pavGroup = new THREE.Group();
+    const materials = [];
+
+    const glassMat = new THREE.MeshStandardMaterial({
+      color: 0x38bdf8,
+      roughness: 0.08,
+      metalness: 0.92,
+      transparent: true,
+      opacity: 0.90
+    });
+    const steelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.8 });
+    const atriumGlass = new THREE.MeshStandardMaterial({
+      color: 0x93c5fd,
+      roughness: 0.05,
+      metalness: 0.9,
+      transparent: true,
+      opacity: 0.85
+    });
+    materials.push(glassMat, steelMat, atriumGlass);
+
+    const w = 13.0;
+    const h = 26.0;
+    const d = 11.0;
+
+    // Main Reflective Blue Glass Tower
+    const tower = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), glassMat);
+    tower.position.y = h * 0.5;
+    tower.castShadow = true;
+    tower.receiveShadow = true;
+    pavGroup.add(tower);
+
+    // Structural Steel Corner Columns
+    [[-w * 0.5, -d * 0.5], [w * 0.5, -d * 0.5], [-w * 0.5, d * 0.5], [w * 0.5, d * 0.5]].forEach(([cx, cz]) => {
+      const col = new THREE.Mesh(new THREE.BoxGeometry(0.6, h, 0.6), steelMat);
+      col.position.set(cx, h * 0.5, cz);
+      col.castShadow = true;
+      pavGroup.add(col);
+    });
+
+    // Horizontal Steel Floor Bands
+    const numFloors = 7;
+    for (let f = 1; f < numFloors; f++) {
+      const band = new THREE.Mesh(new THREE.BoxGeometry(w + 0.2, 0.4, d + 0.2), steelMat);
+      band.position.y = f * (h / numFloors);
+      pavGroup.add(band);
+    }
+
+    // Ground Floor Double-Height Atrium
+    const atrium = new THREE.Mesh(new THREE.BoxGeometry(w * 0.92, 4.5, d * 0.92), atriumGlass);
+    atrium.position.y = 2.25;
+    pavGroup.add(atrium);
+
+    // Rooftop Mechanical Penthouse
+    const penthouse = new THREE.Mesh(new THREE.BoxGeometry(w * 0.65, 3.2, d * 0.65), steelMat);
+    penthouse.position.y = h + 1.6;
+    pavGroup.add(penthouse);
+
+    return { group: pavGroup, materials, primaryMat: glassMat };
+  }
+
+  /**
+   * Iconic Bowling Green Charging Bull Bronze Monument
+   * Sculpted bronze bull on polished black granite plinth with dedication plaque.
+   */
+  function createChargingBullMonument() {
+    const bullGroup = new THREE.Group();
+    const materials = [];
+
+    const plinthMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.25 });
+    const bronzeMat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.35, metalness: 0.85 });
+    const plaqueMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.3, metalness: 0.8 });
+    const barrierMat = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.6 });
+    materials.push(plinthMat, bronzeMat, plaqueMat, barrierMat);
+
+    // 1. Polished Black Granite Plinth
+    const plinth = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.2, 5.2), plinthMat);
+    plinth.position.y = 0.6;
+    plinth.castShadow = true;
+    bullGroup.add(plinth);
+
+    // Brass Plaque
+    const plaque = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.4, 0.08), plaqueMat);
+    plaque.position.set(0, 0.6, 2.64);
+    bullGroup.add(plaque);
+
+    // 2. Sculpted Bronze Bull
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.5, 3.2), bronzeMat);
+    body.position.set(0, 2.1, 0);
+    body.castShadow = true;
+    bullGroup.add(body);
+
+    const shoulder = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.2, 1.4), bronzeMat);
+    shoulder.position.set(0, 2.4, 0.7);
+    shoulder.castShadow = true;
+    bullGroup.add(shoulder);
+
+    const head = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.1, 1.5), bronzeMat);
+    head.position.set(0, 1.7, 2.0);
+    head.rotation.x = 0.28;
+    head.castShadow = true;
+    bullGroup.add(head);
+
+    [-0.8, 0.8].forEach((hx, hIdx) => {
+      const horn = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.16, 1.2, 8), bronzeMat);
+      horn.rotation.z = (hIdx === 0 ? 0.7 : -0.7);
+      horn.rotation.x = -0.5;
+      horn.position.set(hx, 2.2, 2.3);
+      bullGroup.add(horn);
+    });
+
+    [[-0.65, -0.9], [0.65, -0.9], [-0.65, 0.9], [0.65, 0.9]].forEach(([lx, lz]) => {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.1, 0.45), bronzeMat);
+      leg.position.set(lx, 1.4, lz);
+      bullGroup.add(leg);
+    });
+
+    // 3. Perimeter Blue Crowd Control Barricades
+    [-2.2, 2.2].forEach(bx => {
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.9, 5.0), barrierMat);
+      bar.position.set(bx, 0.45, 0);
+      bullGroup.add(bar);
+    });
+
+    return { group: bullGroup, materials, primaryMat: bronzeMat };
+  }
+
+  /**
+   * Historic Wall Street & Broad Street Corner Signpost
+   */
+  function createWallStreetSignpost() {
+    const postGroup = new THREE.Group();
+    const materials = [];
+
+    const ironMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5, metalness: 0.7 });
+    const greenEnamel = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.3 });
+    const whiteLetter = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 });
+    materials.push(ironMat, greenEnamel, whiteLetter);
+
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.14, 4.4, 8), ironMat);
+    pole.position.y = 2.2;
+    pole.castShadow = true;
+    postGroup.add(pole);
+
+    const wallSign = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.38, 0.08), greenEnamel);
+    wallSign.position.set(0.65, 3.8, 0);
+    postGroup.add(wallSign);
+    const wallText = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.18, 0.1), whiteLetter);
+    wallText.position.set(0.65, 3.8, 0);
+    postGroup.add(wallText);
+
+    const broadSign = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.38, 1.8), greenEnamel);
+    broadSign.position.set(0, 4.15, 0.65);
+    postGroup.add(broadSign);
+    const broadText = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.18, 1.5), whiteLetter);
+    broadText.position.set(0, 4.15, 0.65);
+    postGroup.add(broadText);
+
+    return { group: postGroup, materials, primaryMat: greenEnamel };
+  }
+
+  /**
+   * Battery Park Breached Granite Seawall Section
+   */
+  function createBatterySeawallBreachSegment(length = 22.0) {
+    const wallGroup = new THREE.Group();
+    const materials = [];
+
+    const graniteMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.75 });
+    const railMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5, metalness: 0.7 });
+    materials.push(graniteMat, railMat);
+
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(3.6, 3.2, length), graniteMat);
+    wall.position.y = 1.6;
+    wall.castShadow = true;
+    wallGroup.add(wall);
+
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.8, length), railMat);
+    rail.position.set(0, 3.6, 0);
+    wallGroup.add(rail);
+
+    return { group: wallGroup, materials, primaryMat: graniteMat };
+  }
+
   function registerWipeable(mesh, uTrigger, pos, tangent, side, options = {}) {
     mesh.position.copy(pos);
     group.add(mesh);
@@ -401,11 +807,34 @@ export function buildNewYorkScene(group, river, terrain) {
   const manGroup = new THREE.Group();
   manGroup.position.copy(fMan.pt);
 
-  // Curved Granite Battery Park Seawall Promenade
-  const seawall = new THREE.Mesh(new THREE.BoxGeometry(4.0, 3.2, 54.0), seawallGranite);
-  seawall.position.set(fMan.side.x * 12.0, 1.6, fMan.side.z * 12.0);
-  seawall.castShadow = true;
-  manGroup.add(seawall);
+  // Flanking Granite Battery Park Seawall Promenade Sections
+  const seawallSouth = new THREE.Mesh(new THREE.BoxGeometry(4.0, 3.2, 16.0), seawallGranite);
+  seawallSouth.position.set(fMan.side.x * 12.0, 1.6, -18.0);
+  seawallSouth.castShadow = true;
+  manGroup.add(seawallSouth);
+
+  const seawallNorth = new THREE.Mesh(new THREE.BoxGeometry(4.0, 3.2, 16.0), seawallGranite);
+  seawallNorth.position.set(fMan.side.x * 12.0, 1.6, 18.0);
+  seawallNorth.castShadow = true;
+  manGroup.add(seawallNorth);
+
+  // Dynamic Breached Granite Battery Park Seawall Segment that shears and collapses into harbor
+  {
+    const breachSeawall = createBatterySeawallBreachSegment(22.0);
+    const swPos = fMan.pt.clone().addScaledVector(fMan.side, 11.5);
+    swPos.y = getGroundY(swPos.x, swPos.z, 2.0);
+    breachSeawall.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
+
+    registerWipeable(breachSeawall.group, 0.48, swPos, fMan.tangent, fMan.side, {
+      primaryMat: breachSeawall.primaryMat,
+      materials: breachSeawall.materials,
+      driftSpeed: 22.0,
+      tumbleScale: 4.5,
+      collapseTilt: 0.55,
+      sinkScale: 0.28,
+      washSpeed: 26.0
+    });
+  }
 
   // Lush Battery Park Green Lawns
   const lawn = new THREE.Mesh(new THREE.BoxGeometry(14.0, 0.5, 52.0), new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.85 }));
@@ -426,6 +855,80 @@ export function buildNewYorkScene(group, river, terrain) {
   siFerry.position.set(fMan.side.x * 7.5, 2.2, 22.0);
   siFerry.castShadow = true;
   manGroup.add(siFerry);
+
+  // -------------------------------------------------------------------------
+  // FINANCIAL DISTRICT / WALL STREET WATERFRONT DYNAMIC COLLAPSING STRUCTURES (u = 0.49 - 0.52)
+  // -------------------------------------------------------------------------
+  // 1. Wall Street Neoclassical Bank / Stock Exchange Facade (u = 0.49)
+  {
+    const bank = createWallStreetBank();
+    const bankPos = fMan.pt.clone().addScaledVector(fMan.side, 15.2).addScaledVector(fMan.tangent, 5.0);
+    bankPos.y = getGroundY(bankPos.x, bankPos.z, 2.8);
+    bank.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
+    bank.group.rotation.y += 0.12;
+
+    registerWipeable(bank.group, 0.49, bankPos, fMan.tangent, fMan.side, {
+      primaryMat: bank.primaryMat,
+      materials: bank.materials,
+      driftSpeed: 20.0,
+      tumbleScale: 3.8,
+      collapseTilt: 0.52,
+      sinkScale: 0.28,
+      washSpeed: 26.0,
+      maxProg: 0.10
+    });
+  }
+
+  // 2. Historic Wall Street & Broad Street Corner Signpost (u = 0.50)
+  {
+    const signpost = createWallStreetSignpost();
+    const signPos = fMan.pt.clone().addScaledVector(fMan.side, 14.5).addScaledVector(fMan.tangent, 1.8);
+    signPos.y = getGroundY(signPos.x, signPos.z, 2.8);
+    signpost.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
+
+    registerWipeable(signpost.group, 0.50, signPos, fMan.tangent, fMan.side, {
+      primaryMat: signpost.primaryMat,
+      materials: signpost.materials,
+      driftSpeed: 29.0,
+      tumbleScale: 7.5
+    });
+  }
+
+  // 3. Bowling Green Charging Bull Bronze Monument (u = 0.50)
+  {
+    const bull = createChargingBullMonument();
+    const bullPos = fMan.pt.clone().addScaledVector(fMan.side, 16.5).addScaledVector(fMan.tangent, -2.5);
+    bullPos.y = getGroundY(bullPos.x, bullPos.z, 2.8);
+    bull.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
+
+    registerWipeable(bull.group, 0.50, bullPos, fMan.tangent, fMan.side, {
+      primaryMat: bull.primaryMat,
+      materials: bull.materials,
+      driftSpeed: 22.0,
+      tumbleScale: 4.5,
+      collapseTilt: 0.48,
+      sinkScale: 0.25
+    });
+  }
+
+  // 4. Financial District Modern Reflective Glass High-Rise / Trading Pavilion (u = 0.51)
+  {
+    const glassPav = createFinancialGlassPavilion();
+    const pavPos = fMan.pt.clone().addScaledVector(fMan.side, 17.5).addScaledVector(fMan.tangent, 15.0);
+    pavPos.y = getGroundY(pavPos.x, pavPos.z, 2.8);
+    glassPav.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
+
+    registerWipeable(glassPav.group, 0.51, pavPos, fMan.tangent, fMan.side, {
+      primaryMat: glassPav.primaryMat,
+      materials: glassPav.materials,
+      driftSpeed: 22.0,
+      tumbleScale: 4.0,
+      collapseTilt: 0.56,
+      sinkScale: 0.28,
+      washSpeed: 25.0,
+      maxProg: 0.09
+    });
+  }
 
   // LOWER MANHATTAN SKYSCRAPER SKYLINE (Accurately offset along bank normal)
   // Featuring One World Trade Center, Art Deco classic towers & modern glass high-rises
@@ -580,38 +1083,46 @@ export function buildNewYorkScene(group, river, terrain) {
   }
 
   // -------------------------------------------------------------------------
-  // ZONE 4: SOUTH FERRY SUBWAY PORTAL & TRANSIT BREACH (u = 0.54)
+  // ZONE 4: SOUTH FERRY SUBWAY PORTAL & TRANSIT INUNDATION (u = 0.54)
   // -------------------------------------------------------------------------
   const fSub = getRiverFrame(0.54);
 
-  // Subway Entrance Kiosk
+  // Authentic NYC Subway Station Entrance (South Ferry / 1 Train)
+  // Featuring ornate cast-iron hood, illuminated MTA green/red globes,
+  // station sign, descending tiled stairs, and cascading flood torrent.
   {
-    const subKiosk = new THREE.Mesh(new THREE.BoxGeometry(4.5, 2.5, 6.0), steelGreenMat);
-    const pos = fSub.pt.clone().addScaledVector(fSub.side, 15.0).addScaledVector(fSub.tangent, -4.0);
-    pos.y = getGroundY(pos.x, pos.z, 2.7) + 1.25;
-    subKiosk.castShadow = true;
+    const subPortal = createNYCSubwayEntrance();
+    const pos = fSub.pt.clone().addScaledVector(fSub.side, 13.5).addScaledVector(fSub.tangent, -3.5);
+    pos.y = getGroundY(pos.x, pos.z, 2.7);
+    subPortal.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fSub.tangent);
+    subPortal.group.rotation.y += 0.2;
 
-    registerWipeable(subKiosk, 0.54, pos, fSub.tangent, fSub.side, {
-      primaryMat: steelGreenMat,
-      driftSpeed: 25.0,
-      tumbleScale: 5.5,
-      collapseTilt: 0.4
+    registerWipeable(subPortal.group, 0.54, pos, fSub.tangent, fSub.side, {
+      primaryMat: subPortal.primaryMat,
+      materials: subPortal.materials,
+      driftSpeed: 20.0,
+      tumbleScale: 4.2,
+      collapseTilt: 0.45,
+      sinkScale: 0.32,
+      washSpeed: 28.0,
+      maxProg: 0.08
     });
   }
 
-  // Sandbag barricades blowing out at subway stairs
-  for (let s = 0; s < 3; s++) {
-    const bund = createSubwaySandbagBund(3.4);
-    const pos = fSub.pt.clone().addScaledVector(fSub.side, 14.5).addScaledVector(fSub.tangent, -2.0 + s * 1.6);
+  // Sandbag protective ring blowing out under hydrostatic head
+  for (let s = 0; s < 4; s++) {
+    const bund = createSubwaySandbagBund(3.8);
+    const pos = fSub.pt.clone().addScaledVector(fSub.side, 12.8 + (s % 2) * 1.8).addScaledVector(fSub.tangent, -5.5 + s * 1.5);
     pos.y = getGroundY(pos.x, pos.z, 2.7);
     bund.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fSub.tangent);
 
-    registerWipeable(bund.group, 0.54 + s * 0.01, pos, fSub.tangent, fSub.side, {
+    registerWipeable(bund.group, 0.535 + s * 0.008, pos, fSub.tangent, fSub.side, {
       primaryMat: bund.primaryMat,
       materials: bund.materials,
-      driftSpeed: 22.0,
-      tumbleScale: 4.5,
-      sinkScale: 0.25
+      driftSpeed: 28.0,
+      tumbleScale: 5.5,
+      sinkScale: 0.22,
+      washSpeed: 35.0
     });
   }
 

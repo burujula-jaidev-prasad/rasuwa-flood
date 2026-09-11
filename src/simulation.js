@@ -106,8 +106,8 @@ export class FloodSimulation {
     this.landmarkBadges = [];
     const landmarks = [
       { name: "Verrazzano Narrows", sub: "Morning Surge Funnel • 4.8m", u: 0.10, offset: new THREE.Vector3(0, 16, 0) },
-      { name: "The Battery & Wall St", sub: "Seawall Breached • 14.9 ft", u: 0.48, offset: new THREE.Vector3(-14, 14, 0) },
-      { name: "South Ferry Subway", sub: "7 Under-River Tubes Flooded", u: 0.54, offset: new THREE.Vector3(-12, 12, 0) },
+      { name: "Wall St Financial District", sub: "14.9 ft Surge Peak • Seawall Breached", u: 0.48, offset: new THREE.Vector3(-14, 14, 0) },
+      { name: "South Ferry Subway Portal", sub: "7 Under-River Tubes Inundated", u: 0.54, offset: new THREE.Vector3(-12, 12, 0) },
       { name: "FDR Drive & ESCR", sub: "16.5-ft Roller Floodgates", u: 0.62, offset: new THREE.Vector3(-12, 12, 0) },
       { name: "Brooklyn Bridge", sub: "DUMBO Waterfront Submerged", u: 0.74, offset: new THREE.Vector3(0, 16, 0) },
       { name: "ConEd 14th St Substation", sub: "345 kV Arc Blast • Blackout", u: 0.86, offset: new THREE.Vector3(-14, 14, 0) },
@@ -3449,9 +3449,6 @@ export class FloodSimulation {
             m.opacity = 1.0;
           }
         }
-        if (item.impactSplash) {
-          item.impactSplash.visible = false;
-        }
       } else {
         const washProgress = (uWave - item.uTrigger);
         const maxProg = Math.max(item.maxProg || 0.14, 0.14);
@@ -3487,37 +3484,6 @@ export class FloodSimulation {
             .addScaledVector(normDrift, driftDist)
             .add(new THREE.Vector3(0, -sinkDist, 0));
 
-          // Kinetic hydraulic impact splash: mushrooming whitewater burst upon initial collision
-          if (!item.impactSplash) {
-            const splashGeo = new THREE.DodecahedronGeometry(2.4, 1);
-            const splashMat = new THREE.MeshStandardMaterial({
-              color: 0xf1f5f9,
-              roughness: 0.15,
-              metalness: 0.05,
-              transparent: true,
-              opacity: 0.0,
-              depthWrite: false
-            });
-            item.impactSplash = new THREE.Mesh(splashGeo, splashMat);
-            this.group.add(item.impactSplash);
-          }
-
-          if (progressRatio < 0.38) {
-            const splashProg = progressRatio / 0.38;
-            const blastCurve = Math.sin(splashProg * Math.PI);
-            const burstRadius = (item.splashRadius || 5.8) * (0.5 + blastCurve * 0.9);
-            item.impactSplash.visible = true;
-            item.impactSplash.position.set(
-              item.initialPos.x,
-              item.initialPos.y + burstRadius * 0.45,
-              item.initialPos.z
-            );
-            item.impactSplash.scale.set(burstRadius * 1.3, burstRadius * 1.1, burstRadius * 1.3);
-            item.impactSplash.material.opacity = blastCurve * 0.92;
-          } else {
-            if (item.impactSplash) item.impactSplash.visible = false;
-          }
-
           // 4. Retain high opacity while visibly collapsing; only dissolve near end of submersion
           const fade = progressRatio < 0.65 ? 1.0 : Math.max(0.0, 1.0 - (progressRatio - 0.65) / 0.35);
           if (item.material) {
@@ -3531,7 +3497,6 @@ export class FloodSimulation {
           }
         } else {
           item.mesh.visible = false;
-          if (item.impactSplash) item.impactSplash.visible = false;
         }
       }
     }
@@ -3874,15 +3839,6 @@ export class FloodSimulation {
   }
 
   dispose() {
-    if (this.wipeableItems && this.wipeableItems.length > 0) {
-      for (const item of this.wipeableItems) {
-        if (item.impactSplash) {
-          if (item.impactSplash.parent) item.impactSplash.parent.remove(item.impactSplash);
-          if (item.impactSplash.geometry) item.impactSplash.geometry.dispose();
-          if (item.impactSplash.material) item.impactSplash.material.dispose();
-          item.impactSplash = null;
-        }
-      }
-    }
+    this.wipeableItems = [];
   }
 }
