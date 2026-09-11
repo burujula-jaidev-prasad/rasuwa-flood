@@ -316,16 +316,17 @@ export function createTerrain(riverSystem, scenarioId = null) {
       const bedWidth = 8.0 + u * 10.0;
       const bankWidth = 18.0 + u * 12.0;
 
-      // Base elevation: High Taihang mountains in northwest (x < 0), flat plain in southeast (x > 0)
+      // Base elevation: High Taihang mountains in northwest (x < 15), flat plain in southeast (x >= 15)
       let h = 3.0 + valueNoise(x * 0.04, z * 0.04) * 1.5;
 
-      // Steep Taihang Mountain canyon walls flanking the northwest
+      // Grand Taihang Mountain canyon walls flanking the northwest (smooth natural frequencies)
       if (x < 15) {
-        const mountainFactor = Math.min(1.0, Math.max(0, (15 - x) / 80));
-        const ridgeH = (ridgedNoise(x * 1.5, z * 1.5) * 18.0 + 8.0) * mountainFactor;
-        // Suppress mountain peaks inside the river channel
-        const gorgeChannelSuppression = Math.min(1.0, Math.pow(riverDist / bankWidth, 1.8));
-        h += ridgeH * gorgeChannelSuppression;
+        const mountainFactor = Math.min(1.0, Math.max(0, (15 - x) / 75));
+        const ridgeH = (ridgedNoise(x * 0.16, z * 0.16) * 16.0 + 6.0) * mountainFactor;
+        // Clean gorge fluvial terrace corridor: completely flat terraces within 26m of river channel
+        const gorgeSuppression = Math.min(1.0, Math.max(0, (riverDist - bedWidth) / (bankWidth + 10.0)));
+        const smoothGorge = Math.pow(gorgeSuppression, 2.2);
+        h += ridgeH * smoothGorge;
       }
 
       // Gorge riverbed floor & riverbank cutting
@@ -334,7 +335,7 @@ export function createTerrain(riverSystem, scenarioId = null) {
       } else if (riverDist < bankWidth) {
         const t = (riverDist - bedWidth) / (bankWidth - bedWidth);
         const bedFloor = riverInfo.riverY - 1.2;
-        const bankTop = riverInfo.riverY + (x < 0 ? 3.5 : 1.4);
+        const bankTop = riverInfo.riverY + (x < 0 ? 2.6 : 1.2);
         h = bedFloor + (bankTop - bedFloor) * Math.sin(t * Math.PI * 0.5);
       }
 
@@ -397,17 +398,18 @@ export function createTerrain(riverSystem, scenarioId = null) {
       const bankWidth = 18.0 + u * 12.0;
       let h = 3.0 + valueNoise(x * 0.04, z * 0.04) * 1.5;
       if (x < 15) {
-        const mountainFactor = Math.min(1.0, Math.max(0, (15 - x) / 80));
-        const ridgeH = (ridgedNoise(x * 1.5, z * 1.5) * 18.0 + 8.0) * mountainFactor;
-        const gorgeChannelSuppression = Math.min(1.0, Math.pow(riverDist / bankWidth, 1.8));
-        h += ridgeH * gorgeChannelSuppression;
+        const mountainFactor = Math.min(1.0, Math.max(0, (15 - x) / 75));
+        const ridgeH = (ridgedNoise(x * 0.16, z * 0.16) * 16.0 + 6.0) * mountainFactor;
+        const gorgeSuppression = Math.min(1.0, Math.max(0, (riverDist - bedWidth) / (bankWidth + 10.0)));
+        const smoothGorge = Math.pow(gorgeSuppression, 2.2);
+        h += ridgeH * smoothGorge;
       }
       if (riverDist <= bedWidth) {
         h = riverInfo.riverY - 1.2;
       } else if (riverDist < bankWidth) {
         const t = (riverDist - bedWidth) / (bankWidth - bedWidth);
         const bedFloor = riverInfo.riverY - 1.2;
-        const bankTop = riverInfo.riverY + (x < 0 ? 3.5 : 1.4);
+        const bankTop = riverInfo.riverY + (x < 0 ? 2.6 : 1.2);
         h = bedFloor + (bankTop - bedFloor) * Math.sin(t * Math.PI * 0.5);
       }
       return h;

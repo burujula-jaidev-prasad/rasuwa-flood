@@ -3339,9 +3339,9 @@ export class FloodSimulation {
   }
 
   initAtmosphere() {
-    this.rainEnabled = true;
+    this.rainEnabled = false;
 
-    const rainCount = 6500;
+    const rainCount = 3000;
     const rainGeo = new THREE.BufferGeometry();
     const rainPositions = new Float32Array(rainCount * 3);
     const rainVelocities = new Float32Array(rainCount);
@@ -3350,43 +3350,32 @@ export class FloodSimulation {
       rainPositions[i * 3 + 0] = (Math.random() - 0.5) * 240;
       rainPositions[i * 3 + 1] = Math.random() * 120;
       rainPositions[i * 3 + 2] = (Math.random() - 0.5) * 240;
-      rainVelocities[i] = 1.8 + Math.random() * 1.5;
+      rainVelocities[i] = 2.0 + Math.random() * 2.0;
     }
 
     rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPositions, 3));
 
     const rainMat = new THREE.PointsMaterial({
-      color: 0x9fb3c0,
-      size: 0.4,
+      color: 0xcbe4f7,
+      size: 0.35,
       transparent: true,
-      opacity: 0.45,
+      opacity: 0.35,
       depthWrite: false
     });
 
     this.rainSystem = new THREE.Points(rainGeo, rainMat);
+    this.rainSystem.visible = false;
     this.rainPositions = rainPositions;
     this.rainVelocities = rainVelocities;
     this.rainCount = rainCount;
     this.group.add(this.rainSystem);
 
-    const mistGeo = new THREE.PlaneGeometry(160, 160);
-    const mistMat = new THREE.MeshBasicMaterial({
-      color: 0x8aa5b8,
-      transparent: true,
-      opacity: 0.12,
-      side: THREE.DoubleSide,
-      depthWrite: false
-    });
-    this.mistPlane = new THREE.Mesh(mistGeo, mistMat);
-    this.mistPlane.rotation.x = -Math.PI / 2;
-    this.mistPlane.position.set(0, 10, 0);
-    this.group.add(this.mistPlane);
+    this.mistPlane = { visible: false };
   }
 
   setRainVisible(visible) {
     this.rainEnabled = visible;
-    this.rainSystem.visible = visible;
-    this.mistPlane.visible = visible;
+    if (this.rainSystem) this.rainSystem.visible = visible;
   }
 
   updateSurgeFront(uWave) {
@@ -3460,6 +3449,9 @@ export class FloodSimulation {
             m.opacity = 1.0;
           }
         }
+        if (item.impactSplash) {
+          item.impactSplash.visible = false;
+        }
       } else {
         const washProgress = (uWave - item.uTrigger);
         const maxProg = Math.max(item.maxProg || 0.14, 0.14);
@@ -3495,6 +3487,37 @@ export class FloodSimulation {
             .addScaledVector(normDrift, driftDist)
             .add(new THREE.Vector3(0, -sinkDist, 0));
 
+          // Kinetic hydraulic impact splash: mushrooming whitewater burst upon initial collision
+          if (!item.impactSplash) {
+            const splashGeo = new THREE.DodecahedronGeometry(2.4, 1);
+            const splashMat = new THREE.MeshStandardMaterial({
+              color: 0xf1f5f9,
+              roughness: 0.15,
+              metalness: 0.05,
+              transparent: true,
+              opacity: 0.0,
+              depthWrite: false
+            });
+            item.impactSplash = new THREE.Mesh(splashGeo, splashMat);
+            this.group.add(item.impactSplash);
+          }
+
+          if (progressRatio < 0.38) {
+            const splashProg = progressRatio / 0.38;
+            const blastCurve = Math.sin(splashProg * Math.PI);
+            const burstRadius = (item.splashRadius || 5.8) * (0.5 + blastCurve * 0.9);
+            item.impactSplash.visible = true;
+            item.impactSplash.position.set(
+              item.initialPos.x,
+              item.initialPos.y + burstRadius * 0.45,
+              item.initialPos.z
+            );
+            item.impactSplash.scale.set(burstRadius * 1.3, burstRadius * 1.1, burstRadius * 1.3);
+            item.impactSplash.material.opacity = blastCurve * 0.92;
+          } else {
+            if (item.impactSplash) item.impactSplash.visible = false;
+          }
+
           // 4. Retain high opacity while visibly collapsing; only dissolve near end of submersion
           const fade = progressRatio < 0.65 ? 1.0 : Math.max(0.0, 1.0 - (progressRatio - 0.65) / 0.35);
           if (item.material) {
@@ -3508,6 +3531,7 @@ export class FloodSimulation {
           }
         } else {
           item.mesh.visible = false;
+          if (item.impactSplash) item.impactSplash.visible = false;
         }
       }
     }
@@ -3847,5 +3871,18 @@ export class FloodSimulation {
     }
 
     return uWave;
+  }
+
+  dispose() {
+    if (this.wipeableItems && this.wipeableItems.length > 0) {
+      for (const item of this.wipeableItems) {
+        if (item.impactSplash) {
+          if (item.impactSplash.parent) item.impactSplash.parent.remove(item.impactSplash);
+          if (item.impactSplash.geometry) item.impactSplash.geometry.dispose();
+          if (item.impactSplash.material) item.impactSplash.material.dispose();
+          item.impactSplash = null;
+        }
+      }
+    }
   }
 }

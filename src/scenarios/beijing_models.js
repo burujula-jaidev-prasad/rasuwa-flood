@@ -68,13 +68,37 @@ export function buildBeijingScene(group, river, terrain) {
     homeGroup.add(body);
 
     // Traditional Pitched Chinese Tile Roof with eaves overhang
-    const roofGeo = new THREE.ConeGeometry((bw + 1.2) * 0.72, 1.4, 4);
-    const roof = new THREE.Mesh(roofGeo, roofTileMat);
-    roof.rotation.y = Math.PI * 0.25;
-    roof.position.set(0, bh + 0.7, 0);
-    roof.scale.set(1.0, 1.0, (bd + 1.2) / (bw + 1.2));
-    roof.castShadow = true;
-    homeGroup.add(roof);
+    const rw = bw + 1.4;
+    const rd = bd + 1.4;
+    const pitchAngle = 0.44; // ~25 deg
+    const slopeLen = (rd * 0.5) / Math.cos(pitchAngle);
+    const ridgeH = Math.sin(pitchAngle) * slopeLen;
+
+    const slopeGeo = new THREE.BoxGeometry(rw, 0.16, slopeLen);
+    const frontSlope = new THREE.Mesh(slopeGeo, roofTileMat);
+    frontSlope.position.set(0, bh + ridgeH * 0.48, rd * 0.24);
+    frontSlope.rotation.x = pitchAngle;
+    frontSlope.castShadow = true;
+    homeGroup.add(frontSlope);
+
+    const backSlope = new THREE.Mesh(slopeGeo, roofTileMat);
+    backSlope.position.set(0, bh + ridgeH * 0.48, -rd * 0.24);
+    backSlope.rotation.x = -pitchAngle;
+    backSlope.castShadow = true;
+    homeGroup.add(backSlope);
+
+    // Chinese horizontal ridge beam (Zhengji)
+    const ridge = new THREE.Mesh(new THREE.BoxGeometry(rw + 0.3, 0.32, 0.42), roofTileMat);
+    ridge.position.set(0, bh + ridgeH + 0.08, 0);
+    ridge.castShadow = true;
+    homeGroup.add(ridge);
+
+    // Gable triangular side masonry
+    [-bw * 0.48, bw * 0.48].forEach(gx => {
+      const gable = new THREE.Mesh(new THREE.BoxGeometry(0.18, ridgeH * 0.85, bd * 0.9), wallMat);
+      gable.position.set(gx, bh + ridgeH * 0.42, 0);
+      homeGroup.add(gable);
+    });
 
     // Red Wooden Entrance Gate / Portico
     const gate = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.6, 0.15), redGateMat);
@@ -336,9 +360,9 @@ export function buildBeijingScene(group, river, terrain) {
     { z: 20.0,  isLoco: false }
   ];
 
-  trainCarDefs.forEach(car => {
+  trainCarDefs.forEach((car, ci) => {
     const carGroup = new THREE.Group();
-    carGroup.position.set(-fLuo.side.x * 12.0, 3.4, car.z);
+    const carMaterials = [darkGreenTrainMat, trainYellowStripe, railSteelMat];
 
     const body = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.6, 9.5), darkGreenTrainMat);
     body.position.y = 1.5;
@@ -356,24 +380,42 @@ export function buildBeijingScene(group, river, terrain) {
     carGroup.add(roof);
 
     const windowMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.1, metalness: 0.8 });
+    carMaterials.push(windowMat);
     const windows = new THREE.Mesh(new THREE.BoxGeometry(2.44, 0.7, 8.5), windowMat);
     windows.position.y = 1.8;
     carGroup.add(windows);
 
-    luoGroup.add(carGroup);
+    // Car world position along Luopoling siding
+    const carPos = fLuo.pt.clone()
+      .add(new THREE.Vector3(-fLuo.side.x * 12.0, 0, 0))
+      .addScaledVector(fLuo.tangent, car.z);
+    carPos.y = terrain.getTerrainHeight(carPos.x, carPos.z) + 3.4;
+
+    carGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fLuo.tangent);
+
+    registerWipeable(carGroup, 0.20 + ci * 0.005, carPos, fLuo.tangent, fLuo.side, {
+      primaryMat: darkGreenTrainMat,
+      materials: carMaterials,
+      driftSpeed: 18.0,
+      tumbleScale: 3.2,
+      collapseTilt: 0.62,
+      sinkScale: 0.22,
+      washSpeed: 24.0,
+      maxProg: 0.08
+    });
   });
 
-  const debrisCone = new THREE.Mesh(new THREE.ConeGeometry(7.5, 4.5, 16), mudslideMat);
-  debrisCone.position.set(-fLuo.side.x * 12.0, 2.8, -20.0);
-  debrisCone.rotation.z = Math.PI * 0.1;
-  debrisCone.castShadow = true;
-  luoGroup.add(debrisCone);
+  const mudBank = new THREE.Mesh(new THREE.CylinderGeometry(6.5, 10.5, 2.6, 16), mudslideMat);
+  mudBank.position.set(-fLuo.side.x * 12.0, 1.4, -20.0);
+  mudBank.scale.set(1.2, 1.0, 1.8);
+  mudBank.castShadow = true;
+  luoGroup.add(mudBank);
 
   for (let b = 0; b < 10; b++) {
     const boulder = new THREE.Mesh(new THREE.DodecahedronGeometry(0.8 + Math.random() * 0.7), boulderMat);
     boulder.position.set(
       -fLuo.side.x * 12.0 + (Math.random() - 0.5) * 5.0,
-      3.2 + Math.random() * 1.5,
+      2.6 + Math.random() * 1.5,
       -26.0 + b * 4.5
     );
     boulder.rotation.set(Math.random() * 3, Math.random() * 3, 0);
@@ -391,7 +433,7 @@ export function buildBeijingScene(group, river, terrain) {
     const uHut = 0.08 + i * 0.01;
     const fHut = getRiverFrame(uHut);
     const bankDir = (i % 2 === 0) ? -1 : 1;
-    const dist = 8.0 + (i % 3) * 2.5;
+    const dist = 6.5 + (i % 3) * 1.5;
 
     const home = createSiheyuanDwelling(
       4.8 + (i % 3) * 0.6,
@@ -473,7 +515,7 @@ export function buildBeijingScene(group, river, terrain) {
     const uLuoHut = 0.22 + i * 0.012;
     const fLuoHut = getRiverFrame(uLuoHut);
     const bankDir = (i % 2 === 0) ? 1 : -1;
-    const dist = 7.5 + (i % 3) * 2.0;
+    const dist = 6.2 + (i % 3) * 1.5;
 
     const home = createSiheyuanDwelling(
       5.0 + (i % 2) * 0.5,
@@ -574,7 +616,7 @@ export function buildBeijingScene(group, river, terrain) {
     const uDing = 0.42 + i * 0.012;
     const fDing = getRiverFrame(uDing);
     const bankDir = (i % 2 === 0) ? -1 : 1;
-    const dist = 8.0 + (i % 3) * 2.2;
+    const dist = 6.2 + (i % 3) * 1.5;
 
     const home = createSiheyuanDwelling(
       5.2 + (i % 3) * 0.5,
@@ -813,10 +855,18 @@ export function buildBeijingScene(group, river, terrain) {
   plaGroup.add(campGround);
 
   [-6.0, 0, 6.0].forEach(tZ => {
-    const tent = new THREE.Mesh(new THREE.ConeGeometry(2.2, 2.2, 4), rescueTentMat);
-    tent.rotation.y = Math.PI * 0.25;
-    tent.position.set(fPla.side.x * 18.0, 5.0, tZ);
-    plaGroup.add(tent);
+    // Ridge Disaster Relief Command Tent
+    const tentBody = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.0, 3.8), rescueTentMat);
+    tentBody.position.set(fPla.side.x * 18.0, 4.8, tZ);
+    tentBody.castShadow = true;
+    plaGroup.add(tentBody);
+
+    const tentRoof = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 1.9, 3.8, 12, 1, false, 0, Math.PI), rescueTentMat);
+    tentRoof.rotation.z = Math.PI * 0.5;
+    tentRoof.rotation.y = Math.PI * 0.5;
+    tentRoof.position.set(fPla.side.x * 18.0, 5.8, tZ);
+    tentRoof.castShadow = true;
+    plaGroup.add(tentRoof);
   });
 
   const flagMast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 6.0, 6), railSteelMat);

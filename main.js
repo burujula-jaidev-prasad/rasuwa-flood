@@ -164,29 +164,17 @@ class ExplainerApp {
       this.sunLight.position.set(env.sunPosition[0] * 320, env.sunPosition[1] * 320, env.sunPosition[2] * 320);
     }
     if (this.hemiLight) {
-      if (isNY) {
-        this.hemiLight.color.setHex(0xdbeafe);
-        this.hemiLight.groundColor.setHex(0x64748b);
-        this.hemiLight.intensity = 1.15;
-      } else {
-        this.hemiLight.color.setHex(0x9fb3c0);
-        this.hemiLight.groundColor.setHex(0x33513c);
-        this.hemiLight.intensity = 0.85;
-      }
+      this.hemiLight.color.setHex(0xdbeafe);
+      this.hemiLight.groundColor.setHex(0x64748b);
+      this.hemiLight.intensity = 1.22;
     }
     if (this.fillLight) {
-      if (isNY) {
-        this.fillLight.color.setHex(0x93c5fd);
-        this.fillLight.intensity = 0.65;
-        this.fillLight.position.set(-120, 100, 140);
-      } else {
-        this.fillLight.color.setHex(0x6fc0ea);
-        this.fillLight.intensity = 0.4;
-        this.fillLight.position.set(120, 80, 140);
-      }
+      this.fillLight.color.setHex(0x93c5fd);
+      this.fillLight.intensity = 0.72;
+      this.fillLight.position.set(-120, 100, 140);
     }
     if (this.renderer) {
-      this.renderer.toneMappingExposure = isNY ? 1.25 : 1.15;
+      this.renderer.toneMappingExposure = 1.28;
     }
   }
 
@@ -276,7 +264,10 @@ class ExplainerApp {
     // 1. Clean up existing objects
     if (this.waterMesh) this.scene.remove(this.waterMesh);
     if (this.terrainSystem && this.terrainSystem.mesh) this.scene.remove(this.terrainSystem.mesh);
-    if (this.simulation && this.simulation.group) this.scene.remove(this.simulation.group);
+    if (this.simulation) {
+      if (this.simulation.dispose) this.simulation.dispose();
+      if (this.simulation.group) this.scene.remove(this.simulation.group);
+    }
 
     // 2. Re-create objects for new scenario
     this.initSceneObjects();
