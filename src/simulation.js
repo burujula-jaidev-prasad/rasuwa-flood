@@ -93,10 +93,11 @@ export class FloodSimulation {
     this.initNewYorkGenesis();
 
     // Procedural New York landmarks, bridges, skyscrapers, and countermeasures
-    const { wipeableItems, arcLight, arcMesh } = buildNewYorkScene(this.group, this.river, this.terrain);
+    const { wipeableItems, arcLight, arcMesh, updateTubes } = buildNewYorkScene(this.group, this.river, this.terrain);
     this.wipeableItems = wipeableItems;
     this.nyArcLight = arcLight;
     this.nyArcMesh = arcMesh;
+    this.nyUpdateTubes = updateTubes;
 
     // New York landmark badges
     this.initNewYorkLandmarkBadges();
@@ -3509,12 +3510,14 @@ export class FloodSimulation {
         if (this.trailObj) this.river.updateFloodTrail(this.trailObj, 0);
         this.uWave = 0;
         this.updateWipeableItems(0);
+        if (this.nyUpdateTubes) this.nyUpdateTubes(0);
       } else {
         if (this.floodGroup) this.floodGroup.visible = true;
         uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
         this.uWave = uWave;
         this.updateSurgeFront(uWave);
         this.updateWipeableItems(uWave);
+        if (this.nyUpdateTubes) this.nyUpdateTubes(uWave);
 
         if (this.nyArcLight && this.nyArcMesh) {
           if (uWave >= 0.70 && uWave <= 0.82) {

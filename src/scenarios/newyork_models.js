@@ -20,6 +20,8 @@ import * as THREE from 'three';
 export function buildNewYorkScene(group, river, terrain) {
   const wipeableItems = [];
   const dynamicWaterItems = [];
+  const tubesList = [];
+  let metroStation = null;
 
   // Helper to place objects on river tangents & bank normals
   function getRiverFrame(u) {
@@ -54,6 +56,11 @@ export function buildNewYorkScene(group, river, terrain) {
   const ceramicMat      = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.3 });
   const usaceArmyMat    = new THREE.MeshStandardMaterial({ color: 0x3f6212, roughness: 0.6 });
   const hoseMat         = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.7 });
+  const castIronMat     = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8, metalness: 0.6 });
+  const tubeCutawayMat  = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.1, metalness: 0.2, transparent: true, opacity: 0.38, depthWrite: false });
+  const subwaySteelMat  = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.25, metalness: 0.85 });
+  const thirdRailCoverMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.5 });
+  const tubeWaterMat    = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.12, metalness: 0.35, transparent: true, opacity: 0.88, depthWrite: false });
 
   // -------------------------------------------------------------------------
   // PROCEDURAL BUILDERS FOR NEW YORK ARCHITECTURE & VEHICLES
@@ -1036,11 +1043,446 @@ export function buildNewYorkScene(group, river, terrain) {
       driftDir,
       tumbleVel,
       collapseTilt: options.collapseTilt || 0.55,
+      collapseTiltX: options.collapseTiltX || 0.0,
       sinkScale: options.sinkScale !== undefined ? options.sinkScale : 0.25,
       material: options.primaryMat || null,
       materials: options.materials || null,
       maxProg: options.maxProg || 0.12
     });
+  }
+
+  /**
+   * 3D Billboard Status Badges for Submerged Under-River Tubes
+   * Generates crisp dual canvas textures for Active (Dry) vs Submerged (Flooded) states
+   */
+  function createTubeBadgeTextures(title, bullets, tubeDesc) {
+    if (typeof document === 'undefined' || !document.createElement) {
+      const dummyTex = new THREE.Texture();
+      return { texDry: dummyTex, texSub: dummyTex };
+    }
+
+    function renderBadge(isSubmerged) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 140;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        return new THREE.Texture();
+      }
+
+      ctx.fillStyle = isSubmerged ? 'rgba(69, 10, 10, 0.92)' : 'rgba(15, 23, 42, 0.90)';
+      ctx.strokeStyle = isSubmerged ? '#ef4444' : '#10b981';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(10, 10, 492, 120, 16);
+      } else {
+        ctx.rect(10, 10, 492, 120);
+      }
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = isSubmerged ? '#ef4444' : '#10b981';
+      ctx.beginPath();
+      ctx.arc(36, 44, 11, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 30px -apple-system, sans-serif';
+      ctx.fillText(title, 58, 54);
+
+      ctx.fillStyle = isSubmerged ? '#fca5a5' : '#86efac';
+      ctx.font = 'bold 22px monospace';
+      const statusText = isSubmerged ? '[ SUBMERGED • 100% INUNDATED ]' : '[ ACTIVE / DRY • PUMPS RUNNING ]';
+      ctx.fillText(statusText, 58, 92);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '18px -apple-system, sans-serif';
+      ctx.fillText(tubeDesc, 58, 118);
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.minFilter = THREE.LinearFilter;
+      return tex;
+    }
+
+    return { texDry: renderBadge(false), texSub: renderBadge(true) };
+  }
+
+  /**
+   * Under-River Transit Tube (East River & Upper NY Bay crossing)
+   * High-fidelity 3D cutaway tube with tracks, stalled subway train / cars,
+   * cast-iron segmental ring flanges, bulkhead lights, and dynamic floodwater volume.
+   */
+  function buildUnderRiverSubwayTube(cfg) {
+    const fTube = getRiverFrame(cfg.u);
+    const tubeGroup = new THREE.Group();
+    tubeGroup.position.copy(fTube.pt);
+    tubeGroup.position.y = 1.0;
+
+    const basis = new THREE.Matrix4().makeBasis(fTube.tangent, fTube.up, fTube.side);
+    tubeGroup.quaternion.setFromRotationMatrix(basis);
+
+    const span = cfg.tubeSpan || 36.0;
+    const r = cfg.radius || 2.4;
+    const lights = [];
+
+    if (cfg.isVehicular) {
+      // Twin vehicular tubes (Brooklyn-Battery Tunnel) at X = -2.5 and X = +2.5
+      [-2.5, 2.5].forEach((tubX) => {
+        const subTube = new THREE.Group();
+        subTube.position.set(tubX, 0, 0);
+
+        // Lower half cylindrical cast-iron shell
+        const lowerGeo = new THREE.CylinderGeometry(r, r, span, 24, 1, true, 0, Math.PI);
+        const lowerMesh = new THREE.Mesh(lowerGeo, castIronMat);
+        lowerMesh.rotation.x = Math.PI * 0.5;
+        subTube.add(lowerMesh);
+
+        // Upper half translucent cutaway shell
+        const upperGeo = new THREE.CylinderGeometry(r, r, span, 24, 1, true, Math.PI, Math.PI);
+        const upperMesh = new THREE.Mesh(upperGeo, tubeCutawayMat);
+        upperMesh.rotation.x = Math.PI * 0.5;
+        subTube.add(upperMesh);
+
+        // Segmental cast-iron ring ribs every 2.8m
+        for (let rz = -span * 0.48; rz <= span * 0.48; rz += 2.8) {
+          const rib = new THREE.Mesh(new THREE.TorusGeometry(r, 0.08, 8, 24, Math.PI), castIronMat);
+          rib.rotation.y = Math.PI * 0.5;
+          rib.position.set(0, 0, rz);
+          subTube.add(rib);
+        }
+
+        // Paved asphalt roadway bed
+        const road = new THREE.Mesh(new THREE.BoxGeometry(r * 1.6, 0.25, span), tarmacMat);
+        road.position.set(0, -r * 0.55, 0);
+        subTube.add(road);
+
+        // Double yellow center line
+        const yellowLine = new THREE.Mesh(
+          new THREE.BoxGeometry(0.12, 0.04, span * 0.96),
+          new THREE.MeshBasicMaterial({ color: 0xfacc15 })
+        );
+        yellowLine.position.set(0, -r * 0.55 + 0.14, 0);
+        subTube.add(yellowLine);
+
+        // Overhead ceiling tunnel lights
+        for (let lz = -span * 0.4; lz <= span * 0.4; lz += 4.5) {
+          const lampMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.85 });
+          const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), lampMat);
+          lamp.position.set(0, r * 0.75, lz);
+          subTube.add(lamp);
+          lights.push(lamp);
+        }
+
+        tubeGroup.add(subTube);
+      });
+
+      // Stalled vehicles inside the tubes
+      const cab = createYellowCab();
+      cab.group.position.set(-2.5, -r * 0.55 + 0.14, -4.0);
+      tubeGroup.add(cab.group);
+
+      const van = createDeliveryVan(0x0284c7);
+      van.group.position.set(2.5, -r * 0.55 + 0.14, 3.0);
+      tubeGroup.add(van.group);
+
+      const cab2 = createYellowCab();
+      cab2.group.position.set(-2.5, -r * 0.55 + 0.14, 9.0);
+      tubeGroup.add(cab2.group);
+
+    } else {
+      // Subway tube with tracks, ties, third rail, and stalled MTA train
+      const lowerGeo = new THREE.CylinderGeometry(r, r, span, 24, 1, true, 0, Math.PI);
+      const lowerMesh = new THREE.Mesh(lowerGeo, castIronMat);
+      lowerMesh.rotation.x = Math.PI * 0.5;
+      tubeGroup.add(lowerMesh);
+
+      const upperGeo = new THREE.CylinderGeometry(r, r, span, 24, 1, true, Math.PI, Math.PI);
+      const upperMesh = new THREE.Mesh(upperGeo, tubeCutawayMat);
+      upperMesh.rotation.x = Math.PI * 0.5;
+      tubeGroup.add(upperMesh);
+
+      for (let rz = -span * 0.48; rz <= span * 0.48; rz += 2.6) {
+        const rib = new THREE.Mesh(new THREE.TorusGeometry(r, 0.09, 8, 24, Math.PI), castIronMat);
+        rib.rotation.y = Math.PI * 0.5;
+        rib.position.set(0, 0, rz);
+        tubeGroup.add(rib);
+      }
+
+      const trackbed = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.3, span), concreteMat);
+      trackbed.position.set(0, -r * 0.55, 0);
+      tubeGroup.add(trackbed);
+
+      [-0.75, 0.75].forEach((rx) => {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.14, span), steelCableMat);
+        rail.position.set(rx, -r * 0.55 + 0.22, 0);
+        tubeGroup.add(rail);
+      });
+
+      const tieMat = new THREE.MeshStandardMaterial({ color: 0x5a3825, roughness: 0.9 });
+      for (let tz = -span * 0.48; tz <= span * 0.48; tz += 0.8) {
+        const tie = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.09, 0.26), tieMat);
+        tie.position.set(0, -r * 0.55 + 0.16, tz);
+        tubeGroup.add(tie);
+      }
+
+      const thirdRail = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.18, span), thirdRailCoverMat);
+      thirdRail.position.set(1.1, -r * 0.55 + 0.24, 0);
+      tubeGroup.add(thirdRail);
+
+      for (let lz = -span * 0.42; lz <= span * 0.42; lz += 3.8) {
+        const lampMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.85 });
+        const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), lampMat);
+        lamp.position.set(0, r * 0.75, lz);
+        tubeGroup.add(lamp);
+        lights.push(lamp);
+      }
+
+      // Stalled 2-car R160/R188 MTA Subway Train
+      [-4.5, 4.8].forEach((carZ) => {
+        const trainCar = new THREE.Group();
+        trainCar.position.set(0, -r * 0.55 + 1.25, carZ);
+
+        const carBody = new THREE.Mesh(new THREE.BoxGeometry(2.3, 1.8, 8.4), subwaySteelMat);
+        carBody.castShadow = true;
+        trainCar.add(carBody);
+
+        const winMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.9 });
+        const winStrip = new THREE.Mesh(new THREE.BoxGeometry(2.34, 0.6, 7.2), winMat);
+        winStrip.position.y = 0.15;
+        trainCar.add(winStrip);
+
+        const stripeMat = new THREE.MeshBasicMaterial({ color: cfg.lineColor || 0x16a34a });
+        const stripe = new THREE.Mesh(new THREE.BoxGeometry(2.35, 0.14, 8.2), stripeMat);
+        stripe.position.y = -0.3;
+        trainCar.add(stripe);
+
+        const acPod1 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.3, 1.8), concreteMat);
+        acPod1.position.set(0, 1.02, -2.0);
+        trainCar.add(acPod1);
+
+        const acPod2 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.3, 1.8), concreteMat);
+        acPod2.position.set(0, 1.02, 2.0);
+        trainCar.add(acPod2);
+
+        const headLamp1 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+        headLamp1.position.set(-0.6, -0.2, -4.22);
+        trainCar.add(headLamp1);
+
+        const headLamp2 = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+        headLamp2.position.set(0.6, -0.2, -4.22);
+        trainCar.add(headLamp2);
+
+        tubeGroup.add(trainCar);
+      });
+    }
+
+    // Dynamic internal floodwater volume
+    const floodWidth = cfg.isVehicular ? 7.6 : 4.2;
+    const floodMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(floodWidth, 2.4, span * 0.98),
+      tubeWaterMat.clone()
+    );
+    floodMesh.position.set(0, -1.3, 0);
+    floodMesh.scale.set(1.0, 0.001, 1.0);
+    floodMesh.visible = false;
+    tubeGroup.add(floodMesh);
+
+    // Concrete Shore Portal Headwalls at both banks
+    [-span * 0.5, span * 0.5].forEach((pz) => {
+      const portal = new THREE.Group();
+      portal.position.set(0, 0, pz);
+
+      const headwall = new THREE.Mesh(new THREE.BoxGeometry(r * 2.6, r * 2.2, 1.8), concreteMat);
+      portal.add(headwall);
+
+      const portalArch = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.85, r * 0.85, 2.0, 16, 1, false, 0, Math.PI), castIronMat);
+      portalArch.rotation.x = Math.PI * 0.5;
+      portal.add(portalArch);
+
+      tubeGroup.add(portal);
+    });
+
+    // Shore Breach Foam Meshes
+    const foamMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.85 });
+    const foamBrooklyn = new THREE.Mesh(new THREE.SphereGeometry(2.4, 10, 8), foamMat);
+    foamBrooklyn.position.set(0, -0.2, -span * 0.5);
+    foamBrooklyn.scale.set(1.4, 0.6, 1.4);
+    foamBrooklyn.visible = false;
+    tubeGroup.add(foamBrooklyn);
+
+    const foamManhattan = new THREE.Mesh(new THREE.SphereGeometry(2.4, 10, 8), foamMat);
+    foamManhattan.position.set(0, -0.2, span * 0.5);
+    foamManhattan.scale.set(1.4, 0.6, 1.4);
+    foamManhattan.visible = false;
+    tubeGroup.add(foamManhattan);
+
+    // 3D Floating Billboard Badge
+    const badgeTextures = createTubeBadgeTextures(cfg.name, cfg.bullets, cfg.desc);
+    const spriteMat = new THREE.SpriteMaterial({
+      map: badgeTextures.texDry,
+      transparent: true,
+      depthTest: false
+    });
+    const badgeSprite = new THREE.Sprite(spriteMat);
+    badgeSprite.scale.set(15, 4.1, 1);
+    badgeSprite.position.set(0, 11.5, 0);
+    tubeGroup.add(badgeSprite);
+
+    group.add(tubeGroup);
+
+    return {
+      id: cfg.id,
+      uTrigger: cfg.uTrigger,
+      tubeGroup,
+      floodMesh,
+      lights,
+      foamManhattan,
+      foamBrooklyn,
+      badgeSprite,
+      badgeTextures
+    };
+  }
+
+  /**
+   * Subterranean Cutaway Metro Station Vault (South Ferry / 1 Train)
+   * Featuring white glazed subway tiles, blue mosaic trim, elevated passenger platforms,
+   * turnstiles, docked 2-car subway train, descending stairwell with cascading floodwater,
+   * and rising internal station inundation that submerges the tracks and platform.
+   */
+  function buildSubsurfaceMetroStationCutaway(fSub) {
+    const stationGroup = new THREE.Group();
+    const pos = fSub.pt.clone().addScaledVector(fSub.side, 19.5).addScaledVector(fSub.tangent, -4.5);
+    stationGroup.position.set(pos.x, -1.2, pos.z);
+    stationGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fSub.tangent);
+
+    const sLen = 22.0;
+    const sWid = 13.0;
+    const sH = 5.6;
+
+    const tileMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.25, metalness: 0.2 });
+    const mosaicBlueMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.4 });
+    const yellowEdgeMat = new THREE.MeshBasicMaterial({ color: 0xeab308 });
+
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(sWid, 0.4, sLen), concreteMat);
+    floor.position.y = -sH * 0.5;
+    stationGroup.add(floor);
+
+    const backWall = new THREE.Mesh(new THREE.BoxGeometry(0.5, sH, sLen), tileMat);
+    backWall.position.set(-sWid * 0.5, 0, 0);
+    stationGroup.add(backWall);
+
+    const mosaicTrim = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.6, sLen * 0.92), mosaicBlueMat);
+    mosaicTrim.position.set(-sWid * 0.5, 1.2, 0);
+    stationGroup.add(mosaicTrim);
+
+    const endWall1 = new THREE.Mesh(new THREE.BoxGeometry(sWid, sH, 0.5), tileMat);
+    endWall1.position.set(0, 0, -sLen * 0.5);
+    stationGroup.add(endWall1);
+
+    const endWall2 = new THREE.Mesh(new THREE.BoxGeometry(sWid, sH, 0.5), tileMat);
+    endWall2.position.set(0, 0, sLen * 0.5);
+    stationGroup.add(endWall2);
+
+    const platH = 1.3;
+    const platW = 4.8;
+    const platform = new THREE.Mesh(new THREE.BoxGeometry(platW, platH, sLen * 0.88), concreteMat);
+    platform.position.set(0, -sH * 0.5 + platH * 0.5, 0);
+    stationGroup.add(platform);
+
+    [-platW * 0.5 + 0.1, platW * 0.5 - 0.1].forEach((px) => {
+      const edgeStrip = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, sLen * 0.88), yellowEdgeMat);
+      edgeStrip.position.set(px, -sH * 0.5 + platH + 0.03, 0);
+      stationGroup.add(edgeStrip);
+    });
+
+    [-3.8, 3.8].forEach((tx) => {
+      [-0.7, 0.7].forEach((rx) => {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.16, sLen * 0.95), steelCableMat);
+        rail.position.set(tx + rx, -sH * 0.5 + 0.2, 0);
+        stationGroup.add(rail);
+      });
+      const tr = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.2, sLen * 0.95), thirdRailCoverMat);
+      tr.position.set(tx + (tx > 0 ? 1.0 : -1.0), -sH * 0.5 + 0.25, 0);
+      stationGroup.add(tr);
+    });
+
+    const columnMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.5, metalness: 0.6 });
+    for (let cz = -sLen * 0.35; cz <= sLen * 0.35; cz += 3.2) {
+      [-platW * 0.38, platW * 0.38].forEach((cx) => {
+        const col = new THREE.Mesh(new THREE.BoxGeometry(0.25, sH, 0.25), columnMat);
+        col.position.set(cx, 0, cz);
+        stationGroup.add(col);
+      });
+    }
+
+    for (let tn = 0; tn < 4; tn++) {
+      const tst = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.9, 0.8), subwaySteelMat);
+      tst.position.set(-1.2 + tn * 0.8, -sH * 0.5 + platH + 0.45, -sLen * 0.32);
+      stationGroup.add(tst);
+    }
+
+    const trainGroup = new THREE.Group();
+    trainGroup.position.set(3.8, -sH * 0.5 + 1.25, 0);
+    const car1 = new THREE.Mesh(new THREE.BoxGeometry(2.3, 1.8, 8.5), subwaySteelMat);
+    trainGroup.add(car1);
+    const win1 = new THREE.Mesh(new THREE.BoxGeometry(2.34, 0.6, 7.2), new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.85 }));
+    win1.position.y = 0.15;
+    trainGroup.add(win1);
+    const stripe1 = new THREE.Mesh(new THREE.BoxGeometry(2.35, 0.15, 8.2), new THREE.MeshBasicMaterial({ color: 0xdc2626 }));
+    stripe1.position.y = -0.3;
+    trainGroup.add(stripe1);
+    stationGroup.add(trainGroup);
+
+    const stairGroup = new THREE.Group();
+    stairGroup.position.set(0, -sH * 0.5 + platH + 0.8, sLen * 0.38);
+    const stairGeo = new THREE.BoxGeometry(2.6, 2.2, 4.2);
+    const stairRamp = new THREE.Mesh(stairGeo, concreteMat);
+    stairRamp.rotation.x = -0.42;
+    stairGroup.add(stairRamp);
+    stationGroup.add(stairGroup);
+
+    const cascadeGeo = new THREE.PlaneGeometry(2.5, 4.4, 8, 8);
+    const cascadeMat = new THREE.MeshBasicMaterial({
+      color: 0x93c5fd,
+      transparent: true,
+      opacity: 0.85,
+      side: THREE.DoubleSide
+    });
+    const stairCascade = new THREE.Mesh(cascadeGeo, cascadeMat);
+    stairCascade.position.set(0, -sH * 0.5 + platH + 1.2, sLen * 0.38);
+    stairCascade.rotation.x = Math.PI * 0.5 - 0.42;
+    stairCascade.visible = false;
+    stationGroup.add(stairCascade);
+
+    const waterGeo = new THREE.BoxGeometry(sWid * 0.98, 3.4, sLen * 0.98);
+    const stationWaterMat = new THREE.MeshStandardMaterial({
+      color: 0x0284c7,
+      roughness: 0.12,
+      metalness: 0.3,
+      transparent: true,
+      opacity: 0.88,
+      depthWrite: false
+    });
+    const stationWaterMesh = new THREE.Mesh(waterGeo, stationWaterMat);
+    stationWaterMesh.position.set(0, -sH * 0.5 + 0.1, 0);
+    stationWaterMesh.scale.set(1.0, 0.001, 1.0);
+    stationWaterMesh.visible = false;
+    stationGroup.add(stationWaterMesh);
+
+    const alarmLight = new THREE.PointLight(0xef4444, 0.0, 25);
+    alarmLight.position.set(0, sH * 0.4, 0);
+    stationGroup.add(alarmLight);
+
+    group.add(stationGroup);
+
+    return {
+      stationGroup,
+      sH,
+      waterMesh: stationWaterMesh,
+      stairCascade,
+      alarmLight
+    };
   }
 
   // -------------------------------------------------------------------------
@@ -1644,6 +2086,104 @@ export function buildNewYorkScene(group, river, terrain) {
   }
 
   // -------------------------------------------------------------------------
+  // SUBTERRANEAN METRO STATION & 7 UNDER-RIVER TRANSIT TUBES
+  // -------------------------------------------------------------------------
+  // Subsurface Cutaway Metro Station Vault at South Ferry (u = 0.54)
+  metroStation = buildSubsurfaceMetroStationCutaway(fSub);
+
+  // The 7 Historical Under-River Transit Tubes Crossing Upper NY Bay & East River
+  const tubeConfigs = [
+    {
+      id: 'battery_tunnel',
+      name: 'Hugh L. Carey (Battery) Tunnel',
+      bullets: 'VEHICULAR',
+      desc: 'Twin Road Tubes • 86M Gal Inundation',
+      u: 0.50,
+      uTrigger: 0.50,
+      isVehicular: true,
+      lineColor: 0x0284c7,
+      tubeSpan: 36.0,
+      radius: 2.5
+    },
+    {
+      id: 'joralemon_tube',
+      name: 'Joralemon Street Tube',
+      bullets: '(4)(5)',
+      desc: '4/5 Subway • 1908 Historic River Crossing',
+      u: 0.51,
+      uTrigger: 0.51,
+      isVehicular: false,
+      lineColor: 0x16a34a,
+      tubeSpan: 34.0,
+      radius: 2.4
+    },
+    {
+      id: 'clark_tube',
+      name: 'Clark Street Tube',
+      bullets: '(2)(3)',
+      desc: '2/3 Subway • Clark St / William St Bore',
+      u: 0.525,
+      uTrigger: 0.525,
+      isVehicular: false,
+      lineColor: 0xdc2626,
+      tubeSpan: 34.0,
+      radius: 2.4
+    },
+    {
+      id: 'south_ferry_tube',
+      name: 'South Ferry Loop Tube',
+      bullets: '(1)',
+      desc: '1 Subway • 14.5M Gal Terminal Flooding',
+      u: 0.54,
+      uTrigger: 0.54,
+      isVehicular: false,
+      lineColor: 0xdc2626,
+      tubeSpan: 32.0,
+      radius: 2.4
+    },
+    {
+      id: 'montague_tube',
+      name: 'Montague Street Tube',
+      bullets: '(N)(R)',
+      desc: 'N/R Subway • 27M Gal Saltwater Breach',
+      u: 0.57,
+      uTrigger: 0.57,
+      isVehicular: false,
+      lineColor: 0xca8a04,
+      tubeSpan: 35.0,
+      radius: 2.4
+    },
+    {
+      id: 'cranberry_tube',
+      name: 'Cranberry Street Tube',
+      bullets: '(A)(C)',
+      desc: 'A/C Subway • Deep Rock Bore Inundation',
+      u: 0.66,
+      uTrigger: 0.66,
+      isVehicular: false,
+      lineColor: 0x2563eb,
+      tubeSpan: 35.0,
+      radius: 2.4
+    },
+    {
+      id: 'rutgers_tube',
+      name: 'Rutgers Street Tube',
+      bullets: '(F)',
+      desc: 'F Subway • Lower East Side River Crossing',
+      u: 0.71,
+      uTrigger: 0.71,
+      isVehicular: false,
+      lineColor: 0xea580c,
+      tubeSpan: 35.0,
+      radius: 2.4
+    }
+  ];
+
+  tubeConfigs.forEach((cfg) => {
+    tubesList.push(buildUnderRiverSubwayTube(cfg));
+  });
+
+  // -------------------------------------------------------------------------
   // ZONE 5: SOUTH STREET SEAPORT WATERFRONT BRICK LOFTS (u = 0.56 - 0.62)
   // -------------------------------------------------------------------------
   const brickColors = [0x991b1b, 0x854d0e, 0x7f1d1d, 0x713f12, 0x9a3412];
@@ -1768,118 +2308,284 @@ export function buildNewYorkScene(group, river, terrain) {
       tower.add(archTop);
     });
 
-    // Tower Crown Cornice & Saddle Cap
-    const crown = new THREE.Mesh(new THREE.BoxGeometry(7.8, 2.2, 3.2), gothicStoneMat);
-    crown.position.set(0, brTowerH + 4.8, 0);
-    tower.add(crown);
+    // Lower tower saddle base
+    const saddleBase = new THREE.Mesh(new THREE.BoxGeometry(7.6, 1.4, 3.0), gothicStoneMat);
+    saddleBase.position.set(0, brTowerH + 3.8, 0);
+    tower.add(saddleBase);
 
     brGroup.add(tower);
   });
 
-  // Suspended Stiffened Road Deck (Double roadway)
-  const brDeckLen = brSpan * 1.40;
-  const brDeck = new THREE.Mesh(new THREE.BoxGeometry(7.4, 1.2, brDeckLen), steelGreenMat);
-  brDeck.position.set(0, 12.0, 0);
-  brDeck.castShadow = true;
-  brGroup.add(brDeck);
+  const brQuat = new THREE.Quaternion().setFromRotationMatrix(brBasis);
 
-  // Elevated Central Pedestrian Timber Boardwalk
-  const brBoardwalk = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.4, brDeckLen), new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 }));
-  brBoardwalk.position.set(0, 13.0, 0);
-  brGroup.add(brBoardwalk);
-
-  // Timber handrails flanking pedestrian boardwalk
-  [-1.2, 1.2].forEach((rX) => {
-    const handrail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.7, brDeckLen), new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.8 }));
-    handrail.position.set(rX, 13.55, 0);
-    brGroup.add(handrail);
+  // Tower Arch Portal Keystones & Decorative Cornices (uTrigger = 0.743, 0.745)
+  // Fracture and topple into the East River when the central span collapses
+  [-brTowerZ, brTowerZ].forEach((tZ, idx) => {
+    const crown = new THREE.Mesh(new THREE.BoxGeometry(7.8, 2.2, 3.2), gothicStoneMat.clone());
+    const pos = fBr.pt.clone().addScaledVector(fBr.side, tZ).addScaledVector(fBr.up, brTowerH + 4.8);
+    crown.quaternion.copy(brQuat);
+    registerWipeable(crown, 0.743 + idx * 0.002, pos, fBr.tangent, fBr.side, {
+      primaryMat: crown.material,
+      collapseTilt: idx === 0 ? 0.58 : -0.58,
+      tumbleScale: 6.5,
+      sinkScale: 0.35,
+      driftSpeed: 24.0
+    });
   });
 
-  // 4 Heavy 3D Catenary Main Cable Tubes (Outer & Inner pairs)
+  // APPROACH ROADWAY DECKS & BOARDWALKS (Rooted to shores & anchorages in brGroup)
+  const appLen = brAnchorZ - brTowerZ; // 12.32m
+  [-1, 1].forEach((sign) => {
+    const centerZ = sign * (brTowerZ + appLen * 0.5);
+
+    const appDeck = new THREE.Mesh(new THREE.BoxGeometry(7.4, 1.2, appLen), steelGreenMat);
+    appDeck.position.set(0, 12.0, centerZ);
+    appDeck.castShadow = true;
+    brGroup.add(appDeck);
+
+    const appBoardwalk = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.4, appLen), new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 }));
+    appBoardwalk.position.set(0, 13.0, centerZ);
+    brGroup.add(appBoardwalk);
+
+    [-1.2, 1.2].forEach((rX) => {
+      const handrail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.7, appLen), new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.8 }));
+      handrail.position.set(rX, 13.55, centerZ);
+      brGroup.add(handrail);
+    });
+  });
+
+  // SHORE SUSPENSION CABLES & STAY RAYS (Anchorage to Tower in brGroup)
   const cableXPositions = [-3.0, -1.8, 1.8, 3.0];
   cableXPositions.forEach((cableX) => {
-    const curvePts = [];
-    curvePts.push(new THREE.Vector3(cableX, 6.5, -brAnchorZ));
-    curvePts.push(new THREE.Vector3(cableX, 19.0, -brTowerZ * 1.3));
-    curvePts.push(new THREE.Vector3(cableX, brTowerH + 5.2, -brTowerZ));
+    // Manhattan Shore Cable: -brAnchorZ to -brTowerZ
+    const ptsMan = [];
+    ptsMan.push(new THREE.Vector3(cableX, 6.5, -brAnchorZ));
+    ptsMan.push(new THREE.Vector3(cableX, 19.0, -brTowerZ * 1.3));
+    ptsMan.push(new THREE.Vector3(cableX, brTowerH + 5.2, -brTowerZ));
+    const catMan = new THREE.CatmullRomCurve3(ptsMan);
+    brGroup.add(new THREE.Mesh(new THREE.TubeGeometry(catMan, 24, 0.16, 8, false), steelCableMat));
 
-    for (let k = 1; k < 14; k++) {
-      const uK = k / 14;
-      const zK = -brTowerZ + uK * (2.0 * brTowerZ);
-      const normZ = zK / brTowerZ;
-      const yK = 13.6 + (brTowerH + 5.2 - 13.6) * (normZ * normZ);
-      curvePts.push(new THREE.Vector3(cableX, yK, zK));
-    }
+    // Brooklyn Shore Cable: brTowerZ to brAnchorZ
+    const ptsBrk = [];
+    ptsBrk.push(new THREE.Vector3(cableX, brTowerH + 5.2, brTowerZ));
+    ptsBrk.push(new THREE.Vector3(cableX, 19.0, brTowerZ * 1.3));
+    ptsBrk.push(new THREE.Vector3(cableX, 6.5, brAnchorZ));
+    const catBrk = new THREE.CatmullRomCurve3(ptsBrk);
+    brGroup.add(new THREE.Mesh(new THREE.TubeGeometry(catBrk, 24, 0.16, 8, false), steelCableMat));
 
-    curvePts.push(new THREE.Vector3(cableX, brTowerH + 5.2, brTowerZ));
-    curvePts.push(new THREE.Vector3(cableX, 19.0, brTowerZ * 1.3));
-    curvePts.push(new THREE.Vector3(cableX, 6.5, brAnchorZ));
-
-    const catCurve = new THREE.CatmullRomCurve3(curvePts);
-    const cableTube = new THREE.Mesh(new THREE.TubeGeometry(catCurve, 48, 0.16, 8, false), steelCableMat);
-    brGroup.add(cableTube);
-
-    // Vertical Wire Rope Suspenders
-    for (let sZ = -brTowerZ + 1.6; sZ <= brTowerZ - 1.6; sZ += 1.8) {
-      const normZ = sZ / brTowerZ;
-      const yCable = 13.6 + (brTowerH + 5.2 - 13.6) * (normZ * normZ);
-      const suspH = Math.max(0.4, yCable - 12.6);
-      const susp = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, suspH, 6), steelCableMat);
-      susp.position.set(cableX, 12.6 + suspH * 0.5, sZ);
-      brGroup.add(susp);
-    }
-
-    // John Roebling's Radiating Diagonal Steel Stay Cables
-    const deckZTargets = [
-      -brTowerZ * 0.85, -brTowerZ * 0.65, -brTowerZ * 0.45, -brTowerZ * 0.25, -brTowerZ * 0.08,
-      brTowerZ * 0.08, brTowerZ * 0.25, brTowerZ * 0.45, brTowerZ * 0.65, brTowerZ * 0.85
-    ];
-
+    // Shore approach diagonal stay cables
     [-brTowerZ, brTowerZ].forEach((tZ) => {
       const saddlePos = new THREE.Vector3(cableX, brTowerH + 5.0, tZ);
-      deckZTargets.forEach((dZ) => {
-        if ((tZ < 0 && dZ > tZ) || (tZ > 0 && dZ < tZ)) {
+      [-22.0, -25.0, 22.0, 25.0].forEach((dZ) => {
+        if ((tZ < 0 && dZ < tZ) || (tZ > 0 && dZ > tZ)) {
           const deckPos = new THREE.Vector3(cableX, 12.8, dZ);
           const stayLen = saddlePos.distanceTo(deckPos);
-          const stayMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, stayLen, 4), steelCableMat);
-          stayMesh.position.copy(saddlePos).lerp(deckPos, 0.5);
-          stayMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), deckPos.clone().sub(saddlePos).normalize());
-          brGroup.add(stayMesh);
+          const stay = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, stayLen, 4), steelCableMat);
+          stay.position.copy(saddlePos).lerp(deckPos, 0.5);
+          stay.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), deckPos.clone().sub(saddlePos).normalize());
+          brGroup.add(stay);
         }
       });
     });
   });
+
   group.add(brGroup);
 
-  // Dynamic Collapsing Roadway Section & Yellow Cabs on Brooklyn Bridge (u = 0.74)
-  {
-    const cab = createYellowCab();
-    const cabPos = fBr.pt.clone().addScaledVector(fBr.side, -4.0);
-    cabPos.y = 13.2;
-    cab.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fBr.side);
+  // -------------------------------------------------------------------------
+  // CATASTROPHIC BROOKLYN BRIDGE COLLAPSE (u = 0.74)
+  // Dynamic Center Roadway Spans, Boardwalks, Snapped Cables, & Stalled Vehicles
+  // -------------------------------------------------------------------------
+  const centerSpanLen = brTowerZ; // 17.6m for each half-span
 
-    registerWipeable(cab.group, 0.74, cabPos, fBr.tangent, fBr.side, {
-      primaryMat: cab.primaryMat,
-      materials: cab.materials,
-      driftSpeed: 30.0,
-      tumbleScale: 8.0,
-      collapseTilt: 0.58,
-      sinkScale: 0.22
+  // 1. Manhattan Center Suspended Span Half (Z in [-17.6, 0])
+  {
+    const centerSpanMan = new THREE.Group();
+    const manPos = fBr.pt.clone().addScaledVector(fBr.side, -centerSpanLen * 0.5).addScaledVector(fBr.up, 12.0);
+    centerSpanMan.quaternion.copy(brQuat);
+
+    const deckMatMan = steelGreenMat.clone();
+    const bdwMatMan = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 });
+    const cableMatMan = steelCableMat.clone();
+    const trussMatMan = steelGreenMat.clone();
+    const matsMan = [deckMatMan, bdwMatMan, cableMatMan, trussMatMan];
+
+    // Double Roadway Deck Half
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(7.4, 1.2, centerSpanLen), deckMatMan);
+    deck.castShadow = true;
+    centerSpanMan.add(deck);
+
+    // Stiffening Steel Trusses
+    [-3.6, 3.6].forEach((tx) => {
+      const truss = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1.6, centerSpanLen), trussMatMan);
+      truss.position.set(tx, 0.6, 0);
+      centerSpanMan.add(truss);
     });
 
-    const van = createDeliveryVan(0x047857);
-    const vanPos = fBr.pt.clone().addScaledVector(fBr.side, 5.5);
-    vanPos.y = 13.2;
-    van.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fBr.side);
+    // Elevated Central Pedestrian Timber Boardwalk
+    const bdw = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.4, centerSpanLen), bdwMatMan);
+    bdw.position.set(0, 1.0, 0);
+    centerSpanMan.add(bdw);
 
-    registerWipeable(van.group, 0.745, vanPos, fBr.tangent, fBr.side, {
-      primaryMat: van.primaryMat,
-      materials: van.materials,
-      driftSpeed: 29.0,
-      tumbleScale: 7.5,
-      collapseTilt: 0.52
+    [-1.2, 1.2].forEach((rx) => {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.7, centerSpanLen), bdwMatMan);
+      rail.position.set(rx, 1.55, 0);
+      centerSpanMan.add(rail);
+    });
+
+    // 4 Catenary Cable Halves (Saddle at local Z = -8.8, Y = 27.2 down to Midspan at local Z = +8.8, Y = 1.6)
+    cableXPositions.forEach((cx) => {
+      const pts = [];
+      for (let k = 0; k <= 12; k++) {
+        const frac = k / 12;
+        const lz = -8.8 + frac * 17.6;
+        const norm = (8.8 - lz) / 17.6;
+        const ly = 1.6 + 25.6 * (norm * norm);
+        pts.push(new THREE.Vector3(cx, ly, lz));
+      }
+      const cable = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.16, 8, false), cableMatMan);
+      centerSpanMan.add(cable);
+
+      // Vertical wire suspenders
+      for (let lz = -7.2; lz <= 7.2; lz += 1.8) {
+        const norm = (8.8 - lz) / 17.6;
+        const lyCable = 1.6 + 25.6 * (norm * norm);
+        const suspH = Math.max(0.4, lyCable - 0.6);
+        const susp = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, suspH, 6), cableMatMan);
+        susp.position.set(cx, 0.6 + suspH * 0.5, lz);
+        centerSpanMan.add(susp);
+      }
+
+      // John Roebling diagonal stay cables radiating from tower saddle
+      const saddleLocal = new THREE.Vector3(cx, 27.2, -8.8);
+      [-6.5, -4.0, -1.5, 1.5, 4.5, 7.0].forEach((dz) => {
+        const deckLocal = new THREE.Vector3(cx, 0.8, dz);
+        const stayLen = saddleLocal.distanceTo(deckLocal);
+        const stay = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, stayLen, 4), cableMatMan);
+        stay.position.copy(saddleLocal).lerp(deckLocal, 0.5);
+        stay.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), deckLocal.clone().sub(saddleLocal).normalize());
+        centerSpanMan.add(stay);
+      });
+    });
+
+    registerWipeable(centerSpanMan, 0.738, manPos, fBr.tangent, fBr.side, {
+      materials: matsMan,
+      collapseTilt: 0.65,
+      collapseTiltX: -0.22,
+      driftSpeed: 32.0,
+      tumbleScale: 4.5,
+      sinkScale: 0.38,
+      maxProg: 0.16
     });
   }
+
+  // 2. Brooklyn Center Suspended Span Half (Z in [0, +17.6])
+  {
+    const centerSpanBr = new THREE.Group();
+    const brkPos = fBr.pt.clone().addScaledVector(fBr.side, centerSpanLen * 0.5).addScaledVector(fBr.up, 12.0);
+    centerSpanBr.quaternion.copy(brQuat);
+
+    const deckMatBr = steelGreenMat.clone();
+    const bdwMatBr = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 });
+    const cableMatBr = steelCableMat.clone();
+    const trussMatBr = steelGreenMat.clone();
+    const matsBr = [deckMatBr, bdwMatBr, cableMatBr, trussMatBr];
+
+    // Double Roadway Deck Half
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(7.4, 1.2, centerSpanLen), deckMatBr);
+    deck.castShadow = true;
+    centerSpanBr.add(deck);
+
+    // Stiffening Steel Trusses
+    [-3.6, 3.6].forEach((tx) => {
+      const truss = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1.6, centerSpanLen), trussMatBr);
+      truss.position.set(tx, 0.6, 0);
+      centerSpanBr.add(truss);
+    });
+
+    // Elevated Central Pedestrian Timber Boardwalk
+    const bdw = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.4, centerSpanLen), bdwMatBr);
+    bdw.position.set(0, 1.0, 0);
+    centerSpanBr.add(bdw);
+
+    [-1.2, 1.2].forEach((rx) => {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.7, centerSpanLen), bdwMatBr);
+      rail.position.set(rx, 1.55, 0);
+      centerSpanBr.add(rail);
+    });
+
+    // 4 Catenary Cable Halves (Midspan at local Z = -8.8, Y = 1.6 up to Tower Saddle at local Z = +8.8, Y = 27.2)
+    cableXPositions.forEach((cx) => {
+      const pts = [];
+      for (let k = 0; k <= 12; k++) {
+        const frac = k / 12;
+        const lz = -8.8 + frac * 17.6;
+        const norm = (lz + 8.8) / 17.6;
+        const ly = 1.6 + 25.6 * (norm * norm);
+        pts.push(new THREE.Vector3(cx, ly, lz));
+      }
+      const cable = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, 0.16, 8, false), cableMatBr);
+      centerSpanBr.add(cable);
+
+      // Vertical wire suspenders
+      for (let lz = -7.2; lz <= 7.2; lz += 1.8) {
+        const norm = (lz + 8.8) / 17.6;
+        const lyCable = 1.6 + 25.6 * (norm * norm);
+        const suspH = Math.max(0.4, lyCable - 0.6);
+        const susp = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, suspH, 6), cableMatBr);
+        susp.position.set(cx, 0.6 + suspH * 0.5, lz);
+        centerSpanBr.add(susp);
+      }
+
+      // John Roebling diagonal stay cables radiating from Brooklyn tower saddle
+      const saddleLocal = new THREE.Vector3(cx, 27.2, 8.8);
+      [-7.0, -4.5, -1.5, 1.5, 4.0, 6.5].forEach((dz) => {
+        const deckLocal = new THREE.Vector3(cx, 0.8, dz);
+        const stayLen = saddleLocal.distanceTo(deckLocal);
+        const stay = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, stayLen, 4), cableMatBr);
+        stay.position.copy(saddleLocal).lerp(deckLocal, 0.5);
+        stay.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), deckLocal.clone().sub(saddleLocal).normalize());
+        centerSpanBr.add(stay);
+      });
+    });
+
+    registerWipeable(centerSpanBr, 0.742, brkPos, fBr.tangent, fBr.side, {
+      materials: matsBr,
+      collapseTilt: -0.65,
+      collapseTiltX: 0.22,
+      driftSpeed: 30.0,
+      tumbleScale: 4.5,
+      sinkScale: 0.38,
+      maxProg: 0.16
+    });
+  }
+
+  // 3. Stalled Morning Traffic Caught in Brooklyn Bridge Collapse (uTrigger = 0.738 - 0.743)
+  const bridgeVehicles = [
+    { type: 'cab',   sideZ: -13.0, offX: -1.8, uTrig: 0.738, tilt: 0.62 },
+    { type: 'van',   sideZ: -6.5,  offX:  1.8, uTrig: 0.739, tilt: 0.58 },
+    { type: 'cab',   sideZ: -1.0,  offX: -1.8, uTrig: 0.740, tilt: 0.65 },
+    { type: 'van',   sideZ:  4.0,  offX:  1.8, uTrig: 0.741, tilt: -0.58 },
+    { type: 'cab',   sideZ: 10.5,  offX: -1.8, uTrig: 0.742, tilt: -0.62 },
+    { type: 'van',   sideZ: 14.5,  offX:  1.8, uTrig: 0.743, tilt: -0.55 }
+  ];
+
+  bridgeVehicles.forEach((v) => {
+    const veh = v.type === 'cab' ? createYellowCab() : createDeliveryVan(v.sideZ > 0 ? 0x0284c7 : 0x047857);
+    const pos = fBr.pt.clone()
+      .addScaledVector(fBr.side, v.sideZ)
+      .addScaledVector(fBr.tangent, v.offX);
+    pos.y = 13.2;
+    veh.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fBr.side);
+
+    registerWipeable(veh.group, v.uTrig, pos, fBr.tangent, fBr.side, {
+      primaryMat: veh.primaryMat,
+      materials: veh.materials,
+      driftSpeed: 30.0,
+      tumbleScale: 8.0,
+      collapseTilt: v.tilt,
+      sinkScale: 0.28
+    });
+  });
 
   // DUMBO Waterfront 19th-Century Warehouses with Rooftop Water Tanks
   for (let d = 0; d < 6; d++) {
@@ -2012,10 +2718,90 @@ export function buildNewYorkScene(group, river, terrain) {
   }
   group.add(armyGroup);
 
+  function updateTubes(uWave) {
+    // 1. Update 7 Under-River Transit Tubes
+    for (let i = 0; i < tubesList.length; i++) {
+      const tube = tubesList[i];
+      if (!tube) continue;
+
+      if (uWave < tube.uTrigger) {
+        // Pristine / Dry state
+        tube.floodMesh.visible = false;
+        tube.floodMesh.scale.y = 0.001;
+        tube.floodMesh.position.y = -1.3;
+        tube.foamManhattan.visible = false;
+        tube.foamBrooklyn.visible = false;
+
+        if (tube.badgeSprite && tube.badgeTextures && tube.badgeTextures.texDry) {
+          tube.badgeSprite.material.map = tube.badgeTextures.texDry;
+          tube.badgeSprite.material.needsUpdate = true;
+        }
+
+        for (let j = 0; j < tube.lights.length; j++) {
+          const l = tube.lights[j];
+          l.material.color.setHex(0xf59e0b);
+          l.material.opacity = 0.85;
+        }
+      } else {
+        // Inundated / Submerged state
+        const prog = Math.min(1.0, (uWave - tube.uTrigger) / 0.045);
+        tube.floodMesh.visible = true;
+        tube.floodMesh.scale.y = 0.05 + prog * 0.95;
+        tube.floodMesh.position.y = -1.3 + prog * 1.15;
+
+        // Foamy portal spray at tunnel breach points
+        const pulse = Math.sin(Date.now() * 0.02) * 0.2 + 0.8;
+        tube.foamManhattan.visible = true;
+        tube.foamManhattan.scale.set(1.0 + pulse * 0.3, 1.0 + pulse * 0.3, 1.0 + pulse * 0.3);
+        tube.foamBrooklyn.visible = true;
+        tube.foamBrooklyn.scale.set(1.0 + pulse * 0.3, 1.0 + pulse * 0.3, 1.0 + pulse * 0.3);
+
+        if (tube.badgeSprite && tube.badgeTextures && tube.badgeTextures.texSub) {
+          tube.badgeSprite.material.map = tube.badgeTextures.texSub;
+          tube.badgeSprite.material.needsUpdate = true;
+        }
+
+        // Electrical short-circuit & emergency red flashing strobe
+        const strobe = (Math.sin(Date.now() * 0.04 + tube.uTrigger * 20.0) > 0.0);
+        for (let j = 0; j < tube.lights.length; j++) {
+          const l = tube.lights[j];
+          if (prog < 0.25) {
+            l.material.color.setHex(0xf59e0b);
+            l.material.opacity = 0.85;
+          } else {
+            l.material.color.setHex(strobe ? 0xef4444 : 0x38bdf8);
+            l.material.opacity = strobe ? 0.95 : 0.2;
+          }
+        }
+      }
+    }
+
+    // 2. Update South Ferry Subsurface Metro Station Cutaway
+    if (metroStation) {
+      if (uWave < 0.53) {
+        metroStation.waterMesh.visible = false;
+        metroStation.waterMesh.scale.y = 0.001;
+        metroStation.waterMesh.position.y = -metroStation.sH * 0.5 + 0.1;
+        metroStation.stairCascade.visible = false;
+        metroStation.alarmLight.intensity = 0.0;
+      } else {
+        const stProg = Math.min(1.0, (uWave - 0.53) / 0.045);
+        metroStation.waterMesh.visible = true;
+        metroStation.waterMesh.scale.y = 0.05 + stProg * 0.95;
+        metroStation.waterMesh.position.y = -metroStation.sH * 0.5 + 0.1 + stProg * (metroStation.sH * 0.55);
+        metroStation.stairCascade.visible = true;
+        metroStation.stairCascade.material.opacity = 0.75 + Math.sin(Date.now() * 0.03) * 0.15;
+        const alarmPulse = Math.sin(Date.now() * 0.05) > 0.0 ? 1.0 : 0.0;
+        metroStation.alarmLight.intensity = alarmPulse * 5.0;
+      }
+    }
+  }
+
   return {
     wipeableItems,
     dynamicWaterItems,
     arcLight,
-    arcMesh
+    arcMesh,
+    updateTubes
   };
 }
