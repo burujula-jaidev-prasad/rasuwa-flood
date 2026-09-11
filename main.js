@@ -229,22 +229,10 @@ class ExplainerApp {
       this.ui.setGuided(isGuided);
     };
 
-    // Auto-start timer for intro card (3.4s)
-    const introTimerInterval = setInterval(() => {
-      if (this.introDismissed) {
-        clearInterval(introTimerInterval);
-        return;
-      }
-      this.introElapsed += 0.2;
-      const remaining = Math.max(0, (TIMELINE_CONFIG.INTRO_CARD_DUR - this.introElapsed)).toFixed(1);
-      if (this.ui.elIntroTimer) {
-        this.ui.elIntroTimer.textContent = `Autoplaying in ${remaining}s...`;
-      }
-      if (this.introElapsed >= TIMELINE_CONFIG.INTRO_CARD_DUR) {
-        clearInterval(introTimerInterval);
-        this.dismissIntro();
-      }
-    }, 200);
+    // Involuntary autoplay timer removed: simulation remains comfortably paused at t=0
+    if (this.ui.elIntroTimer) {
+      this.ui.elIntroTimer.style.display = 'none';
+    }
 
     this.ui.elIntroSkip.addEventListener('click', () => {
       this.dismissIntro();
@@ -275,12 +263,12 @@ class ExplainerApp {
     // 3. Update environment (sky, fog, sun)
     this.updateEnvironmentForScenario(getScenario(scenarioId));
 
-    // 4. Update UI & timeline
+    // 4. Update UI & timeline (start paused at t=0 so user has full control)
     this.t = 0.0;
     this.introDismissed = true;
     this.ui.hideIntroCard();
-    this.isPlaying = true;
-    this.ui.isPlaying = true;
+    this.isPlaying = false;
+    this.ui.isPlaying = false;
     this.ui.updatePlayBtnState();
     this.ui.setScenario(scenarioId);
     this.updateSimulationState(0.016);
@@ -290,8 +278,8 @@ class ExplainerApp {
     if (this.introDismissed) return;
     this.introDismissed = true;
     this.ui.hideIntroCard();
-    this.isPlaying = true;
-    this.ui.isPlaying = true;
+    this.isPlaying = false;
+    this.ui.isPlaying = false;
     this.ui.updatePlayBtnState();
   }
 

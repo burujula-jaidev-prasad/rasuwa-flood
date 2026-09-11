@@ -71,24 +71,24 @@ export class CameraDirector {
           // Establish directly on Outer Thames Estuary sea defense wall breach
           const p = this.river.getPointAt(0.04);
           desiredTarget.set(p.x + 4.0, p.y + 4.0, p.z);
-          desiredRadius = 68;
-          desiredPhi = 0.80;
+          desiredRadius = 135;
+          desiredPhi = 0.74;
           desiredTheta = -1.25;
         } else if (t <= 0.92) {
           const uWave = Math.max(0, Math.min(1, (t - 0.18) / 0.78));
           const wavePos = this.river.getPointAt(uWave);
-          desiredTarget.copy(wavePos).add(new THREE.Vector3(2.0, 3.5, 0));
+          desiredTarget.copy(wavePos).add(new THREE.Vector3(2.0, 4.0, 0));
 
           const followAlpha = (t - 0.20) / (0.92 - 0.20);
-          desiredRadius = 58;
-          desiredPhi = 0.82;
+          desiredRadius = 125;
+          desiredPhi = 0.74;
           desiredTheta = -1.22 + 1.15 * followAlpha;
         } else {
           const pullAlpha = (t - 0.92) / (1.0 - 0.92);
           const endTarget = this.river.getPointAt(0.75);
-          desiredTarget.lerpVectors(endTarget, new THREE.Vector3(10, 6, 14), pullAlpha);
-          desiredRadius = 58 + 70 * pullAlpha;
-          desiredPhi = 0.82 + 0.10 * pullAlpha;
+          desiredTarget.lerpVectors(endTarget, new THREE.Vector3(10, 8, 14), pullAlpha);
+          desiredRadius = 125 + 90 * pullAlpha;
+          desiredPhi = 0.74 + 0.12 * pullAlpha;
           desiredTheta = -0.07 - 0.35 * pullAlpha;
         }
       } else if (isTokyo) {
@@ -96,24 +96,24 @@ export class CameraDirector {
           // Establish directly on Saitama Arakawa super-levee blowout
           const p = this.river.getPointAt(0.04);
           desiredTarget.set(p.x, p.y + 4.0, p.z);
-          desiredRadius = 68;
-          desiredPhi = 0.80;
+          desiredRadius = 135;
+          desiredPhi = 0.74;
           desiredTheta = -1.25;
         } else if (t <= 0.92) {
           const uWave = Math.max(0, Math.min(1, (t - 0.18) / 0.78));
           const wavePos = this.river.getPointAt(uWave);
-          desiredTarget.copy(wavePos).add(new THREE.Vector3(0, 3.5, 0));
+          desiredTarget.copy(wavePos).add(new THREE.Vector3(0, 4.0, 0));
 
           const followAlpha = (t - 0.20) / (0.92 - 0.20);
-          desiredRadius = 58;
-          desiredPhi = 0.82;
+          desiredRadius = 125;
+          desiredPhi = 0.74;
           desiredTheta = -1.22 + 1.15 * followAlpha;
         } else {
           const pullAlpha = (t - 0.92) / (1.0 - 0.92);
           const endTarget = this.river.getPointAt(0.75);
-          desiredTarget.lerpVectors(endTarget, new THREE.Vector3(12, 6, 12), pullAlpha);
-          desiredRadius = 58 + 70 * pullAlpha;
-          desiredPhi = 0.82 + 0.10 * pullAlpha;
+          desiredTarget.lerpVectors(endTarget, new THREE.Vector3(12, 8, 12), pullAlpha);
+          desiredRadius = 125 + 90 * pullAlpha;
+          desiredPhi = 0.74 + 0.12 * pullAlpha;
           desiredTheta = -0.07 - 0.35 * pullAlpha;
         }
       } else if (isBeijing) {
@@ -121,49 +121,49 @@ export class CameraDirector {
           // Establish high in the misty Taihang mountain gorge (Miaofengshan rockslide)
           const p = this.river.getPointAt(0.04);
           desiredTarget.set(p.x - 4.0, p.y + 6.0, p.z);
-          desiredRadius = 68;
-          desiredPhi = 0.76;
+          desiredRadius = 135;
+          desiredPhi = 0.72;
           desiredTheta = -1.18;
         } else if (t <= 0.92) {
           const uWave = Math.max(0, Math.min(1, (t - 0.18) / 0.78));
           const wavePos = this.river.getPointAt(uWave);
-          desiredTarget.copy(wavePos).add(new THREE.Vector3(0, 3.5, 0));
+          desiredTarget.copy(wavePos).add(new THREE.Vector3(0, 4.0, 0));
 
           const followAlpha = (t - 0.20) / (0.92 - 0.20);
-          desiredRadius = 58;
-          desiredPhi = 0.82;
+          desiredRadius = 125;
+          desiredPhi = 0.74;
           desiredTheta = -1.22 + 1.10 * followAlpha;
         } else {
           const pullAlpha = (t - 0.92) / (1.0 - 0.92);
           const endTarget = this.river.getPointAt(0.75);
-          desiredTarget.lerpVectors(endTarget, new THREE.Vector3(12, 6, 15), pullAlpha);
-          desiredRadius = 58 + 70 * pullAlpha;
-          desiredPhi = 0.82 + 0.10 * pullAlpha;
+          desiredTarget.lerpVectors(endTarget, new THREE.Vector3(12, 8, 15), pullAlpha);
+          desiredRadius = 125 + 90 * pullAlpha;
+          desiredPhi = 0.74 + 0.12 * pullAlpha;
           desiredTheta = -0.12 - 0.35 * pullAlpha;
         }
       } else if (isNewYork) {
         if (t < 0.20) {
           // Establish on The Narrows entrance, Verrazzano Bridge & Atlantic seawall breach
           const p = this.river.getPointAt(0.04);
-          desiredTarget.set(p.x + 4.0, p.y + 4.0, p.z);
-          desiredRadius = 68;
-          desiredPhi = 0.80;
-          desiredTheta = -1.25;
+          desiredTarget.set(p.x + 6.0, p.y + 6.0, p.z);
+          desiredRadius = 135;
+          desiredPhi = 0.72; // Normal elevated top-view like Nepal
+          desiredTheta = -1.22;
         } else if (t <= 0.92) {
           const uWave = Math.max(0, Math.min(1, (t - 0.18) / 0.78));
           const wavePos = this.river.getPointAt(uWave);
-          desiredTarget.copy(wavePos).add(new THREE.Vector3(3.0, 3.5, 0));
+          desiredTarget.copy(wavePos).add(new THREE.Vector3(4.0, 5.0, 0));
 
           const followAlpha = (t - 0.20) / (0.92 - 0.20);
-          desiredRadius = 58;
-          desiredPhi = 0.82;
-          desiredTheta = -1.25 + 1.15 * followAlpha;
+          desiredRadius = 125;
+          desiredPhi = 0.74; // Normal elevated top-view like Nepal
+          desiredTheta = -1.22 + 1.15 * followAlpha;
         } else {
           const pullAlpha = (t - 0.92) / (1.0 - 0.92);
           const endTarget = this.river.getPointAt(0.70);
-          desiredTarget.lerpVectors(endTarget, new THREE.Vector3(10, 8, 10), pullAlpha);
-          desiredRadius = 58 + 75 * pullAlpha;
-          desiredPhi = 0.82 + 0.10 * pullAlpha;
+          desiredTarget.lerpVectors(endTarget, new THREE.Vector3(12, 10, 12), pullAlpha);
+          desiredRadius = 125 + 110 * pullAlpha;
+          desiredPhi = 0.74 + 0.12 * pullAlpha;
           desiredTheta = -0.10 - 0.40 * pullAlpha;
         }
       } else if (isDelhi) {
@@ -171,48 +171,49 @@ export class CameraDirector {
           // Establish on Hathnikund Barrage sluice blowout & guide bund collapse
           const p = this.river.getPointAt(0.04);
           desiredTarget.set(p.x, p.y + 4.0, p.z);
-          desiredRadius = 68;
-          desiredPhi = 0.80;
+          desiredRadius = 135;
+          desiredPhi = 0.74;
           desiredTheta = -1.25;
         } else if (t <= 0.92) {
           const uWave = Math.max(0, Math.min(1, (t - 0.18) / 0.78));
           const wavePos = this.river.getPointAt(uWave);
-          desiredTarget.copy(wavePos).add(new THREE.Vector3(0, 3.2, 0));
+          desiredTarget.copy(wavePos).add(new THREE.Vector3(0, 4.0, 0));
 
           const followAlpha = (t - 0.20) / (0.92 - 0.20);
-          desiredRadius = 58;
-          desiredPhi = 0.84;
+          desiredRadius = 125;
+          desiredPhi = 0.74;
           desiredTheta = -1.20 + 1.05 * followAlpha;
         } else {
           const pullAlpha = (t - 0.92) / (1.0 - 0.92);
           const endTarget = this.river.getPointAt(0.95);
-          desiredTarget.lerpVectors(endTarget, new THREE.Vector3(0, 4, 0), pullAlpha);
-          desiredRadius = 58 + 70 * pullAlpha;
-          desiredPhi = 0.84 + 0.08 * pullAlpha;
+          desiredTarget.lerpVectors(endTarget, new THREE.Vector3(0, 6, 0), pullAlpha);
+          desiredRadius = 125 + 90 * pullAlpha;
+          desiredPhi = 0.74 + 0.10 * pullAlpha;
           desiredTheta = -0.15 - 0.35 * pullAlpha;
         }
       } else {
+        // Nepal / Rasuwa standard
         if (t < 0.22) {
           const p2 = this.river.getPointAt(0.02);
           desiredTarget.set(p2.x - 6.0, p2.y + 16.0, p2.z - 4.0);
-          desiredRadius = 80;
-          desiredPhi = 0.74;
+          desiredRadius = 125;
+          desiredPhi = 0.72;
           desiredTheta = -1.15;
         } else if (t <= 0.94) {
           const uWave = Math.max(0, Math.min(1, (t - 0.20) / 0.80));
           const wavePos = this.river.getPointAt(uWave);
-          desiredTarget.copy(wavePos).add(new THREE.Vector3(0, 4.0, 0));
+          desiredTarget.copy(wavePos).add(new THREE.Vector3(0, 4.5, 0));
 
           const followAlpha = (t - 0.22) / (0.94 - 0.22);
-          desiredRadius = 68;
-          desiredPhi = 0.84;
+          desiredRadius = 120;
+          desiredPhi = 0.74;
           desiredTheta = -1.12 + (-0.07 - (-1.12)) * followAlpha;
         } else {
           const pullAlpha = (t - 0.94) / (1.0 - 0.94);
           const startTarget = this.river.getPointAt(1.0);
           desiredTarget.lerpVectors(startTarget, new THREE.Vector3(24, 6, 34), pullAlpha);
-          desiredRadius = 68 + 140 * pullAlpha;
-          desiredPhi = 0.84 + (0.96 - 0.84) * pullAlpha;
+          desiredRadius = 120 + 120 * pullAlpha;
+          desiredPhi = 0.74 + 0.14 * pullAlpha;
           desiredTheta = -0.07 + (-0.5 - (-0.07)) * pullAlpha;
         }
       }

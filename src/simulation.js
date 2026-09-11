@@ -975,33 +975,7 @@ export class FloodSimulation {
       waveColor = 0x7a6b5c; // Himalayan glacial debris
     }
 
-    // 1. Hydrodynamic 3D Breaker Wave Crest (curved hydrodynamic wedge spanning the river channel)
-    const waveGeo = new THREE.CylinderGeometry(4.8, 6.2, 22.0, 32, 1, false, -Math.PI * 0.4, Math.PI * 0.8);
-    waveGeo.rotateZ(Math.PI / 2);
-    const waveMat = new THREE.MeshStandardMaterial({
-      color: waveColor,
-      roughness: 0.18,
-      metalness: 0.08,
-      transparent: true,
-      opacity: 0.90,
-      side: THREE.DoubleSide
-    });
-    this.waveCrest = new THREE.Mesh(waveGeo, waveMat);
-    this.floodGroup.add(this.waveCrest);
-
-    // 2. Frothing Whitewater Foam Lip (along the breaking wave crest)
-    const foamLipGeo = new THREE.CylinderGeometry(0.9, 1.4, 22.8, 20);
-    foamLipGeo.rotateZ(Math.PI / 2);
-    const foamLipMat = new THREE.MeshStandardMaterial({
-      color: foamColor,
-      roughness: 0.75,
-      metalness: 0.02,
-      transparent: true,
-      opacity: 0.95
-    });
-    this.waveFoam = new THREE.Mesh(foamLipGeo, foamLipMat);
-    this.waveFoam.position.set(0, 2.2, 0.4);
-    this.floodGroup.add(this.waveFoam);
+    // (Removed rigid cylinder bars: organic flood front is rendered via trailObj ribbon, spray particles, and apron froth)
 
     // 3. Turbulent Froth Apron / Wake (foaming wake trailing behind the crest)
     const apronGeo = new THREE.PlaneGeometry(22.0, 10.0, 16, 8);

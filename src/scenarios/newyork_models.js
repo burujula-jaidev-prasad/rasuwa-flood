@@ -434,6 +434,296 @@ export function buildNewYorkScene(group, river, terrain) {
   }
 
   /**
+   * Sidewalk Subway Ventilation Grates (Heavy cast-iron sidewalk grates flush with pavement)
+   */
+  function createSidewalkSubwayGrate(gw = 2.4, gd = 4.8) {
+    const grateGroup = new THREE.Group();
+    const materials = [];
+    const frameMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8, metalness: 0.7 });
+    const barMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.85, metalness: 0.8 });
+    const holeMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.95 });
+    materials.push(frameMat, barMat, holeMat);
+
+    // Subterranean void cavity
+    const voidMesh = new THREE.Mesh(new THREE.BoxGeometry(gw, 0.4, gd), holeMat);
+    voidMesh.position.y = -0.15;
+    grateGroup.add(voidMesh);
+
+    // Cast-iron perimeter frame
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(gw + 0.3, 0.12, gd + 0.3), frameMat);
+    frame.position.y = 0.06;
+    grateGroup.add(frame);
+
+    // Parallel slatted grate bars
+    const numBars = Math.floor(gd / 0.32);
+    for (let b = 0; b < numBars; b++) {
+      const bZ = (b - numBars * 0.5 + 0.5) * 0.32;
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(gw * 0.92, 0.08, 0.14), barMat);
+      bar.position.set(0, 0.08, bZ);
+      grateGroup.add(bar);
+    }
+
+    return { group: grateGroup, materials, primaryMat: frameMat };
+  }
+
+  /**
+   * Historic Bowling Green Beaux-Arts Subway Station Control House (Heins & LaFarge Kiosk)
+   */
+  function createBowlingGreenSubwayKiosk() {
+    const bgGroup = new THREE.Group();
+    const materials = [];
+    const brickMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.8 });
+    const limestoneMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.6 });
+    const copperRoof = new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.4, metalness: 0.3 });
+    const ironMat = new THREE.MeshStandardMaterial({ color: 0x064e3b, roughness: 0.4, metalness: 0.6 });
+    const mtaGreen = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.3 });
+    const globeMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, emissive: 0x15803d, emissiveIntensity: 0.8, roughness: 0.2 });
+    materials.push(brickMat, limestoneMat, copperRoof, ironMat, mtaGreen, globeMat);
+
+    const kw = 8.0;
+    const kh = 4.6;
+    const kd = 6.0;
+
+    // Beaux-Arts limestone foundation plinth
+    const base = new THREE.Mesh(new THREE.BoxGeometry(kw, 1.0, kd), limestoneMat);
+    base.position.y = 0.5;
+    bgGroup.add(base);
+
+    // Red brick wall envelope with decorative quoins
+    const body = new THREE.Mesh(new THREE.BoxGeometry(kw * 0.95, kh * 0.6, kd * 0.95), brickMat);
+    body.position.y = 1.0 + kh * 0.3;
+    body.castShadow = true;
+    bgGroup.add(body);
+
+    // Twin Arched Entry Portals with descending tiled stairs
+    [-kw * 0.25, kw * 0.25].forEach((px, idx) => {
+      const archFrame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.6, kd + 0.08), limestoneMat);
+      archFrame.position.set(px, 2.3, 0);
+      bgGroup.add(archFrame);
+
+      // Descending stairs
+      for (let s = 0; s < 5; s++) {
+        const step = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.22, 0.7), limestoneMat);
+        step.position.set(px, 0.2 - s * 0.22, -kd * 0.3 + s * 0.55);
+        bgGroup.add(step);
+      }
+
+      // MTA Globe Lamp atop portal
+      const globe = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), globeMat);
+      globe.position.set(px, 4.0, kd * 0.5 + 0.1);
+      bgGroup.add(globe);
+    });
+
+    // Copper Mansard Hip Roof
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(kw * 0.68, 2.2, 4), copperRoof);
+    roof.position.y = kh + 0.7;
+    roof.rotation.y = Math.PI * 0.25;
+    roof.castShadow = true;
+    bgGroup.add(roof);
+
+    // Historic Subway Nameplate: "BOWLING GREEN • (4)(5)"
+    const sign = new THREE.Mesh(new THREE.BoxGeometry(kw * 0.65, 0.55, 0.15), ironMat);
+    sign.position.set(0, 3.6, kd * 0.5 + 0.1);
+    bgGroup.add(sign);
+
+    const bullet = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.18, 12), mtaGreen);
+    bullet.rotation.x = Math.PI * 0.5;
+    bullet.position.set(kw * 0.24, 3.6, kd * 0.5 + 0.14);
+    bgGroup.add(bullet);
+
+    return { group: bgGroup, materials, primaryMat: brickMat };
+  }
+
+  // Classic NYC Double-Luminaire Teardrop Streetlamp
+  function createNYCStreetLamp() {
+    const lampGroup = new THREE.Group();
+    const materials = [];
+    const ironMat = new THREE.MeshStandardMaterial({ color: 0x1e3a2b, roughness: 0.4, metalness: 0.65 });
+    const glowMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xfef08a, emissiveIntensity: 0.8, roughness: 0.2 });
+    materials.push(ironMat, glowMat);
+
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.42, 1.1, 8), ironMat);
+    base.position.y = 0.55;
+    lampGroup.add(base);
+
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.18, 5.0, 8), ironMat);
+    pole.position.y = 3.5;
+    pole.castShadow = true;
+    lampGroup.add(pole);
+
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.12, 0.16), ironMat);
+    arm.position.y = 5.6;
+    lampGroup.add(arm);
+
+    [-0.95, 0.95].forEach(lx => {
+      const shade = new THREE.Mesh(new THREE.ConeGeometry(0.36, 0.28, 8), ironMat);
+      shade.position.set(lx, 5.5, 0);
+      lampGroup.add(shade);
+
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 8), glowMat);
+      bulb.position.set(lx, 5.28, 0);
+      lampGroup.add(bulb);
+    });
+
+    return { group: lampGroup, materials, primaryMat: ironMat };
+  }
+
+  // NYC Cantilever Traffic Signal Mast Arm
+  function createTrafficSignal() {
+    const sigGroup = new THREE.Group();
+    const materials = [];
+    const yellowSteel = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.4, metalness: 0.5 });
+    const headMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5 });
+    const redLight = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+    const amberLight = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
+    const greenLight = new THREE.MeshBasicMaterial({ color: 0x22c55e });
+    materials.push(yellowSteel, headMat, redLight, amberLight, greenLight);
+
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.25, 6.2, 8), yellowSteel);
+    mast.position.y = 3.1;
+    sigGroup.add(mast);
+
+    const cantArm = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, 5.0, 8), yellowSteel);
+    cantArm.rotation.z = Math.PI / 2;
+    cantArm.position.set(2.4, 5.8, 0);
+    sigGroup.add(cantArm);
+
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.48, 1.4, 0.38), headMat);
+    head.position.set(3.8, 5.3, 0);
+    sigGroup.add(head);
+
+    const rL = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), redLight);
+    rL.position.set(3.8, 5.7, 0.2);
+    sigGroup.add(rL);
+
+    const aL = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), amberLight);
+    aL.position.set(3.8, 5.3, 0.2);
+    sigGroup.add(aL);
+
+    const gL = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), greenLight);
+    gL.position.set(3.8, 4.9, 0.2);
+    sigGroup.add(gL);
+
+    return { group: sigGroup, materials, primaryMat: yellowSteel };
+  }
+
+  // Classic NYC Fire Hydrant
+  function createNYCFireHydrant() {
+    const hydGroup = new THREE.Group();
+    const materials = [];
+    const redBody = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.4 });
+    const silverCap = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.25, metalness: 0.85 });
+    materials.push(redBody, silverCap);
+
+    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.25, 0.9, 10), redBody);
+    barrel.position.y = 0.45;
+    barrel.castShadow = true;
+    hydGroup.add(barrel);
+
+    const bonnet = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.2, 10), silverCap);
+    bonnet.position.y = 0.95;
+    hydGroup.add(bonnet);
+
+    const nut = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.12, 5), silverCap);
+    nut.position.y = 1.08;
+    hydGroup.add(nut);
+
+    [-0.22, 0.22].forEach(nx => {
+      const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.2, 8), silverCap);
+      nozzle.rotation.z = Math.PI / 2;
+      nozzle.position.set(nx, 0.55, 0);
+      hydGroup.add(nozzle);
+    });
+
+    return { group: hydGroup, materials, primaryMat: redBody };
+  }
+
+  // World's Fair Cast-Iron & Wood Park Bench
+  function createParkBench() {
+    const benchGroup = new THREE.Group();
+    const materials = [];
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.85 });
+    const ironMat = new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.5, metalness: 0.6 });
+    materials.push(woodMat, ironMat);
+
+    [-1.0, 1.0].forEach(bx => {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.8, 0.9), ironMat);
+      leg.position.set(bx, 0.4, 0);
+      benchGroup.add(leg);
+    });
+
+    for (let s = 0; s < 4; s++) {
+      const slat = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.08, 0.18), woodMat);
+      slat.position.set(0, 0.45, -0.3 + s * 0.2);
+      benchGroup.add(slat);
+    }
+    for (let bs = 0; bs < 3; bs++) {
+      const bSlat = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.18, 0.08), woodMat);
+      bSlat.position.set(0, 0.6 + bs * 0.2, -0.38);
+      benchGroup.add(bSlat);
+    }
+
+    return { group: benchGroup, materials, primaryMat: woodMat };
+  }
+
+  // Paved Asphalt Road Grid with double-yellow lines & pedestrian zebra crosswalks
+  function createPavedRoadGrid(roadW = 9.0, roadL = 44.0, hasCrosswalk = true) {
+    const roadGroup = new THREE.Group();
+    const materials = [];
+    const asphaltMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.85 });
+    const doubleYellow = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+    const whitePaint = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
+    const curbMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.7 });
+    materials.push(asphaltMat, doubleYellow, whitePaint, curbMat);
+
+    // Asphalt surface
+    const asphalt = new THREE.Mesh(new THREE.BoxGeometry(roadW, 0.2, roadL), asphaltMat);
+    asphalt.position.y = 0.1;
+    asphalt.receiveShadow = true;
+    roadGroup.add(asphalt);
+
+    // Double-yellow center lines
+    [-0.15, 0.15].forEach(dyX => {
+      const yLine = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.02, roadL * 0.88), doubleYellow);
+      yLine.position.set(dyX, 0.22, 0);
+      roadGroup.add(yLine);
+    });
+
+    // White dashed lane markers
+    [-roadW * 0.25, roadW * 0.25].forEach(dlX => {
+      const numDashes = Math.floor(roadL / 4.0);
+      for (let d = 0; d < numDashes; d++) {
+        const dZ = (d - numDashes * 0.5 + 0.5) * 4.0;
+        const dash = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.02, 2.0), whitePaint);
+        dash.position.set(dlX, 0.22, dZ);
+        roadGroup.add(dash);
+      }
+    });
+
+    // Pedestrian zebra crosswalks
+    if (hasCrosswalk) {
+      [-roadL * 0.42, roadL * 0.42].forEach(crossZ => {
+        const numBars = Math.floor(roadW / 1.0);
+        for (let b = 0; b < numBars; b++) {
+          const bX = (b - numBars * 0.5 + 0.5) * 1.0;
+          const zebra = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.02, 3.2), whitePaint);
+          zebra.position.set(bX, 0.23, crossZ);
+          roadGroup.add(zebra);
+        }
+      });
+    }
+
+    // Flanking concrete curbs
+    [-roadW * 0.5 - 0.25, roadW * 0.5 + 0.25].forEach(cX => {
+      const curb = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, roadL), curbMat);
+      curb.position.set(cX, 0.25, 0);
+      roadGroup.add(curb);
+    });
+
+    return { group: roadGroup, materials, primaryMat: asphaltMat };
+  }
+
+  /**
    * Wall Street Neoclassical Bank / Stock Exchange Facade
    * Grand Greek-Revival facade with 6 fluted limestone Corinthian columns,
    * pediment frieze, bronze double entry doors, and carved entablature.
@@ -760,45 +1050,124 @@ export function buildNewYorkScene(group, river, terrain) {
   const vzGroup = new THREE.Group();
   vzGroup.position.copy(fVz.pt);
 
-  const vzSpan = 42.0;
-  const vzTowerH = 34.0;
+  const vzBasis = new THREE.Matrix4().makeBasis(fVz.tangent, fVz.up, fVz.side);
+  vzGroup.quaternion.setFromRotationMatrix(vzBasis);
 
-  [-vzSpan * 0.48, vzSpan * 0.48].forEach((sideOffset) => {
-    const towerGroup = new THREE.Group();
-    towerGroup.position.set(fVz.side.x * sideOffset, 0, fVz.side.z * sideOffset);
+  const vzSpan = 48.0;
+  const vzTowerH = 36.0;
+  const vzTowerZ = vzSpan * 0.40;
+  const vzAnchorZ = vzSpan * 0.65;
 
-    const caisson = new THREE.Mesh(new THREE.BoxGeometry(6.5, 6.0, 8.0), concreteMat);
-    caisson.position.y = 2.5;
-    towerGroup.add(caisson);
+  // Staten Island (-Z) & Brooklyn (+Z) Concrete Shore Anchorages
+  [-vzAnchorZ, vzAnchorZ].forEach((aZ) => {
+    const anchor = new THREE.Mesh(new THREE.BoxGeometry(9.0, 11.0, 10.0), concreteMat);
+    anchor.position.set(0, 5.5, aZ);
+    anchor.castShadow = true;
+    vzGroup.add(anchor);
 
-    [-2.0, 2.0].forEach((legZ) => {
-      const leg = new THREE.Mesh(new THREE.BoxGeometry(2.2, vzTowerH, 2.4), steelGreenMat);
-      leg.position.set(0, vzTowerH * 0.5 + 5.0, legZ);
-      leg.castShadow = true;
-      towerGroup.add(leg);
-    });
-
-    [12.0, 22.0, 32.0, vzTowerH + 4.0].forEach((strutY) => {
-      const strut = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.6, 4.8), steelGreenMat);
-      strut.position.set(0, strutY, 0);
-      towerGroup.add(strut);
-    });
-
-    vzGroup.add(towerGroup);
+    const buttress = new THREE.Mesh(new THREE.BoxGeometry(10.0, 3.0, 4.0), concreteMat);
+    buttress.position.set(0, 1.5, aZ + (aZ > 0 ? -4.0 : 4.0));
+    vzGroup.add(buttress);
   });
 
-  const vzDeckWidth = vzSpan + 6.0;
-  const vzDeck = new THREE.Mesh(new THREE.BoxGeometry(vzDeckWidth, 1.4, 5.5), steelGreenMat);
-  vzDeck.rotation.y = Math.atan2(fVz.side.x, fVz.side.z);
+  // Monumental Double-Legged Steel Towers
+  [-vzTowerZ, vzTowerZ].forEach((tZ) => {
+    const tower = new THREE.Group();
+    tower.position.set(0, 0, tZ);
+
+    // Deep water concrete pier caisson
+    const caisson = new THREE.Mesh(new THREE.BoxGeometry(9.0, 6.5, 6.0), concreteMat);
+    caisson.position.y = 2.5;
+    tower.add(caisson);
+
+    // Twin tapered steel tower legs
+    [-2.6, 2.6].forEach((legX) => {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(2.4, vzTowerH, 2.6), steelGreenMat);
+      leg.position.set(legX, vzTowerH * 0.5 + 4.5, 0);
+      leg.castShadow = true;
+      tower.add(leg);
+    });
+
+    // Deep structural portal cross struts
+    [12.0, 22.0, 32.0, vzTowerH + 4.2].forEach((strutY) => {
+      const strut = new THREE.Mesh(new THREE.BoxGeometry(7.2, 1.8, 2.4), steelGreenMat);
+      strut.position.set(0, strutY, 0);
+      tower.add(strut);
+    });
+
+    // Tower saddle caps for main suspension cables
+    [-2.6, 2.6].forEach((saddleX) => {
+      const saddle = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.4, 2.8), steelCableMat);
+      saddle.position.set(saddleX, vzTowerH + 5.2, 0);
+      tower.add(saddle);
+    });
+
+    vzGroup.add(tower);
+  });
+
+  // Double-Deck Truss Roadway
+  const vzDeckLen = vzSpan * 1.35;
+  const vzDeck = new THREE.Mesh(new THREE.BoxGeometry(7.6, 2.2, vzDeckLen), steelGreenMat);
   vzDeck.position.set(0, 13.0, 0);
   vzDeck.castShadow = true;
   vzGroup.add(vzDeck);
 
-  const vzRoad = new THREE.Mesh(new THREE.BoxGeometry(vzDeckWidth, 0.2, 4.8), tarmacMat);
-  vzRoad.rotation.y = Math.atan2(fVz.side.x, fVz.side.z);
-  vzRoad.position.set(0, 13.8, 0);
+  // Upper Roadway Tarmac with lane striping
+  const vzRoad = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.2, vzDeckLen), tarmacMat);
+  vzRoad.position.set(0, 14.15, 0);
   vzGroup.add(vzRoad);
+
+  // Sweeping 3D Catenary Main Suspension Cables (North & South cables)
+  [-2.6, 2.6].forEach((cableX) => {
+    const curvePts = [];
+    curvePts.push(new THREE.Vector3(cableX, 7.0, -vzAnchorZ));
+    curvePts.push(new THREE.Vector3(cableX, 20.0, -vzTowerZ * 1.3));
+    curvePts.push(new THREE.Vector3(cableX, vzTowerH + 5.2, -vzTowerZ));
+
+    for (let k = 1; k < 12; k++) {
+      const uK = k / 12;
+      const zK = -vzTowerZ + uK * (2.0 * vzTowerZ);
+      const normZ = zK / vzTowerZ;
+      const yK = 14.5 + (vzTowerH + 5.2 - 14.5) * (normZ * normZ);
+      curvePts.push(new THREE.Vector3(cableX, yK, zK));
+    }
+
+    curvePts.push(new THREE.Vector3(cableX, vzTowerH + 5.2, vzTowerZ));
+    curvePts.push(new THREE.Vector3(cableX, 20.0, vzTowerZ * 1.3));
+    curvePts.push(new THREE.Vector3(cableX, 7.0, vzAnchorZ));
+
+    const catCurve = new THREE.CatmullRomCurve3(curvePts);
+    const cableTube = new THREE.Mesh(new THREE.TubeGeometry(catCurve, 40, 0.22, 8, false), steelCableMat);
+    vzGroup.add(cableTube);
+
+    // Vertical Wire Rope Suspenders
+    for (let sZ = -vzTowerZ + 2.0; sZ <= vzTowerZ - 2.0; sZ += 2.2) {
+      const normZ = sZ / vzTowerZ;
+      const yCable = 14.5 + (vzTowerH + 5.2 - 14.5) * (normZ * normZ);
+      const suspH = Math.max(0.4, yCable - 14.15);
+      const susp = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, suspH, 6), steelCableMat);
+      susp.position.set(cableX, 14.15 + suspH * 0.5, sZ);
+      vzGroup.add(susp);
+    }
+  });
   group.add(vzGroup);
+
+  // Dynamic Collapsing Elements on Verrazzano Approach (u = 0.10)
+  {
+    const dotTruck = createDeliveryVan(0xf59e0b);
+    const truckPos = fVz.pt.clone().addScaledVector(fVz.side, -14.0);
+    truckPos.y = 14.4;
+    dotTruck.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fVz.side);
+
+    registerWipeable(dotTruck.group, 0.10, truckPos, fVz.tangent, fVz.side, {
+      primaryMat: dotTruck.primaryMat,
+      materials: dotTruck.materials,
+      driftSpeed: 32.0,
+      tumbleScale: 7.5,
+      collapseTilt: 0.6,
+      sinkScale: 0.25
+    });
+  }
 
   // -------------------------------------------------------------------------
   // 2. LOWER MANHATTAN SKYLINE, ONE WTC & BATTERY PARK (u = 0.48 - 0.54)
@@ -927,6 +1296,124 @@ export function buildNewYorkScene(group, river, terrain) {
       sinkScale: 0.28,
       washSpeed: 25.0,
       maxProg: 0.09
+    });
+  }
+
+  // 5. Bowling Green Historic Beaux-Arts Subway Station Control House (4/5 Trains) (u = 0.50)
+  {
+    const bgKiosk = createBowlingGreenSubwayKiosk();
+    const bgPos = fMan.pt.clone().addScaledVector(fMan.side, 20.0).addScaledVector(fMan.tangent, -5.5);
+    bgPos.y = getGroundY(bgPos.x, bgPos.z, 2.8);
+    bgKiosk.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
+
+    registerWipeable(bgKiosk.group, 0.50, bgPos, fMan.tangent, fMan.side, {
+      primaryMat: bgKiosk.primaryMat,
+      materials: bgKiosk.materials,
+      driftSpeed: 21.0,
+      tumbleScale: 4.0,
+      collapseTilt: 0.46,
+      sinkScale: 0.28,
+      washSpeed: 25.0
+    });
+
+    // Bowling Green Sidewalk Subway Ventilation Grate
+    const bgGrate = createSidewalkSubwayGrate(2.4, 5.2);
+    const bgGratePos = fMan.pt.clone().addScaledVector(fMan.side, 18.0).addScaledVector(fMan.tangent, -8.5);
+    bgGratePos.y = getGroundY(bgGratePos.x, bgGratePos.z, 2.8);
+    bgGrate.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
+
+    registerWipeable(bgGrate.group, 0.495, bgGratePos, fMan.tangent, fMan.side, {
+      primaryMat: bgGrate.primaryMat,
+      materials: bgGrate.materials,
+      driftSpeed: 25.0,
+      tumbleScale: 5.0
+    });
+  }
+
+  // 6. Wall Street & Broad Street Subway Entrance Portal (2/3/4/5 Trains) (u = 0.51)
+  {
+    const wsSubway = createNYCSubwayEntrance();
+    const wsSubPos = fMan.pt.clone().addScaledVector(fMan.side, 14.8).addScaledVector(fMan.tangent, 9.5);
+    wsSubPos.y = getGroundY(wsSubPos.x, wsSubPos.z, 2.8);
+    wsSubway.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
+
+    registerWipeable(wsSubway.group, 0.51, wsSubPos, fMan.tangent, fMan.side, {
+      primaryMat: wsSubway.primaryMat,
+      materials: wsSubway.materials,
+      driftSpeed: 22.0,
+      tumbleScale: 4.2,
+      collapseTilt: 0.48,
+      sinkScale: 0.30,
+      washSpeed: 27.0
+    });
+
+    // Wall Street Sidewalk Subway Ventilation Grate
+    const wsGrate = createSidewalkSubwayGrate(2.2, 4.6);
+    const wsGratePos = fMan.pt.clone().addScaledVector(fMan.side, 13.2).addScaledVector(fMan.tangent, 12.5);
+    wsGratePos.y = getGroundY(wsGratePos.x, wsGratePos.z, 2.8);
+    wsGrate.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
+
+    registerWipeable(wsGrate.group, 0.51, wsGratePos, fMan.tangent, fMan.side, {
+      primaryMat: wsGrate.primaryMat,
+      materials: wsGrate.materials,
+      driftSpeed: 26.0,
+      tumbleScale: 5.5
+    });
+  }
+
+  // 7. Paved Asphalt Road Grid (West Street / Battery Place & Broad Street)
+  {
+    // Main North-South Coastal Boulevard with double-yellow center line & zebra crosswalks
+    const road1 = createPavedRoadGrid(9.5, 52.0, true);
+    const r1Pos = fMan.pt.clone().addScaledVector(fMan.side, 21.5);
+    r1Pos.y = getGroundY(r1Pos.x, r1Pos.z, 2.75);
+    road1.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
+    manGroup.add(road1.group);
+
+    // East-West Connecting Avenue toward Wall Street
+    const road2 = createPavedRoadGrid(8.5, 36.0, true);
+    const r2Pos = fMan.pt.clone().addScaledVector(fMan.side, 25.5).addScaledVector(fMan.tangent, 7.5);
+    r2Pos.y = getGroundY(r2Pos.x, r2Pos.z, 2.75);
+    road2.group.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), fMan.tangent);
+    manGroup.add(road2.group);
+  }
+
+  // 8. Municipal Infrastructure: NYC Streetlamps, Traffic Signals, Hydrants & Benches
+  {
+    // Classic Cast-Iron Double-Luminaire NYC Streetlamps along sidewalks
+    [-18.0, -6.0, 6.0, 18.0].forEach((lampZ) => {
+      const lamp = createNYCStreetLamp();
+      const lPos = fMan.pt.clone().addScaledVector(fMan.side, 16.5).addScaledVector(fMan.tangent, lampZ);
+      lPos.y = getGroundY(lPos.x, lPos.z, 2.8);
+      lamp.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
+      manGroup.add(lamp.group);
+    });
+
+    // Traffic Signal Mast Arms at intersections
+    [-14.0, 14.0].forEach((sigZ) => {
+      const signal = createTrafficSignal();
+      const sPos = fMan.pt.clone().addScaledVector(fMan.side, 26.5).addScaledVector(fMan.tangent, sigZ);
+      sPos.y = getGroundY(sPos.x, sPos.z, 2.8);
+      signal.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
+      manGroup.add(signal.group);
+    });
+
+    // Classic Red/Silver NYC Fire Hydrants on curb corners
+    [-12.0, 12.0].forEach((hydZ) => {
+      const hyd = createNYCFireHydrant();
+      const hPos = fMan.pt.clone().addScaledVector(fMan.side, 17.0).addScaledVector(fMan.tangent, hydZ);
+      hPos.y = getGroundY(hPos.x, hPos.z, 2.8);
+      hyd.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
+      manGroup.add(hyd.group);
+    });
+
+    // World's Fair Cast-Iron & Wood Park Benches along Battery Park esplanade
+    [-15.0, -5.0, 5.0, 15.0].forEach((benchZ) => {
+      const bench = createParkBench();
+      const bPos = fMan.pt.clone().addScaledVector(fMan.side, 13.5).addScaledVector(fMan.tangent, benchZ);
+      bPos.y = getGroundY(bPos.x, bPos.z, 2.4);
+      bench.group.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), fMan.side);
+      manGroup.add(bench.group);
     });
   }
 
@@ -1109,6 +1596,21 @@ export function buildNewYorkScene(group, river, terrain) {
     });
   }
 
+  // South Ferry Sidewalk Subway Ventilation Grate
+  {
+    const sfGrate = createSidewalkSubwayGrate(2.4, 4.8);
+    const sfGratePos = fSub.pt.clone().addScaledVector(fSub.side, 15.5).addScaledVector(fSub.tangent, -6.5);
+    sfGratePos.y = getGroundY(sfGratePos.x, sfGratePos.z, 2.7);
+    sfGrate.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fSub.tangent);
+
+    registerWipeable(sfGrate.group, 0.535, sfGratePos, fSub.tangent, fSub.side, {
+      primaryMat: sfGrate.primaryMat,
+      materials: sfGrate.materials,
+      driftSpeed: 28.0,
+      tumbleScale: 6.0
+    });
+  }
+
   // Sandbag protective ring blowing out under hydrostatic head
   for (let s = 0; s < 4; s++) {
     const bund = createSubwaySandbagBund(3.8);
@@ -1212,46 +1714,172 @@ export function buildNewYorkScene(group, river, terrain) {
   const brGroup = new THREE.Group();
   brGroup.position.copy(fBr.pt);
 
-  const brSpan = 40.0;
-  const brTowerH = 32.0;
+  const brBasis = new THREE.Matrix4().makeBasis(fBr.tangent, fBr.up, fBr.side);
+  brGroup.quaternion.setFromRotationMatrix(brBasis);
+
+  const brSpan = 44.0;
+  const brTowerH = 34.0;
+  const brTowerZ = brSpan * 0.40;
+  const brAnchorZ = brSpan * 0.68;
+
+  // Manhattan (-Z) & Brooklyn (+Z) Massive Stepped Granite Anchorages
+  [-brAnchorZ, brAnchorZ].forEach((aZ) => {
+    const anchorage = new THREE.Group();
+    anchorage.position.set(0, 0, aZ);
+
+    const baseBlock = new THREE.Mesh(new THREE.BoxGeometry(9.5, 10.0, 9.5), gothicStoneMat);
+    baseBlock.position.y = 5.0;
+    baseBlock.castShadow = true;
+    anchorage.add(baseBlock);
+
+    const cornice = new THREE.Mesh(new THREE.BoxGeometry(10.2, 1.2, 10.2), gothicStoneMat);
+    cornice.position.y = 10.6;
+    anchorage.add(cornice);
+
+    const parapet = new THREE.Mesh(new THREE.BoxGeometry(9.2, 0.8, 9.2), gothicStoneMat);
+    parapet.position.y = 11.6;
+    anchorage.add(parapet);
+
+    brGroup.add(anchorage);
+  });
 
   // Twin Neo-Gothic Granite Arch Suspension Towers
-  [-brSpan * 0.45, brSpan * 0.45].forEach((towerOffset) => {
+  [-brTowerZ, brTowerZ].forEach((tZ) => {
     const tower = new THREE.Group();
-    tower.position.set(fBr.side.x * towerOffset, 0, fBr.side.z * towerOffset);
+    tower.position.set(0, 0, tZ);
 
-    // Granite foundation pier
-    const pier = new THREE.Mesh(new THREE.BoxGeometry(6.5, 5.0, 9.0), gothicStoneMat);
-    pier.position.y = 2.5;
-    tower.add(pier);
+    // Submerged granite caisson foundation
+    const caisson = new THREE.Mesh(new THREE.BoxGeometry(8.5, 6.0, 5.5), gothicStoneMat);
+    caisson.position.y = 2.5;
+    tower.add(caisson);
 
-    // Twin Gothic Arch Portals
-    [-2.2, 2.2].forEach((archZ) => {
-      const archPillar = new THREE.Mesh(new THREE.BoxGeometry(2.2, brTowerH, 2.4), gothicStoneMat);
-      archPillar.position.set(0, brTowerH * 0.5 + 4.5, archZ);
+    // Triple Arch Pillars (Left, Center, Right) creating twin pointed gothic arches
+    [-2.6, 0, 2.6].forEach((pX) => {
+      const archPillar = new THREE.Mesh(new THREE.BoxGeometry(1.9, brTowerH, 2.4), gothicStoneMat);
+      archPillar.position.set(pX, brTowerH * 0.5 + 4.0, 0);
       archPillar.castShadow = true;
       tower.add(archPillar);
     });
 
-    const gothicArchTop = new THREE.Mesh(new THREE.BoxGeometry(2.3, 3.5, 6.8), gothicStoneMat);
-    gothicArchTop.position.set(0, brTowerH + 4.0, 0);
-    tower.add(gothicArchTop);
+    // Pointed Gothic Arch Portal Tops
+    [-1.3, 1.3].forEach((aX) => {
+      const archTop = new THREE.Mesh(new THREE.BoxGeometry(2.1, 3.2, 2.4), gothicStoneMat);
+      archTop.position.set(aX, brTowerH + 2.8, 0);
+      tower.add(archTop);
+    });
+
+    // Tower Crown Cornice & Saddle Cap
+    const crown = new THREE.Mesh(new THREE.BoxGeometry(7.8, 2.2, 3.2), gothicStoneMat);
+    crown.position.set(0, brTowerH + 4.8, 0);
+    tower.add(crown);
 
     brGroup.add(tower);
   });
 
-  // Suspended Road Deck & Elevated Pedestrian Boardwalk
-  const brDeck = new THREE.Mesh(new THREE.BoxGeometry(brSpan + 8.0, 1.2, 6.0), steelGreenMat);
-  brDeck.rotation.y = Math.atan2(fBr.side.x, fBr.side.z);
+  // Suspended Stiffened Road Deck (Double roadway)
+  const brDeckLen = brSpan * 1.40;
+  const brDeck = new THREE.Mesh(new THREE.BoxGeometry(7.4, 1.2, brDeckLen), steelGreenMat);
   brDeck.position.set(0, 12.0, 0);
   brDeck.castShadow = true;
   brGroup.add(brDeck);
 
-  const brBoardwalk = new THREE.Mesh(new THREE.BoxGeometry(brSpan + 8.0, 0.4, 2.2), new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 }));
-  brBoardwalk.rotation.y = Math.atan2(fBr.side.x, fBr.side.z);
+  // Elevated Central Pedestrian Timber Boardwalk
+  const brBoardwalk = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.4, brDeckLen), new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 }));
   brBoardwalk.position.set(0, 13.0, 0);
   brGroup.add(brBoardwalk);
+
+  // Timber handrails flanking pedestrian boardwalk
+  [-1.2, 1.2].forEach((rX) => {
+    const handrail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.7, brDeckLen), new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.8 }));
+    handrail.position.set(rX, 13.55, 0);
+    brGroup.add(handrail);
+  });
+
+  // 4 Heavy 3D Catenary Main Cable Tubes (Outer & Inner pairs)
+  const cableXPositions = [-3.0, -1.8, 1.8, 3.0];
+  cableXPositions.forEach((cableX) => {
+    const curvePts = [];
+    curvePts.push(new THREE.Vector3(cableX, 6.5, -brAnchorZ));
+    curvePts.push(new THREE.Vector3(cableX, 19.0, -brTowerZ * 1.3));
+    curvePts.push(new THREE.Vector3(cableX, brTowerH + 5.2, -brTowerZ));
+
+    for (let k = 1; k < 14; k++) {
+      const uK = k / 14;
+      const zK = -brTowerZ + uK * (2.0 * brTowerZ);
+      const normZ = zK / brTowerZ;
+      const yK = 13.6 + (brTowerH + 5.2 - 13.6) * (normZ * normZ);
+      curvePts.push(new THREE.Vector3(cableX, yK, zK));
+    }
+
+    curvePts.push(new THREE.Vector3(cableX, brTowerH + 5.2, brTowerZ));
+    curvePts.push(new THREE.Vector3(cableX, 19.0, brTowerZ * 1.3));
+    curvePts.push(new THREE.Vector3(cableX, 6.5, brAnchorZ));
+
+    const catCurve = new THREE.CatmullRomCurve3(curvePts);
+    const cableTube = new THREE.Mesh(new THREE.TubeGeometry(catCurve, 48, 0.16, 8, false), steelCableMat);
+    brGroup.add(cableTube);
+
+    // Vertical Wire Rope Suspenders
+    for (let sZ = -brTowerZ + 1.6; sZ <= brTowerZ - 1.6; sZ += 1.8) {
+      const normZ = sZ / brTowerZ;
+      const yCable = 13.6 + (brTowerH + 5.2 - 13.6) * (normZ * normZ);
+      const suspH = Math.max(0.4, yCable - 12.6);
+      const susp = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, suspH, 6), steelCableMat);
+      susp.position.set(cableX, 12.6 + suspH * 0.5, sZ);
+      brGroup.add(susp);
+    }
+
+    // John Roebling's Radiating Diagonal Steel Stay Cables
+    const deckZTargets = [
+      -brTowerZ * 0.85, -brTowerZ * 0.65, -brTowerZ * 0.45, -brTowerZ * 0.25, -brTowerZ * 0.08,
+      brTowerZ * 0.08, brTowerZ * 0.25, brTowerZ * 0.45, brTowerZ * 0.65, brTowerZ * 0.85
+    ];
+
+    [-brTowerZ, brTowerZ].forEach((tZ) => {
+      const saddlePos = new THREE.Vector3(cableX, brTowerH + 5.0, tZ);
+      deckZTargets.forEach((dZ) => {
+        if ((tZ < 0 && dZ > tZ) || (tZ > 0 && dZ < tZ)) {
+          const deckPos = new THREE.Vector3(cableX, 12.8, dZ);
+          const stayLen = saddlePos.distanceTo(deckPos);
+          const stayMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, stayLen, 4), steelCableMat);
+          stayMesh.position.copy(saddlePos).lerp(deckPos, 0.5);
+          stayMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), deckPos.clone().sub(saddlePos).normalize());
+          brGroup.add(stayMesh);
+        }
+      });
+    });
+  });
   group.add(brGroup);
+
+  // Dynamic Collapsing Roadway Section & Yellow Cabs on Brooklyn Bridge (u = 0.74)
+  {
+    const cab = createYellowCab();
+    const cabPos = fBr.pt.clone().addScaledVector(fBr.side, -4.0);
+    cabPos.y = 13.2;
+    cab.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fBr.side);
+
+    registerWipeable(cab.group, 0.74, cabPos, fBr.tangent, fBr.side, {
+      primaryMat: cab.primaryMat,
+      materials: cab.materials,
+      driftSpeed: 30.0,
+      tumbleScale: 8.0,
+      collapseTilt: 0.58,
+      sinkScale: 0.22
+    });
+
+    const van = createDeliveryVan(0x047857);
+    const vanPos = fBr.pt.clone().addScaledVector(fBr.side, 5.5);
+    vanPos.y = 13.2;
+    van.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fBr.side);
+
+    registerWipeable(van.group, 0.745, vanPos, fBr.tangent, fBr.side, {
+      primaryMat: van.primaryMat,
+      materials: van.materials,
+      driftSpeed: 29.0,
+      tumbleScale: 7.5,
+      collapseTilt: 0.52
+    });
+  }
 
   // DUMBO Waterfront 19th-Century Warehouses with Rooftop Water Tanks
   for (let d = 0; d < 6; d++) {
