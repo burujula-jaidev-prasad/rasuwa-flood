@@ -13,8 +13,8 @@
     }
   }
   </script>
-  <script type="module" crossorigin src="./assets/index-JPC52DQe.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-BtZ9h76C.css">
+  <script type="module" crossorigin src="./assets/index-_09cTrRG.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CvSe5PcS.css">
 </head>
 <body>
   <!-- 3D WebGL Canvas Container -->
@@ -58,6 +58,18 @@
         <span class="sc-name">London</span>
       </button>
     </nav>
+
+    <!-- Real 3D Photogrammetry Map Mode Toggle (Google 3D Tiles) -->
+    <div class="map-mode-container" id="map-mode-container">
+      <button class="map-mode-btn" id="map-mode-toggle" title="Toggle Real 3D Photogrammetry Map vs Local Simulation">
+        <span class="map-mode-icon">🗺️</span>
+        <span class="map-mode-text">REAL 3D MAP</span>
+        <span class="map-mode-badge" id="map-mode-badge">OFF</span>
+      </button>
+      <button class="map-key-btn" id="map-key-btn" title="Configure Google Cloud Maps API Key">
+        <span>🔑</span>
+      </button>
+    </div>
   </header>
 
   <!-- KPI Disaster Command Dashboard -->
@@ -237,6 +249,28 @@
       </div>
       <div class="intro-actions">
         <button class="intro-btn" id="intro-skip-btn">Explore 3D New York Simulation</button>
+  <!-- Google 3D Tiles API Key Configuration Modal -->
+  <div class="google-key-modal-overlay" id="google-key-modal" style="display: none;">
+    <div class="google-key-modal">
+      <div class="key-modal-header">
+        <div class="key-badge">Google Maps Platform</div>
+        <button class="key-modal-close" id="key-modal-close" title="Close">&times;</button>
+      </div>
+      <h3 class="key-modal-title">Google Photorealistic 3D Tiles</h3>
+      <p class="key-modal-desc">
+        Stream real 3D building photogrammetry of New York City directly from Google Earth into Three.js.
+        Requires a Google Cloud API Key with the <strong>Map Tiles API</strong> enabled.
+      </p>
+      <div class="key-input-group">
+        <label for="google-api-key-input">Google Cloud API Key:</label>
+        <input type="password" id="google-api-key-input" placeholder="AIzaSy..." autocomplete="off">
+      </div>
+      <div class="key-modal-footer">
+        <button class="key-btn key-btn-secondary" id="key-btn-fallback">Use Local Simulation</button>
+        <button class="key-btn key-btn-primary" id="key-btn-save">Stream Real 3D Tiles</button>
+      </div>
+      <div class="key-modal-hint">
+        <span>🔒</span> Stored locally in your browser. Never sent to any external server.
       </div>
     </div>
   </div>
