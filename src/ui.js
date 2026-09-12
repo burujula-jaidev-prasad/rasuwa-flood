@@ -115,12 +115,26 @@ export class UIManager {
       }
     });
 
-    this.elGuidedBtn.addEventListener('click', () => {
-      this.isGuided = !this.isGuided;
-      this.updateGuidedBtnState();
-      if (this.options.onToggleGuided) {
-        this.options.onToggleGuided(this.isGuided);
-      }
+    if (this.elGuidedBtn) {
+      this.elGuidedBtn.addEventListener('click', () => {
+        this.isGuided = !this.isGuided;
+        this.updateGuidedBtnState();
+        if (this.options.onToggleGuided) {
+          this.options.onToggleGuided(this.isGuided);
+        }
+      });
+    }
+
+    // Multiple Director View Buttons (Top, Left, Chaser, Isometric, Free Orbit)
+    const viewBtns = document.querySelectorAll('.view-btn');
+    viewBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.getAttribute('data-view');
+        this.setViewMode(mode);
+        if (this.options.onSelectViewMode) {
+          this.options.onSelectViewMode(mode);
+        }
+      });
     });
 
     this.elRainBtn.addEventListener('click', () => {
@@ -184,6 +198,7 @@ export class UIManager {
   }
 
   updateGuidedBtnState() {
+    if (!this.elGuidedBtn) return;
     if (this.isGuided) {
       this.elGuidedBtn.classList.add('active');
       this.elGuidedBtn.innerHTML = `
@@ -204,9 +219,22 @@ export class UIManager {
     }
   }
 
-  setGuided(guided) {
+  setGuided(guided, mode = null) {
     this.isGuided = guided;
     this.updateGuidedBtnState();
+    if (!guided) {
+      this.setViewMode('free');
+    } else if (mode) {
+      this.setViewMode(mode);
+    }
+  }
+
+  setViewMode(mode) {
+    this.currentViewMode = mode;
+    const viewBtns = document.querySelectorAll('.view-btn');
+    viewBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-view') === mode);
+    });
   }
 
   hideIntroCard() {

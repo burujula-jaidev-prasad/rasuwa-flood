@@ -248,7 +248,295 @@ export function buildNewYorkScene(group, river, terrain) {
       copGroup.add(wheel);
     });
 
-    return { group: copGroup, materials, primaryMat: whiteMat };
+    return { group: copGroup, materials, primaryMat: whiteMat, lightbar };
+  }
+
+  // Civilian Sedan Car
+  function createSedanCar(colorHex = 0x94a3b8) {
+    const carGroup = new THREE.Group();
+    const materials = [];
+
+    const bodyMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.35, metalness: 0.5 });
+    const darkWinMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.15, metalness: 0.8 });
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.9 });
+    materials.push(bodyMat, darkWinMat, wheelMat);
+
+    const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.75, 4.2), bodyMat);
+    chassis.position.y = 0.6;
+    chassis.castShadow = true;
+    carGroup.add(chassis);
+
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.7, 2.2), darkWinMat);
+    cabin.position.set(0, 1.3, -0.15);
+    carGroup.add(cabin);
+
+    [[-0.92, -1.25], [0.92, -1.25], [-0.92, 1.25], [0.92, 1.25]].forEach(([wX, wZ]) => {
+      const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.28, 10), wheelMat);
+      wheel.rotation.z = Math.PI / 2;
+      wheel.position.set(wX, 0.32, wZ);
+      carGroup.add(wheel);
+    });
+
+    return { group: carGroup, materials, primaryMat: bodyMat };
+  }
+
+  // 20-ft Intermodal Cargo Shipping Container
+  function createShippingContainer(boxHex = 0x0284c7) {
+    const contGroup = new THREE.Group();
+    const materials = [];
+
+    const boxMat = new THREE.MeshStandardMaterial({ color: boxHex, roughness: 0.5, metalness: 0.4 });
+    const cornerMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.7, metalness: 0.8 });
+    const hazardMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+    materials.push(boxMat, cornerMat, hazardMat);
+
+    // Main corrugated cargo box (6.0m x 2.4m x 2.5m)
+    const box = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.5, 6.0), boxMat);
+    box.position.y = 1.25;
+    box.castShadow = true;
+    contGroup.add(box);
+
+    // Subtle corrugated side rib trims
+    for (let r = -2.5; r <= 2.5; r += 0.8) {
+      const rib = new THREE.Mesh(new THREE.BoxGeometry(2.46, 2.4, 0.12), boxMat);
+      rib.position.set(0, 1.25, r);
+      contGroup.add(rib);
+    }
+
+    // Heavy steel corner castings
+    [[-1.2, 1.2], [1.2, 1.2]].forEach(([cx, cz]) => {
+      [0.05, 2.45].forEach(cy => {
+        const corner = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), cornerMat);
+        corner.position.set(cx, cy, cz);
+        contGroup.add(corner);
+      });
+    });
+
+    // Hazmat / shipping placard
+    const placard = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.4, 0.8), hazardMat);
+    placard.position.set(1.22, 1.4, 0);
+    contGroup.add(placard);
+
+    return { group: contGroup, materials, primaryMat: boxMat };
+  }
+
+  // Heavy Industrial Wood Cargo Pallet
+  function createTimberPallet() {
+    const palletGroup = new THREE.Group();
+    const materials = [];
+
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 });
+    materials.push(woodMat);
+
+    // 3 bottom skids
+    [-0.7, 0, 0.7].forEach(sx => {
+      const skid = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 1.6), woodMat);
+      skid.position.set(sx, 0.06, 0);
+      palletGroup.add(skid);
+    });
+
+    // Top deck slats
+    for (let s = 0; s < 6; s++) {
+      const slat = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.2), woodMat);
+      slat.position.set(0, 0.16, -0.7 + s * 0.28);
+      palletGroup.add(slat);
+    }
+
+    return { group: palletGroup, materials, primaryMat: woodMat };
+  }
+
+  // 55-Gallon Steel Oil / Chemical Drum Cluster
+  function createSteelDrumCluster() {
+    const clusterGroup = new THREE.Group();
+    const materials = [];
+
+    const yellowDrumMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4, metalness: 0.6 });
+    const blueDrumMat = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.35, metalness: 0.7 });
+    const redDrumMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.4, metalness: 0.5 });
+    materials.push(yellowDrumMat, blueDrumMat, redDrumMat);
+
+    // Upright Yellow Hazmat Drum
+    const drum1 = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 1.05, 12), yellowDrumMat);
+    drum1.position.set(-0.35, 0.52, -0.2);
+    drum1.castShadow = true;
+    clusterGroup.add(drum1);
+
+    // Floating/Knocked Blue Petroleum Drum
+    const drum2 = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 1.05, 12), blueDrumMat);
+    drum2.rotation.z = Math.PI * 0.45;
+    drum2.position.set(0.4, 0.35, 0.1);
+    drum2.castShadow = true;
+    clusterGroup.add(drum2);
+
+    // Red Flammable Drum
+    const drum3 = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 1.05, 12), redDrumMat);
+    drum3.rotation.x = Math.PI * 0.4;
+    drum3.position.set(-0.1, 0.32, 0.45);
+    drum3.castShadow = true;
+    clusterGroup.add(drum3);
+
+    return { group: clusterGroup, materials, primaryMat: yellowDrumMat };
+  }
+
+  // Driftwood Piling / Creosote Wharf Timber Beam
+  function createDriftwoodBeam() {
+    const beamGroup = new THREE.Group();
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.95 });
+    const materials = [woodMat];
+
+    const log = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.28, 4.8, 10), woodMat);
+    log.rotation.z = Math.PI * 0.5;
+    log.position.y = 0.25;
+    log.castShadow = true;
+    beamGroup.add(log);
+
+    return { group: beamGroup, materials, primaryMat: woodMat };
+  }
+
+  // 4-Car MTA Stainless-Steel Subway Train Set (R160 / R211 Style)
+  function createMTASubwayTrain() {
+    const trainGroup = new THREE.Group();
+    const materials = [];
+
+    const carSteelMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.22, metalness: 0.85 });
+    const darkWinMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.15, metalness: 0.8 });
+    const litWinMat = new THREE.MeshStandardMaterial({
+      color: 0xfef08a,
+      emissive: 0xfef08a,
+      emissiveIntensity: 0.85,
+      roughness: 0.2
+    });
+    const doorFrameMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5 });
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.8, metalness: 0.9 });
+    const gangwayMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.9 });
+    const headlightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const redTailMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+    const routeBulletMat = new THREE.MeshBasicMaterial({ color: 0x2563eb }); // MTA Blue (A) Eighth Ave Express Bullet
+    materials.push(carSteelMat, darkWinMat, litWinMat, doorFrameMat, wheelMat, gangwayMat, headlightMat, redTailMat, routeBulletMat);
+
+    const carLen = 14.5;
+    const carW = 3.2;
+    const carH = 3.2;
+    const numCars = 4;
+
+    for (let c = 0; c < numCars; c++) {
+      const carGroup = new THREE.Group();
+      const carZ = (c - (numCars - 1) * 0.5) * (carLen + 0.8);
+      carGroup.position.z = carZ;
+
+      // Stainless Steel Carbody
+      const body = new THREE.Mesh(new THREE.BoxGeometry(carW, carH * 0.85, carLen), carSteelMat);
+      body.position.y = carH * 0.5 + 0.35;
+      body.castShadow = true;
+      carGroup.add(body);
+
+      // Curved Silver Roof Cap
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(carW * 0.94, 0.35, carLen - 0.2), carSteelMat);
+      roof.position.y = carH + 0.35;
+      carGroup.add(roof);
+
+      // Fluted Stainless Steel Rib Accents along lower sides
+      const fluting = new THREE.Mesh(new THREE.BoxGeometry(carW + 0.04, 0.45, carLen - 0.4), new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.3, metalness: 0.9 }));
+      fluting.position.y = 0.9;
+      carGroup.add(fluting);
+
+      // Warm Illuminated Passenger Cabin Windows (Glows from within!)
+      const winL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.95, carLen * 0.78), litWinMat);
+      winL.position.set(-carW * 0.5 - 0.02, carH * 0.55 + 0.35, 0);
+      carGroup.add(winL);
+
+      const winR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.95, carLen * 0.78), litWinMat);
+      winR.position.set(carW * 0.5 + 0.02, carH * 0.55 + 0.35, 0);
+      carGroup.add(winR);
+
+      // 3 Sets of Double Sliding Passenger Doors per side
+      [-carLen * 0.32, 0, carLen * 0.32].forEach(dz => {
+        [-carW * 0.5 - 0.03, carW * 0.5 + 0.03].forEach(dx => {
+          const door = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.9, 1.4), doorFrameMat);
+          door.position.set(dx, 1.45, dz);
+          carGroup.add(door);
+        });
+      });
+
+      // Dual Roof-Mounted HVAC Pods
+      [-carLen * 0.25, carLen * 0.25].forEach(hz => {
+        const hvac = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.45, 2.6), doorFrameMat);
+        hvac.position.set(0, carH + 0.65, hz);
+        carGroup.add(hvac);
+      });
+
+      // 2 Bogie Wheel Trucks per car
+      [-carLen * 0.35, carLen * 0.35].forEach(bz => {
+        const bogie = new THREE.Group();
+        bogie.position.set(0, 0.38, bz);
+
+        const frame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.25, 2.2), wheelMat);
+        bogie.add(frame);
+
+        // 4 Steel Wheels
+        [-1.1, 1.1].forEach(wx => {
+          [-0.8, 0.8].forEach(wz => {
+            const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.22, 12), wheelMat);
+            wheel.rotation.z = Math.PI * 0.5;
+            wheel.position.set(wx, 0, wz);
+            bogie.add(wheel);
+          });
+        });
+        carGroup.add(bogie);
+      });
+
+      // Articulated Gangway Bellows between cars
+      if (c < numCars - 1) {
+        const bellows = new THREE.Mesh(new THREE.BoxGeometry(2.0, 2.4, 0.82), gangwayMat);
+        bellows.position.set(0, carH * 0.5 + 0.35, carLen * 0.5 + 0.41);
+        carGroup.add(bellows);
+      }
+
+      // Lead Car Front End Features (car 0 facing front, positive Z)
+      if (c === 0) {
+        // Angled Cab Windshield
+        const cabWin = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.1, 0.15), darkWinMat);
+        cabWin.position.set(0, carH * 0.6 + 0.35, -carLen * 0.5 - 0.05);
+        carGroup.add(cabWin);
+
+        // Lit Route Sign & Blue "A" Express Bullet
+        const signBox = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.4, 0.18), darkWinMat);
+        signBox.position.set(0, carH + 0.15, -carLen * 0.5 - 0.05);
+        carGroup.add(signBox);
+
+        const bullet = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.2, 12), routeBulletMat);
+        bullet.rotation.x = Math.PI * 0.5;
+        bullet.position.set(-0.45, carH + 0.15, -carLen * 0.5 - 0.06);
+        carGroup.add(bullet);
+
+        // Twin Headlights
+        [-0.75, 0.75].forEach(hx => {
+          const headlight = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), headlightMat);
+          headlight.position.set(hx, 0.85, -carLen * 0.5 - 0.05);
+          carGroup.add(headlight);
+        });
+
+        // Red Tail/Marker Lights on roof corners
+        [-1.3, 1.3].forEach(rx => {
+          const marker = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 6), redTailMat);
+          marker.position.set(rx, carH + 0.25, -carLen * 0.5 - 0.05);
+          carGroup.add(marker);
+        });
+      }
+
+      // Rear Car End Marker Lights (car numCars - 1)
+      if (c === numCars - 1) {
+        [-1.1, 1.1].forEach(rx => {
+          const rearMarker = new THREE.Mesh(new THREE.SphereGeometry(0.14, 6, 6), redTailMat);
+          rearMarker.position.set(rx, carH + 0.25, carLen * 0.5 + 0.05);
+          carGroup.add(rearMarker);
+        });
+      }
+
+      trainGroup.add(carGroup);
+    }
+
+    return { group: trainGroup, materials, primaryMat: carSteelMat };
   }
 
   // Commercial Delivery Van
@@ -2718,6 +3006,381 @@ export function buildNewYorkScene(group, river, terrain) {
   }
   group.add(armyGroup);
 
+  // -------------------------------------------------------------------------
+  // 8. ELEVATED METRO VIADUCT, SOUTH FERRY TERMINAL & 4-CAR MTA SUBWAY TRAIN
+  // -------------------------------------------------------------------------
+  const viaductGroup = new THREE.Group();
+  const numBents = 14;
+  const bentFrames = [];
+
+  const viadSteelMat  = new THREE.MeshStandardMaterial({ color: 0x1e3a2b, roughness: 0.45, metalness: 0.75 }); // NYC transit dark green steel
+  const trackBedMat   = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 });
+  const sleeperMat    = new THREE.MeshStandardMaterial({ color: 0x3e2723, roughness: 0.9 });
+  const railSteelMat  = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.2, metalness: 0.95 });
+  const thirdRailMat  = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.45 });
+  const platformMat   = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.6 });
+  const yellowEdgeMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.35 });
+  const stationRoofMat= new THREE.MeshStandardMaterial({ color: 0x064e3b, roughness: 0.4, metalness: 0.5 });
+  const stationSignMat= new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 });
+
+  for (let b = 0; b < numBents; b++) {
+    const uViad = 0.46 + b * 0.015; // spans u = 0.46 to 0.655
+    const fV = getRiverFrame(uViad);
+    const deckCenter = fV.pt.clone().addScaledVector(fV.side, 18.2);
+    const groundY = getGroundY(deckCenter.x, deckCenter.z, 2.7);
+    const deckY = 11.2;
+    deckCenter.y = deckY;
+    bentFrames.push({ u: uViad, deckCenter, f: fV, groundY, deckY });
+
+    // Steel Trestle Bents (Twin heavy H-columns with cross lacing)
+    const colH = deckY - groundY;
+    const colY = groundY + colH * 0.5;
+
+    // Dual columns spaced 6.2m apart laterally
+    [-3.1, 3.1].forEach(colOff => {
+      const colPos = deckCenter.clone().addScaledVector(fV.side, colOff);
+      colPos.y = colY;
+
+      const col = new THREE.Mesh(new THREE.BoxGeometry(0.7, colH, 0.7), viadSteelMat);
+      col.position.copy(colPos);
+      col.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fV.tangent);
+      col.castShadow = true;
+      col.receiveShadow = true;
+      viaductGroup.add(col);
+
+      // Heavy concrete footing block at ground level
+      const footing = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.6, 1.4), concreteMat);
+      footing.position.copy(colPos);
+      footing.position.y = groundY + 0.3;
+      viaductGroup.add(footing);
+    });
+
+    // Transverse Heavy Cross Girder at top of bent
+    const crossGirder = new THREE.Mesh(new THREE.BoxGeometry(7.6, 0.7, 0.8), viadSteelMat);
+    crossGirder.position.copy(deckCenter);
+    crossGirder.position.y = deckY - 0.35;
+    crossGirder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fV.tangent);
+    crossGirder.rotateY(Math.PI * 0.5);
+    crossGirder.castShadow = true;
+    viaductGroup.add(crossGirder);
+
+    // Diagonal Cross Bracing (X-struts) between twin columns
+    const braceLen = Math.sqrt(6.2 * 6.2 + colH * colH * 0.6 * 0.6);
+    const braceAng = Math.atan2(colH * 0.6, 6.2);
+    [-1, 1].forEach(dir => {
+      const brace = new THREE.Mesh(new THREE.BoxGeometry(braceLen, 0.22, 0.22), viadSteelMat);
+      brace.position.copy(deckCenter);
+      brace.position.y = colY;
+      brace.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fV.tangent);
+      brace.rotateY(Math.PI * 0.5);
+      brace.rotateZ(dir * braceAng);
+      viaductGroup.add(brace);
+    });
+  }
+
+  // Longitudinal Spans: Girders, Track Deck, Ties, Rails & Third Rails
+  for (let b = 0; b < numBents - 1; b++) {
+    const b1 = bentFrames[b];
+    const b2 = bentFrames[b + 1];
+    const spanCenter = b1.deckCenter.clone().add(b2.deckCenter).multiplyScalar(0.5);
+    const spanVec = b2.deckCenter.clone().sub(b1.deckCenter);
+    const spanLen = spanVec.length();
+    const spanDir = spanVec.clone().normalize();
+
+    // 4 Longitudinal Plate Girders carrying the deck
+    [-2.8, -1.0, 1.0, 2.8].forEach(gOff => {
+      const gPos = spanCenter.clone().addScaledVector(b1.f.side, gOff);
+      gPos.y = b1.deckY - 0.45;
+      const girder = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.9, spanLen), viadSteelMat);
+      girder.position.copy(gPos);
+      girder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), spanDir);
+      girder.castShadow = true;
+      viaductGroup.add(girder);
+    });
+
+    // Solid Deck Bed Slab
+    const deckSlab = new THREE.Mesh(new THREE.BoxGeometry(7.4, 0.25, spanLen), trackBedMat);
+    deckSlab.position.copy(spanCenter);
+    deckSlab.position.y = b1.deckY;
+    deckSlab.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), spanDir);
+    viaductGroup.add(deckSlab);
+
+    // Track Cross-Ties (Sleepers) along the span
+    const numTies = Math.floor(spanLen / 0.85);
+    for (let ti = 0; ti < numTies; ti++) {
+      const alpha = (ti + 0.5) / numTies;
+      const tiePos = b1.deckCenter.clone().lerp(b2.deckCenter, alpha);
+      tiePos.y = b1.deckY + 0.18;
+
+      // Inbound track tie
+      const tie1 = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.16, 0.28), sleeperMat);
+      tie1.position.copy(tiePos).addScaledVector(b1.f.side, -1.9);
+      tie1.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), spanDir);
+      tie1.rotateY(Math.PI * 0.5);
+      viaductGroup.add(tie1);
+
+      // Outbound track tie
+      const tie2 = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.16, 0.28), sleeperMat);
+      tie2.position.copy(tiePos).addScaledVector(b1.f.side, 1.9);
+      tie2.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), spanDir);
+      tie2.rotateY(Math.PI * 0.5);
+      viaductGroup.add(tie2);
+    }
+
+    // Dual Running Rails (Track 1: side -1.9 ± 0.75, Track 2: side +1.9 ± 0.75)
+    [-2.65, -1.15, 1.15, 2.65].forEach(rOff => {
+      const railPos = spanCenter.clone().addScaledVector(b1.f.side, rOff);
+      railPos.y = b1.deckY + 0.32;
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, spanLen), railSteelMat);
+      rail.position.copy(railPos);
+      rail.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), spanDir);
+      viaductGroup.add(rail);
+    });
+
+    // Outer Third Rails (600V DC Conductor Rail with safety timber cover)
+    [-3.3, 3.3].forEach(trOff => {
+      const trPos = spanCenter.clone().addScaledVector(b1.f.side, trOff);
+      trPos.y = b1.deckY + 0.38;
+      const tr = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, spanLen), thirdRailMat);
+      tr.position.copy(trPos);
+      tr.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), spanDir);
+      viaductGroup.add(tr);
+    });
+
+    // Safety Walkway Handrails along both edges
+    [-3.65, 3.65].forEach(hrOff => {
+      const hrPos = spanCenter.clone().addScaledVector(b1.f.side, hrOff);
+      hrPos.y = b1.deckY + 0.65;
+      const hr = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.85, spanLen), viadSteelMat);
+      hr.position.copy(hrPos);
+      hr.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), spanDir);
+      viaductGroup.add(hr);
+    });
+  }
+
+  // Elevated Station ("South Ferry Elevated Viaduct Terminal") at bents 5 - 7
+  {
+    const stBent1 = bentFrames[5];
+    const stBent2 = bentFrames[7];
+    const stCenter = stBent1.deckCenter.clone().lerp(stBent2.deckCenter, 0.5);
+    const stVec = stBent2.deckCenter.clone().sub(stBent1.deckCenter);
+    const stLen = stVec.length() + 4.0;
+    const stDir = stVec.clone().normalize();
+
+    // Raised Concrete Platform
+    const stPlat = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.45, stLen), platformMat);
+    stPlat.position.copy(stCenter).addScaledVector(stBent1.f.side, 4.2);
+    stPlat.position.y = stBent1.deckY + 0.5;
+    stPlat.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), stDir);
+    stPlat.castShadow = true;
+    stPlat.receiveShadow = true;
+    viaductGroup.add(stPlat);
+
+    // Yellow Tactile Safety Warning Strip
+    const tactileStrip = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.47, stLen), yellowEdgeMat);
+    tactileStrip.position.copy(stPlat.position).addScaledVector(stBent1.f.side, -2.05);
+    tactileStrip.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), stDir);
+    viaductGroup.add(tactileStrip);
+
+    // Arched Station Canopy Roof & Steel Trusses
+    const canopyRoof = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.25, stLen), stationRoofMat);
+    canopyRoof.position.copy(stPlat.position);
+    canopyRoof.position.y = stBent1.deckY + 4.2;
+    canopyRoof.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), stDir);
+    canopyRoof.castShadow = true;
+    viaductGroup.add(canopyRoof);
+
+    // Station Canopy Columns
+    for (let cp = -stLen * 0.4; cp <= stLen * 0.4; cp += 6.0) {
+      const cPost = new THREE.Mesh(new THREE.BoxGeometry(0.24, 3.8, 0.24), viadSteelMat);
+      cPost.position.copy(stPlat.position).addScaledVector(stDir, cp);
+      cPost.position.y = stBent1.deckY + 2.4;
+      viaductGroup.add(cPost);
+    }
+
+    // MTA Enamel Station Nameplate: "SOUTH FERRY ELEVATED TERMINAL"
+    const stSign = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.6, 6.5), stationSignMat);
+    stSign.position.copy(stPlat.position);
+    stSign.position.y = stBent1.deckY + 3.2;
+    stSign.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), stDir);
+    viaductGroup.add(stSign);
+
+    const stSignText = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.35, 6.0), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    stSignText.position.copy(stSign.position);
+    viaductGroup.add(stSignText);
+
+    // Mezzanine Covered Stairway Tower descending to street level
+    const stairH = stBent1.deckY - stBent1.groundY;
+    const stairTower = new THREE.Mesh(new THREE.BoxGeometry(3.2, stairH, 4.2), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 }));
+    stairTower.position.copy(stPlat.position).addScaledVector(stBent1.f.side, 3.2);
+    stairTower.position.y = stBent1.groundY + stairH * 0.5;
+    stairTower.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), stDir);
+    stairTower.castShadow = true;
+    viaductGroup.add(stairTower);
+  }
+
+  // 4-Car MTA Stainless Steel Subway Train Set positioned along elevated inbound track
+  {
+    const trainSet = createMTASubwayTrain();
+    const tBent1 = bentFrames[3];
+    const tBent2 = bentFrames[6];
+    const trainPos = tBent1.deckCenter.clone().lerp(tBent2.deckCenter, 0.5).addScaledVector(tBent1.f.side, -1.9);
+    trainPos.y = tBent1.deckY + 0.35;
+
+    const tDir = tBent2.deckCenter.clone().sub(tBent1.deckCenter).normalize();
+    trainSet.group.position.copy(trainPos);
+    trainSet.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tDir);
+    viaductGroup.add(trainSet.group);
+  }
+
+  group.add(viaductGroup);
+
+  // -------------------------------------------------------------------------
+  // 9. ACTIVE BUOYANT FLOATING CARS & MARITIME DEBRIS FLOTILLA
+  // -------------------------------------------------------------------------
+  const floatingFlotilla = [];
+
+  const flotillaSpecs = [
+    // 10 Buoyant Vehicles (Yellow Cabs, NYPD Patrol Cruisers, Sedans, Delivery Vans)
+    { kind: 'vehicle', sub: 'cab',    u: 0.22, side:  6.5, rotY:  0.35, drift: 0.52, bAmp: 0.32, bFreq: 3.2, pFreq: 2.1, rFreq: 1.8 },
+    { kind: 'vehicle', sub: 'cop',    u: 0.28, side: -8.0, rotY: -0.25, drift: 0.58, bAmp: 0.35, bFreq: 3.5, pFreq: 2.3, rFreq: 2.0 },
+    { kind: 'vehicle', sub: 'van',    u: 0.34, side:  7.5, rotY:  0.45, drift: 0.48, bAmp: 0.28, bFreq: 2.8, pFreq: 1.9, rFreq: 1.6, hex: 0x0284c7 },
+    { kind: 'vehicle', sub: 'sedan',  u: 0.42, side: -9.0, rotY: -0.60, drift: 0.55, bAmp: 0.30, bFreq: 3.1, pFreq: 2.2, rFreq: 1.9, hex: 0x94a3b8 },
+    { kind: 'vehicle', sub: 'cab',    u: 0.47, side:  8.0, rotY:  0.20, drift: 0.50, bAmp: 0.34, bFreq: 3.4, pFreq: 2.4, rFreq: 1.7 },
+    { kind: 'vehicle', sub: 'cop',    u: 0.53, side:  9.5, rotY:  0.75, drift: 0.60, bAmp: 0.36, bFreq: 3.6, pFreq: 2.5, rFreq: 2.1 },
+    { kind: 'vehicle', sub: 'van',    u: 0.58, side: -7.0, rotY: -0.40, drift: 0.46, bAmp: 0.26, bFreq: 2.7, pFreq: 1.8, rFreq: 1.5, hex: 0x15803d },
+    { kind: 'vehicle', sub: 'sedan',  u: 0.64, side:  8.5, rotY:  0.55, drift: 0.54, bAmp: 0.32, bFreq: 3.3, pFreq: 2.2, rFreq: 1.8, hex: 0xb91c1c },
+    { kind: 'vehicle', sub: 'cab',    u: 0.70, side: -6.5, rotY: -0.30, drift: 0.52, bAmp: 0.33, bFreq: 3.2, pFreq: 2.1, rFreq: 1.9 },
+    { kind: 'vehicle', sub: 'sedan',  u: 0.78, side:  7.0, rotY:  0.40, drift: 0.56, bAmp: 0.30, bFreq: 3.0, pFreq: 2.0, rFreq: 1.7, hex: 0x1e3a8a },
+
+    // 14 Floating Maritime & Urban Debris (Shipping Containers, Pallets, Steel Drums, Logs)
+    { kind: 'debris', sub: 'container', u: 0.18, side: -5.0, rotY:  0.50, drift: 0.62, bAmp: 0.25, bFreq: 2.4, pFreq: 1.6, rFreq: 1.4, hex: 0x0284c7 },
+    { kind: 'debris', sub: 'pallet',    u: 0.24, side:  4.0, rotY: -0.80, drift: 0.68, bAmp: 0.42, bFreq: 4.2, pFreq: 2.8, rFreq: 2.5 },
+    { kind: 'debris', sub: 'drums',     u: 0.30, side: -6.5, rotY:  0.30, drift: 0.65, bAmp: 0.38, bFreq: 3.8, pFreq: 2.6, rFreq: 2.2 },
+    { kind: 'debris', sub: 'log',       u: 0.36, side:  5.5, rotY:  0.90, drift: 0.60, bAmp: 0.35, bFreq: 3.5, pFreq: 2.4, rFreq: 2.0 },
+    { kind: 'debris', sub: 'container', u: 0.44, side:  6.0, rotY: -0.45, drift: 0.58, bAmp: 0.24, bFreq: 2.3, pFreq: 1.5, rFreq: 1.3, hex: 0x065f46 },
+    { kind: 'debris', sub: 'pallet',    u: 0.49, side: -4.5, rotY:  0.65, drift: 0.70, bAmp: 0.44, bFreq: 4.4, pFreq: 3.0, rFreq: 2.6 },
+    { kind: 'debris', sub: 'drums',     u: 0.55, side:  5.0, rotY: -0.55, drift: 0.64, bAmp: 0.37, bFreq: 3.7, pFreq: 2.5, rFreq: 2.3 },
+    { kind: 'debris', sub: 'container', u: 0.60, side: -8.0, rotY:  0.35, drift: 0.60, bAmp: 0.26, bFreq: 2.5, pFreq: 1.7, rFreq: 1.4, hex: 0xea580c },
+    { kind: 'debris', sub: 'log',       u: 0.66, side:  4.0, rotY: -0.70, drift: 0.62, bAmp: 0.36, bFreq: 3.6, pFreq: 2.3, rFreq: 2.1 },
+    { kind: 'debris', sub: 'pallet',    u: 0.72, side: -5.5, rotY:  0.40, drift: 0.69, bAmp: 0.41, bFreq: 4.1, pFreq: 2.9, rFreq: 2.4 },
+    { kind: 'debris', sub: 'container', u: 0.76, side:  5.0, rotY: -0.60, drift: 0.59, bAmp: 0.25, bFreq: 2.4, pFreq: 1.6, rFreq: 1.3, hex: 0x1e3a8a },
+    { kind: 'debris', sub: 'drums',     u: 0.80, side: -4.0, rotY:  0.85, drift: 0.66, bAmp: 0.38, bFreq: 3.9, pFreq: 2.7, rFreq: 2.3 },
+    { kind: 'debris', sub: 'pallet',    u: 0.83, side:  3.5, rotY: -0.35, drift: 0.67, bAmp: 0.43, bFreq: 4.3, pFreq: 2.8, rFreq: 2.5 },
+    { kind: 'debris', sub: 'log',       u: 0.87, side: -5.0, rotY:  0.50, drift: 0.61, bAmp: 0.35, bFreq: 3.5, pFreq: 2.4, rFreq: 2.0 }
+  ];
+
+  flotillaSpecs.forEach((spec, sIdx) => {
+    let itemObj = null;
+    let isCop = false;
+    let lightbarMesh = null;
+
+    if (spec.kind === 'vehicle') {
+      if (spec.sub === 'cab') {
+        itemObj = createYellowCab();
+      } else if (spec.sub === 'cop') {
+        itemObj = createNYPDCruiser();
+        isCop = true;
+        lightbarMesh = itemObj.lightbar;
+      } else if (spec.sub === 'van') {
+        itemObj = createDeliveryVan(spec.hex || 0x2563eb);
+      } else if (spec.sub === 'sedan') {
+        itemObj = createSedanCar(spec.hex || 0x94a3b8);
+      }
+    } else {
+      if (spec.sub === 'container') {
+        itemObj = createShippingContainer(spec.hex || 0x0284c7);
+      } else if (spec.sub === 'pallet') {
+        itemObj = createTimberPallet();
+      } else if (spec.sub === 'drums') {
+        itemObj = createSteelDrumCluster();
+      } else if (spec.sub === 'log') {
+        itemObj = createDriftwoodBeam();
+      }
+    }
+
+    if (!itemObj) return;
+
+    const fInit = getRiverFrame(spec.u);
+    const startPos = fInit.pt.clone().addScaledVector(fInit.side, spec.side);
+    startPos.y = fInit.pt.y + 0.3;
+
+    itemObj.group.position.copy(startPos);
+    itemObj.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fInit.tangent);
+    itemObj.group.rotateY(spec.rotY);
+
+    group.add(itemObj.group);
+
+    floatingFlotilla.push({
+      mesh: itemObj.group,
+      uTrigger: spec.u,
+      baseSide: spec.side,
+      baseRotY: spec.rotY,
+      driftRate: spec.drift,
+      bobAmp: spec.bAmp,
+      bobFreq: spec.bFreq,
+      pitchFreq: spec.pFreq,
+      rollFreq: spec.rFreq,
+      pitchAmp: 0.16,
+      rollAmp: 0.14,
+      yawRate: 1.2,
+      phase: sIdx * 1.37,
+      isCop,
+      lightbarMesh,
+      pristinePos: startPos.clone(),
+      pristineQuat: itemObj.group.quaternion.clone()
+    });
+  });
+
+  function updateFloatingItems(uWave) {
+    const timeSec = Date.now() * 0.001;
+
+    for (let i = 0; i < floatingFlotilla.length; i++) {
+      const item = floatingFlotilla[i];
+      if (uWave <= item.uTrigger) {
+        // Pristine resting coordinates & orientation
+        item.mesh.position.copy(item.pristinePos);
+        item.mesh.quaternion.copy(item.pristineQuat);
+        if (item.isCop && item.lightbarMesh) {
+          item.lightbarMesh.material.color.setHex(0xef4444);
+        }
+      } else {
+        // Surge arrival! Dynamic hydrodynamic drift & wave bobbing
+        const surgeProg = Math.min(1.0, (uWave - item.uTrigger) / (1.0 - item.uTrigger + 0.001));
+        const currU = Math.min(0.97, item.uTrigger + surgeProg * item.driftRate * (1.0 - item.uTrigger));
+        const f = getRiverFrame(currU);
+
+        // Lateral wander in turbulent current
+        const wander = Math.sin(timeSec * 0.8 + item.phase) * 1.5;
+        const currSide = item.baseSide + wander;
+
+        // Hydrodynamic vertical heave
+        const waterBaseY = f.pt.y + 0.7;
+        const bob = Math.sin(timeSec * item.bobFreq + item.phase) * item.bobAmp;
+
+        const pos = f.pt.clone().addScaledVector(f.side, currSide);
+        pos.y = waterBaseY + bob;
+        item.mesh.position.copy(pos);
+
+        // Hydrodynamic pitch & roll along wave slope
+        item.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f.tangent);
+        const pitch = Math.sin(timeSec * item.pitchFreq + item.phase) * item.pitchAmp;
+        const roll = Math.cos(timeSec * item.rollFreq + item.phase) * item.rollAmp;
+        const yaw = item.baseRotY + surgeProg * item.yawRate;
+
+        item.mesh.rotateY(yaw);
+        item.mesh.rotateX(pitch);
+        item.mesh.rotateZ(roll);
+
+        // Emergency flashing lightbar for police cruiser
+        if (item.isCop && item.lightbarMesh) {
+          const strobe = Math.sin(timeSec * 16.0 + item.phase) > 0;
+          item.lightbarMesh.material.color.setHex(strobe ? 0xef4444 : 0x3b82f6);
+        }
+      }
+    }
+  }
+
   function updateTubes(uWave) {
     // 1. Update 7 Under-River Transit Tubes
     for (let i = 0; i < tubesList.length; i++) {
@@ -2802,6 +3465,7 @@ export function buildNewYorkScene(group, river, terrain) {
     dynamicWaterItems,
     arcLight,
     arcMesh,
-    updateTubes
+    updateTubes,
+    updateFloatingItems
   };
 }

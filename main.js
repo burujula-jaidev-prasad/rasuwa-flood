@@ -196,8 +196,8 @@ class ExplainerApp {
     // 4. Camera Choreography Director
     this.cameraDirector = new CameraDirector(this.camera, this.renderer.domElement, this.riverSystem, this.currentScenarioId);
     if (this.ui) {
-      this.cameraDirector.onModeChange = (isGuided) => {
-        this.ui.setGuided(isGuided);
+      this.cameraDirector.onModeChange = (isGuided, mode) => {
+        this.ui.setGuided(isGuided, mode);
       };
     }
   }
@@ -222,11 +222,14 @@ class ExplainerApp {
       },
       onSelectScenario: (scenarioId) => {
         this.switchScenario(scenarioId);
+      },
+      onSelectViewMode: (mode) => {
+        this.cameraDirector.setViewMode(mode);
       }
     });
 
-    this.cameraDirector.onModeChange = (isGuided) => {
-      this.ui.setGuided(isGuided);
+    this.cameraDirector.onModeChange = (isGuided, mode) => {
+      this.ui.setGuided(isGuided, mode);
     };
 
     // Involuntary autoplay timer removed: simulation remains comfortably paused at t=0

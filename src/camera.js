@@ -10,6 +10,7 @@ export class CameraDirector {
     this.scenarioId = scenarioId || getScenario().config.id;
 
     this.isGuided = true;
+    this.viewMode = 'top'; // Default to Top View (Bird's Eye / Map) as requested
     this.controls = new OrbitControls(this.camera, this.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
@@ -19,7 +20,7 @@ export class CameraDirector {
 
     const startPt = this.river.getPointAt(0.04);
     this.currentTarget = new THREE.Vector3(startPt.x, startPt.y + 8, startPt.z);
-    this.spherical = new THREE.Spherical(125, 0.76, -1.15);
+    this.spherical = new THREE.Spherical(145, 0.20, -1.15);
     this.initialized = false;
 
     this.controls.addEventListener('start', () => {
@@ -31,11 +32,20 @@ export class CameraDirector {
     this.onModeChange = null;
   }
 
+  setViewMode(mode) {
+    this.viewMode = mode;
+    if (mode === 'free') {
+      this.setGuided(false);
+    } else {
+      this.setGuided(true);
+    }
+  }
+
   setGuided(guided) {
     this.isGuided = guided;
     this.controls.enabled = !guided;
     if (this.onModeChange) {
-      this.onModeChange(this.isGuided);
+      this.onModeChange(this.isGuided, this.viewMode);
     }
   }
 
@@ -216,6 +226,24 @@ export class CameraDirector {
           desiredPhi = 0.74 + 0.14 * pullAlpha;
           desiredTheta = -0.07 + (-0.5 - (-0.07)) * pullAlpha;
         }
+      }
+
+      // Multiple Director View Angle Overrides (Top, Left, Chaser, Isometric)
+      if (this.viewMode === 'top') {
+        desiredPhi = 0.20;   // High overhead top-down bird's-eye map view
+        desiredRadius = 145;
+        desiredTheta = -1.15;
+      } else if (this.viewMode === 'left') {
+        desiredPhi = 0.70;   // Left-bank cinematic perspective
+        desiredRadius = 130;
+        desiredTheta = -2.35;
+      } else if (this.viewMode === 'chaser') {
+        desiredPhi = 0.72;
+        desiredRadius = 90;
+      } else if (this.viewMode === 'iso') {
+        desiredPhi = 0.58;   // 3D Isometric overview
+        desiredRadius = 140;
+        desiredTheta = -0.90;
       }
 
       if (!this.initialized) {

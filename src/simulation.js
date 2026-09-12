@@ -93,11 +93,12 @@ export class FloodSimulation {
     this.initNewYorkGenesis();
 
     // Procedural New York landmarks, bridges, skyscrapers, and countermeasures
-    const { wipeableItems, arcLight, arcMesh, updateTubes } = buildNewYorkScene(this.group, this.river, this.terrain);
+    const { wipeableItems, arcLight, arcMesh, updateTubes, updateFloatingItems } = buildNewYorkScene(this.group, this.river, this.terrain);
     this.wipeableItems = wipeableItems;
     this.nyArcLight = arcLight;
     this.nyArcMesh = arcMesh;
     this.nyUpdateTubes = updateTubes;
+    this.nyUpdateFloating = updateFloatingItems;
 
     // New York landmark badges
     this.initNewYorkLandmarkBadges();
@@ -406,125 +407,33 @@ export class FloodSimulation {
 
     const stoneMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.9 });
     const deflectorMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.7 });
-    const oceanWaveMat = new THREE.MeshStandardMaterial({
-      color: 0x0284c7,
-      roughness: 0.15,
-      metalness: 0.1,
-      transparent: true,
-      opacity: 0.90
-    });
 
+    // Static Granite Shoreline Breakwater Armor (solid coastal revetment, no involuntary block launching)
     this.nySeawallBlocks = [];
-    [-12.0, -4.0, 4.0, 12.0].forEach((offset, idx) => {
-      const bGeo = new THREE.BoxGeometry(7.5, 8.0, 5.0);
+    [-14.0, -7.0, 7.0, 14.0].forEach((offset) => {
+      const bGeo = new THREE.BoxGeometry(6.5, 4.5, 5.0);
       const bMesh = new THREE.Mesh(bGeo, stoneMat);
       bMesh.position.copy(f0.pt).addScaledVector(side, offset);
-      bMesh.position.y += 3.8;
+      bMesh.position.y += 2.2;
       bMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f0.tangent);
       this.nyGenesisGroup.add(bMesh);
 
-      const cGeo = new THREE.BoxGeometry(7.6, 1.4, 2.2);
+      const cGeo = new THREE.BoxGeometry(6.6, 1.2, 2.0);
       const cMesh = new THREE.Mesh(cGeo, deflectorMat);
-      cMesh.position.y = 4.2;
+      cMesh.position.y = 2.4;
       bMesh.add(cMesh);
 
       this.nySeawallBlocks.push({
         mesh: bMesh,
         initialPos: bMesh.position.clone(),
-        initialRot: bMesh.rotation.clone(),
-        isCenter: idx === 1 || idx === 2
+        initialRot: bMesh.rotation.clone()
       });
     });
-
-    const breakerGeo = new THREE.CylinderGeometry(5.0, 7.5, 28.0, 24, 1, false, 0, Math.PI);
-    breakerGeo.rotateZ(Math.PI / 2);
-    this.nyOceanBreaker = new THREE.Mesh(breakerGeo, oceanWaveMat);
-    this.nyOceanBreaker.position.copy(f0.pt).addScaledVector(f0.tangent, -8.0);
-    this.nyOceanBreaker.position.y += 2.0;
-    this.nyOceanBreaker.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f0.tangent);
-    this.nyGenesisGroup.add(this.nyOceanBreaker);
-
-    this.nyShards = [];
-    const shardGeo = new THREE.DodecahedronGeometry(1.4, 0);
-    for (let i = 0; i < 12; i++) {
-      const s = new THREE.Mesh(shardGeo, stoneMat);
-      s.position.copy(f0.pt).add(new THREE.Vector3(
-        (Math.random() - 0.5) * 14.0,
-        Math.random() * 4.0,
-        (Math.random() - 0.5) * 8.0
-      ));
-      s.visible = false;
-      this.nyGenesisGroup.add(s);
-      this.nyShards.push({
-        mesh: s,
-        basePos: s.position.clone(),
-        rotVel: new THREE.Vector3(Math.random() * 5 - 2.5, Math.random() * 5 - 2.5, Math.random() * 5 - 2.5)
-      });
-    }
-
-    const geyserGeo = new THREE.SphereGeometry(1, 24, 18);
-    const geyserMat = new THREE.MeshBasicMaterial({
-      color: 0xf8fafc,
-      transparent: true,
-      opacity: 0.0,
-      depthWrite: false
-    });
-    this.nyGeyser = new THREE.Mesh(geyserGeo, geyserMat);
-    this.nyGeyser.position.copy(f0.pt).addScaledVector(f0.tangent, 2.0);
-    this.nyGeyser.position.y += 2.0;
-    this.nyGenesisGroup.add(this.nyGeyser);
   }
 
   updateNewYorkGenesis(clampedT) {
+    // Involuntary block launching eliminated: seawall armor blocks remain rock-solid on the shore
     if (!this.nyGenesisGroup) return;
-
-    if (clampedT < 0.03) {
-      for (const blk of this.nySeawallBlocks) {
-        blk.mesh.position.copy(blk.initialPos);
-        blk.mesh.rotation.copy(blk.initialRot);
-      }
-      this.nyOceanBreaker.position.y = 2.0;
-      this.nyOceanBreaker.scale.set(1, 1, 1);
-      for (const s of this.nyShards) s.mesh.visible = false;
-      this.nyGeyser.material.opacity = 0.0;
-    } else if (clampedT <= 0.16) {
-      const pAlpha = (clampedT - 0.03) / 0.13;
-      const smoothP = Math.sin(pAlpha * Math.PI * 0.5);
-
-      this.nyOceanBreaker.position.y = 2.0 + smoothP * 4.2;
-      this.nyOceanBreaker.scale.set(1.0 + smoothP * 0.3, 1.0 + smoothP * 0.5, 1.0);
-
-      for (const blk of this.nySeawallBlocks) {
-        if (blk.isCenter) {
-          blk.mesh.rotation.x = blk.initialRot.x - smoothP * 0.75;
-          blk.mesh.position.y = blk.initialPos.y - smoothP * 3.4;
-          blk.mesh.position.addScaledVector(this.river.getTangentAt(0.02), smoothP * 4.0);
-        }
-      }
-
-      for (const s of this.nyShards) {
-        s.mesh.visible = true;
-        s.mesh.position.set(
-          s.basePos.x + Math.sin(pAlpha * 4.0) * 3.0,
-          s.basePos.y - smoothP * 1.5,
-          s.basePos.z + pAlpha * 20.0
-        );
-        s.mesh.rotation.x += s.rotVel.x * 0.02;
-      }
-
-      if (clampedT >= 0.07) {
-        const gAlpha = (clampedT - 0.07) / 0.09;
-        const rad = 2.0 + gAlpha * 22.0;
-        this.nyGeyser.scale.set(rad, rad * 0.85, rad);
-        this.nyGeyser.material.opacity = Math.max(0, 0.90 * (1.0 - gAlpha * 0.75));
-      } else {
-        this.nyGeyser.material.opacity = 0.0;
-      }
-    } else {
-      this.nyGeyser.material.opacity = 0.0;
-      for (const s of this.nyShards) s.mesh.visible = false;
-      this.nyOceanBreaker.position.y = -10;
-    }
   }
 
   initBeijingGenesis() {
@@ -3511,6 +3420,7 @@ export class FloodSimulation {
         this.uWave = 0;
         this.updateWipeableItems(0);
         if (this.nyUpdateTubes) this.nyUpdateTubes(0);
+        if (this.nyUpdateFloating) this.nyUpdateFloating(0);
       } else {
         if (this.floodGroup) this.floodGroup.visible = true;
         uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
@@ -3518,6 +3428,7 @@ export class FloodSimulation {
         this.updateSurgeFront(uWave);
         this.updateWipeableItems(uWave);
         if (this.nyUpdateTubes) this.nyUpdateTubes(uWave);
+        if (this.nyUpdateFloating) this.nyUpdateFloating(uWave);
 
         if (this.nyArcLight && this.nyArcMesh) {
           if (uWave >= 0.70 && uWave <= 0.82) {
