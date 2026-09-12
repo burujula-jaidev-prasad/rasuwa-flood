@@ -20,7 +20,7 @@ export class CameraDirector {
 
     const startPt = this.river.getPointAt(0.04);
     this.currentTarget = new THREE.Vector3(startPt.x, startPt.y + 8, startPt.z);
-    this.spherical = new THREE.Spherical(145, 0.20, -1.15);
+    this.spherical = new THREE.Spherical(155, 0.38, -1.15);
     this.initialized = false;
 
     this.controls.addEventListener('start', () => {
@@ -63,24 +63,24 @@ export class CameraDirector {
     this.setGuided(false);
   }
 
-  update(t, delta = 0.016) {
+  update(t, deltaSec = 0.016) {
     if (this.isGuided) {
-      let desiredTarget = new THREE.Vector3();
-      let desiredRadius = 125;
-      let desiredPhi = 0.72;
-      let desiredTheta = -1.15;
-
       const isDelhi = (this.scenarioId === 'delhi');
       const isNewYork = (this.scenarioId === 'newyork');
       const isBeijing = (this.scenarioId === 'beijing');
       const isTokyo = (this.scenarioId === 'tokyo');
       const isLondon = (this.scenarioId === 'london');
 
+      const desiredTarget = new THREE.Vector3();
+      let desiredRadius = 120;
+      let desiredPhi = 0.74;
+      let desiredTheta = -1.15;
+
       if (isLondon) {
         if (t < 0.20) {
           // Establish directly on Outer Thames Estuary sea defense wall breach
           const p = this.river.getPointAt(0.04);
-          desiredTarget.set(p.x + 4.0, p.y + 4.0, p.z);
+          desiredTarget.set(p.x, p.y + 4.0, p.z);
           desiredRadius = 135;
           desiredPhi = 0.74;
           desiredTheta = -1.25;
@@ -228,15 +228,19 @@ export class CameraDirector {
         }
       }
 
-      // Multiple Director View Angle Overrides (Top, Left, Chaser, Isometric)
+      // Multiple Director View Angle Overrides (Top, Left, Right/Opposite, Chaser, Isometric)
       if (this.viewMode === 'top') {
-        desiredPhi = 0.20;   // High overhead top-down bird's-eye map view
-        desiredRadius = 145;
+        desiredPhi = 0.38;   // Elevated bird's-eye map view with clear 3D architectural relief
+        desiredRadius = 155;
         desiredTheta = -1.15;
       } else if (this.viewMode === 'left') {
-        desiredPhi = 0.70;   // Left-bank cinematic perspective
-        desiredRadius = 130;
+        desiredPhi = 0.70;   // West-bank cinematic perspective
+        desiredRadius = 135;
         desiredTheta = -2.35;
+      } else if (this.viewMode === 'right') {
+        desiredPhi = 0.68;   // East-bank / Brooklyn / Harbor frontal perspective (Opposite View)
+        desiredRadius = 135;
+        desiredTheta = 0.85; // Directly opposite left view, looking across the river with zero occlusion
       } else if (this.viewMode === 'chaser') {
         desiredPhi = 0.72;
         desiredRadius = 90;

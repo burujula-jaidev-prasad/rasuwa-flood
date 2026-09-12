@@ -1835,51 +1835,153 @@ export function buildNewYorkScene(group, river, terrain) {
     vzGroup.add(tower);
   });
 
-  // Double-Deck Truss Roadway
-  const vzDeckLen = vzSpan * 1.35;
-  const vzDeck = new THREE.Mesh(new THREE.BoxGeometry(7.6, 2.2, vzDeckLen), steelGreenMat);
-  vzDeck.position.set(0, 13.0, 0);
-  vzDeck.castShadow = true;
-  vzGroup.add(vzDeck);
+  // Approach Roadway Decks (Staten Island & Brooklyn remain rooted to shore anchorages in vzGroup)
+  const vzAppLen = vzAnchorZ - vzTowerZ; // 12.0m
+  [-1, 1].forEach((sign) => {
+    const centerZ = sign * (vzTowerZ + vzAppLen * 0.5);
+    const appDeck = new THREE.Mesh(new THREE.BoxGeometry(7.6, 2.2, vzAppLen), steelGreenMat);
+    appDeck.position.set(0, 13.0, centerZ);
+    appDeck.castShadow = true;
+    vzGroup.add(appDeck);
 
-  // Upper Roadway Tarmac with lane striping
-  const vzRoad = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.2, vzDeckLen), tarmacMat);
-  vzRoad.position.set(0, 14.15, 0);
-  vzGroup.add(vzRoad);
-
-  // Sweeping 3D Catenary Main Suspension Cables (North & South cables)
-  [-2.6, 2.6].forEach((cableX) => {
-    const curvePts = [];
-    curvePts.push(new THREE.Vector3(cableX, 7.0, -vzAnchorZ));
-    curvePts.push(new THREE.Vector3(cableX, 20.0, -vzTowerZ * 1.3));
-    curvePts.push(new THREE.Vector3(cableX, vzTowerH + 5.2, -vzTowerZ));
-
-    for (let k = 1; k < 12; k++) {
-      const uK = k / 12;
-      const zK = -vzTowerZ + uK * (2.0 * vzTowerZ);
-      const normZ = zK / vzTowerZ;
-      const yK = 14.5 + (vzTowerH + 5.2 - 14.5) * (normZ * normZ);
-      curvePts.push(new THREE.Vector3(cableX, yK, zK));
-    }
-
-    curvePts.push(new THREE.Vector3(cableX, vzTowerH + 5.2, vzTowerZ));
-    curvePts.push(new THREE.Vector3(cableX, 20.0, vzTowerZ * 1.3));
-    curvePts.push(new THREE.Vector3(cableX, 7.0, vzAnchorZ));
-
-    const catCurve = new THREE.CatmullRomCurve3(curvePts);
-    const cableTube = new THREE.Mesh(new THREE.TubeGeometry(catCurve, 40, 0.22, 8, false), steelCableMat);
-    vzGroup.add(cableTube);
-
-    // Vertical Wire Rope Suspenders
-    for (let sZ = -vzTowerZ + 2.0; sZ <= vzTowerZ - 2.0; sZ += 2.2) {
-      const normZ = sZ / vzTowerZ;
-      const yCable = 14.5 + (vzTowerH + 5.2 - 14.5) * (normZ * normZ);
-      const suspH = Math.max(0.4, yCable - 14.15);
-      const susp = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, suspH, 6), steelCableMat);
-      susp.position.set(cableX, 14.15 + suspH * 0.5, sZ);
-      vzGroup.add(susp);
-    }
+    const appRoad = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.2, vzAppLen), tarmacMat);
+    appRoad.position.set(0, 14.15, centerZ);
+    vzGroup.add(appRoad);
   });
+
+  // Shore Catenary Suspension Cables (Anchorage to Tower in vzGroup)
+  [-2.6, 2.6].forEach((cableX) => {
+    // Staten Island Shore Cable: -vzAnchorZ to -vzTowerZ
+    const ptsSI = [];
+    ptsSI.push(new THREE.Vector3(cableX, 7.0, -vzAnchorZ));
+    ptsSI.push(new THREE.Vector3(cableX, 20.0, -vzTowerZ * 1.3));
+    ptsSI.push(new THREE.Vector3(cableX, vzTowerH + 5.2, -vzTowerZ));
+    const catSI = new THREE.CatmullRomCurve3(ptsSI);
+    vzGroup.add(new THREE.Mesh(new THREE.TubeGeometry(catSI, 20, 0.22, 8, false), steelCableMat));
+
+    // Brooklyn Shore Cable: vzTowerZ to vzAnchorZ
+    const ptsBK = [];
+    ptsBK.push(new THREE.Vector3(cableX, vzTowerH + 5.2, vzTowerZ));
+    ptsBK.push(new THREE.Vector3(cableX, 20.0, vzTowerZ * 1.3));
+    ptsBK.push(new THREE.Vector3(cableX, 7.0, vzAnchorZ));
+    const catBK = new THREE.CatmullRomCurve3(ptsBK);
+    vzGroup.add(new THREE.Mesh(new THREE.TubeGeometry(catBK, 20, 0.22, 8, false), steelCableMat));
+  });
+
+  const vzQuat = new THREE.Quaternion().setFromRotationMatrix(vzBasis);
+
+  // Tower Upper Cross-Struts Fracture and topple into The Narrows (uTrigger = 0.112, 0.116)
+  [-vzTowerZ, vzTowerZ].forEach((tZ, idx) => {
+    const strutMesh = new THREE.Mesh(new THREE.BoxGeometry(7.2, 1.8, 2.4), steelGreenMat.clone());
+    const pos = fVz.pt.clone().addScaledVector(fVz.side, tZ).addScaledVector(fVz.up, 32.0);
+    strutMesh.quaternion.copy(vzQuat);
+    registerWipeable(strutMesh, 0.112 + idx * 0.004, pos, fVz.tangent, fVz.side, {
+      primaryMat: strutMesh.material,
+      collapseTilt: idx === 0 ? 0.65 : -0.65,
+      tumbleScale: 6.0,
+      sinkScale: 0.35,
+      driftSpeed: 30.0
+    });
+  });
+
+  // CATASTROPHIC VERRAZZANO SUSPENSION BRIDGE SHATTERING & COLLAPSE (uTrigger = 0.108 - 0.114)
+  const vzCenterHalfLen = vzTowerZ; // 19.2m
+
+  // 1. Staten Island Center Suspended Half-Span (Z in [-19.2, 0])
+  {
+    const spanSI = new THREE.Group();
+    const posSI = fVz.pt.clone().addScaledVector(fVz.side, -vzCenterHalfLen * 0.5).addScaledVector(fVz.up, 13.0);
+    spanSI.quaternion.copy(vzQuat);
+
+    const deckSI = new THREE.Mesh(new THREE.BoxGeometry(7.6, 2.2, vzCenterHalfLen), steelGreenMat.clone());
+    deckSI.castShadow = true;
+    spanSI.add(deckSI);
+
+    const roadSI = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.2, vzCenterHalfLen), tarmacMat.clone());
+    roadSI.position.y = 1.15;
+    spanSI.add(roadSI);
+
+    // Snapped Catenary Main Suspension Cables (North & South)
+    [-2.6, 2.6].forEach((cX) => {
+      const pts = [];
+      pts.push(new THREE.Vector3(cX, vzTowerH + 5.2 - 13.0, -vzCenterHalfLen * 0.5));
+      pts.push(new THREE.Vector3(cX, 14.5 - 13.0, vzCenterHalfLen * 0.5));
+      const cat = new THREE.CatmullRomCurve3(pts);
+      spanSI.add(new THREE.Mesh(new THREE.TubeGeometry(cat, 16, 0.20, 8, false), steelCableMat.clone()));
+
+      for (let sZ = -vzCenterHalfLen * 0.45; sZ <= vzCenterHalfLen * 0.45; sZ += 2.4) {
+        const norm = (sZ + vzCenterHalfLen * 0.5) / vzCenterHalfLen;
+        const yCab = (1.0 - norm) * (vzTowerH + 5.2 - 13.0) + norm * 1.5;
+        const sH = Math.max(0.4, yCab - 1.15);
+        const susp = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, sH, 6), steelCableMat.clone());
+        susp.position.set(cX, 1.15 + sH * 0.5, sZ);
+        spanSI.add(susp);
+      }
+    });
+
+    [-3.6, 3.6].forEach((gX) => {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.9, vzCenterHalfLen), steelGreenMat.clone());
+      rail.position.set(gX, 1.55, 0);
+      spanSI.add(rail);
+    });
+
+    registerWipeable(spanSI, 0.108, posSI, fVz.tangent, fVz.side, {
+      collapseTilt: -0.64,
+      collapseTiltX: 0.22,
+      driftSpeed: 35.0,
+      tumbleScale: 5.0,
+      sinkScale: 0.40,
+      maxProg: 0.16
+    });
+  }
+
+  // 2. Brooklyn Center Suspended Half-Span (Z in [0, 19.2])
+  {
+    const spanBK = new THREE.Group();
+    const posBK = fVz.pt.clone().addScaledVector(fVz.side, vzCenterHalfLen * 0.5).addScaledVector(fVz.up, 13.0);
+    spanBK.quaternion.copy(vzQuat);
+
+    const deckBK = new THREE.Mesh(new THREE.BoxGeometry(7.6, 2.2, vzCenterHalfLen), steelGreenMat.clone());
+    deckBK.castShadow = true;
+    spanBK.add(deckBK);
+
+    const roadBK = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.2, vzCenterHalfLen), tarmacMat.clone());
+    roadBK.position.y = 1.15;
+    spanBK.add(roadBK);
+
+    [-2.6, 2.6].forEach((cX) => {
+      const pts = [];
+      pts.push(new THREE.Vector3(cX, 14.5 - 13.0, -vzCenterHalfLen * 0.5));
+      pts.push(new THREE.Vector3(cX, vzTowerH + 5.2 - 13.0, vzCenterHalfLen * 0.5));
+      const cat = new THREE.CatmullRomCurve3(pts);
+      spanBK.add(new THREE.Mesh(new THREE.TubeGeometry(cat, 16, 0.20, 8, false), steelCableMat.clone()));
+
+      for (let sZ = -vzCenterHalfLen * 0.45; sZ <= vzCenterHalfLen * 0.45; sZ += 2.4) {
+        const norm = (sZ + vzCenterHalfLen * 0.5) / vzCenterHalfLen;
+        const yCab = norm * (vzTowerH + 5.2 - 13.0) + (1.0 - norm) * 1.5;
+        const sH = Math.max(0.4, yCab - 1.15);
+        const susp = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, sH, 6), steelCableMat.clone());
+        susp.position.set(cX, 1.15 + sH * 0.5, sZ);
+        spanBK.add(susp);
+      }
+    });
+
+    [-3.6, 3.6].forEach((gX) => {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.9, vzCenterHalfLen), steelGreenMat.clone());
+      rail.position.set(gX, 1.55, 0);
+      spanBK.add(rail);
+    });
+
+    registerWipeable(spanBK, 0.114, posBK, fVz.tangent, fVz.side, {
+      collapseTilt: 0.64,
+      collapseTiltX: -0.22,
+      driftSpeed: 35.0,
+      tumbleScale: 5.0,
+      sinkScale: 0.40,
+      maxProg: 0.16
+    });
+  }
+
   group.add(vzGroup);
 
   // Dynamic Collapsing Elements on Verrazzano Approach (u = 0.10)
@@ -3381,6 +3483,229 @@ export function buildNewYorkScene(group, river, terrain) {
     }
   }
 
+  // -------------------------------------------------------------------------
+  // 10. ACTIVE PASSING TRAFFIC ON BRIDGES (Verrazzano-Narrows & Brooklyn Bridges)
+  // -------------------------------------------------------------------------
+  const activeBridgeVehicles = [];
+
+  // Verrazzano Bridge Traffic (10 passing vehicles)
+  const vzTrafficDefs = [
+    { type: 'cab',   dir:  1, laneX: -1.8, initZ: -28.0, speed: 22.0 },
+    { type: 'sedan', dir:  1, laneX: -1.8, initZ: -14.0, speed: 25.0, hex: 0xf8fafc },
+    { type: 'van',   dir:  1, laneX: -1.8, initZ:   2.0, speed: 20.0, hex: 0x0284c7 },
+    { type: 'sedan', dir:  1, laneX: -1.8, initZ:  16.0, speed: 24.0, hex: 0x3b82f6 },
+    { type: 'cab',   dir:  1, laneX: -1.8, initZ: -20.0, speed: 23.0 },
+
+    { type: 'cab',   dir: -1, laneX:  1.8, initZ:  28.0, speed: 22.0 },
+    { type: 'sedan', dir: -1, laneX:  1.8, initZ:  12.0, speed: 26.0, hex: 0xb91c1c },
+    { type: 'van',   dir: -1, laneX:  1.8, initZ:  -4.0, speed: 19.0, hex: 0x16a34a },
+    { type: 'sedan', dir: -1, laneX:  1.8, initZ: -18.0, speed: 24.0, hex: 0x94a3b8 },
+    { type: 'cab',   dir: -1, laneX:  1.8, initZ:  20.0, speed: 23.0 }
+  ];
+
+  vzTrafficDefs.forEach((def) => {
+    const veh = def.type === 'cab' ? createYellowCab() :
+                def.type === 'van' ? createDeliveryVan(def.hex) :
+                createSedanCar(def.hex);
+    group.add(veh.group);
+
+    activeBridgeVehicles.push({
+      bridge: 'verrazzano',
+      mesh: veh.group,
+      dir: def.dir,
+      laneX: def.laneX,
+      initZ: def.initZ,
+      speed: def.speed,
+      spanLen: vzSpan * 1.35,
+      deckY: 14.3,
+      f: fVz,
+      basis: vzBasis,
+      quat: vzQuat,
+      uBreachW: 0.108,
+      uBreachE: 0.114,
+      plungeZRange: vzTowerZ
+    });
+  });
+
+  // Brooklyn Bridge Traffic (8 passing vehicles)
+  const brTrafficDefs = [
+    { type: 'cab',   dir:  1, laneX: -1.9, initZ: -24.0, speed: 18.0 },
+    { type: 'sedan', dir:  1, laneX: -1.9, initZ: -10.0, speed: 20.0, hex: 0xf8fafc },
+    { type: 'van',   dir:  1, laneX: -1.9, initZ:   6.0, speed: 17.0, hex: 0x0369a1 },
+    { type: 'cab',   dir:  1, laneX: -1.9, initZ:  18.0, speed: 19.0 },
+
+    { type: 'cab',   dir: -1, laneX:  1.9, initZ:  24.0, speed: 18.0 },
+    { type: 'sedan', dir: -1, laneX:  1.9, initZ:   8.0, speed: 21.0, hex: 0xb91c1c },
+    { type: 'van',   dir: -1, laneX:  1.9, initZ:  -8.0, speed: 17.0, hex: 0xd97706 },
+    { type: 'sedan', dir: -1, laneX:  1.9, initZ: -20.0, speed: 19.0, hex: 0x334155 }
+  ];
+
+  brTrafficDefs.forEach((def) => {
+    const veh = def.type === 'cab' ? createYellowCab() :
+                def.type === 'van' ? createDeliveryVan(def.hex) :
+                createSedanCar(def.hex);
+    group.add(veh.group);
+
+    activeBridgeVehicles.push({
+      bridge: 'brooklyn',
+      mesh: veh.group,
+      dir: def.dir,
+      laneX: def.laneX,
+      initZ: def.initZ,
+      speed: def.speed,
+      spanLen: brSpan * 1.36,
+      deckY: 13.2,
+      f: fBr,
+      basis: brBasis,
+      quat: brQuat,
+      uBreachW: 0.738,
+      uBreachE: 0.742,
+      plungeZRange: brTowerZ
+    });
+  });
+
+  function updateBridgeTraffic(t, uWave) {
+    for (let i = 0; i < activeBridgeVehicles.length; i++) {
+      const v = activeBridgeVehicles[i];
+      const spanHalf = v.spanLen * 0.5;
+
+      const dist = v.initZ + v.dir * v.speed * (t * 36.0);
+      let localZ = ((dist % v.spanLen) + v.spanLen) % v.spanLen - spanHalf;
+
+      const worldPos = v.f.pt.clone()
+        .addScaledVector(v.f.side, localZ)
+        .addScaledVector(v.f.tangent, v.laneX);
+      worldPos.y = v.deckY;
+
+      let isPlunging = false;
+      let plungeProg = 0.0;
+      let plungeSign = 1.0;
+
+      if (Math.abs(localZ) <= v.plungeZRange) {
+        if (localZ < 0 && uWave >= v.uBreachW) {
+          isPlunging = true;
+          plungeProg = Math.min(1.0, (uWave - v.uBreachW) / 0.045);
+          plungeSign = -1.0;
+        } else if (localZ >= 0 && uWave >= v.uBreachE) {
+          isPlunging = true;
+          plungeProg = Math.min(1.0, (uWave - v.uBreachE) / 0.045);
+          plungeSign = 1.0;
+        }
+      }
+
+      if (isPlunging) {
+        worldPos.y -= plungeProg * 14.0;
+        worldPos.addScaledVector(v.f.tangent, plungeProg * 3.0 * (v.laneX > 0 ? 1 : -1));
+        v.mesh.position.copy(worldPos);
+        v.mesh.quaternion.copy(v.quat);
+        v.mesh.rotateZ(plungeSign * plungeProg * 1.2);
+        v.mesh.rotateX(plungeProg * 0.8);
+      } else {
+        v.mesh.position.copy(worldPos);
+        v.mesh.quaternion.copy(v.quat);
+        if (v.dir < 0) {
+          v.mesh.rotateY(Math.PI);
+        }
+      }
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // 11. DENSE WATERFRONT BANK BUILDINGS (MANHATTAN & BROOKLYN SHORELINES)
+  // -------------------------------------------------------------------------
+  const bankBuildingsGroup = new THREE.Group();
+
+  const bankBuildingSpecs = [
+    // --- MANHATTAN EAST RIVER & FDR DRIVE WATERFRONT (u = 0.58 - 0.84) ---
+    { u: 0.58, side: 25.0, tan:  4.0, w: 10.0, d: 9.0, h: 36.0, mat: stoneTowerMat, isArtDeco: true },
+    { u: 0.60, side: 32.0, tan: -6.0, w: 12.0, d: 10.0, h: 42.0, mat: glassTowerMat1 },
+    { u: 0.63, side: 24.0, tan:  8.0, w: 9.0,  d: 8.5, h: 34.0, mat: stoneTowerMat },
+    { u: 0.65, side: 35.0, tan: -4.0, w: 11.0, d: 11.0, h: 46.0, mat: glassTowerMat2 },
+    { u: 0.68, side: 22.0, tan:  6.0, w: 9.5,  d: 9.0, h: 32.0, mat: stoneTowerMat, isArtDeco: true },
+    { u: 0.70, side: 30.0, tan: -8.0, w: 10.0, d: 9.0, h: 40.0, mat: glassTowerMat1 },
+    { u: 0.75, side: 24.0, tan: 12.0, w: 12.0, d: 10.0, h: 44.0, mat: glassTowerMat2 },
+    { u: 0.78, side: 34.0, tan: -2.0, w: 10.5, d: 9.5, h: 38.0, mat: stoneTowerMat },
+    { u: 0.82, side: 26.0, tan:  5.0, w: 11.0, d: 10.0, h: 36.0, mat: stoneTowerMat },
+    { u: 0.84, side: 36.0, tan: -6.0, w: 12.0, d: 11.0, h: 42.0, mat: glassTowerMat1 },
+
+    // --- MANHATTAN BATTERY & FINANCIAL DISTRICT WATERFRONT (u = 0.44 - 0.54) ---
+    { u: 0.44, side: 24.0, tan:  6.0, w: 11.0, d: 10.0, h: 38.0, mat: stoneTowerMat, isArtDeco: true },
+    { u: 0.46, side: 32.0, tan: -4.0, w: 12.0, d: 11.0, h: 44.0, mat: glassTowerMat2 },
+    { u: 0.48, side: 36.0, tan: 12.0, w: 10.0, d: 9.0,  h: 40.0, mat: glassTowerMat1 },
+    { u: 0.52, side: 28.0, tan: -8.0, w: 9.5,  d: 9.0,  h: 36.0, mat: stoneTowerMat, isArtDeco: true },
+    { u: 0.54, side: 38.0, tan:  6.0, w: 11.5, d: 10.5, h: 48.0, mat: glassTowerMat2 },
+
+    // --- BROOKLYN / DUMBO / BROOKLYN HEIGHTS WATERFRONT (u = 0.56 - 0.88) ---
+    { u: 0.58, side: -24.0, tan: -4.0, w: 10.0, d: 9.0, h: 30.0, mat: stoneTowerMat, isArtDeco: true },
+    { u: 0.61, side: -30.0, tan:  6.0, w: 11.0, d: 10.0, h: 36.0, mat: stoneTowerMat },
+    { u: 0.64, side: -22.0, tan: -8.0, w: 9.0,  d: 8.5, h: 28.0, mat: stoneTowerMat },
+    { u: 0.67, side: -28.0, tan:  4.0, w: 10.5, d: 9.5, h: 34.0, mat: glassTowerMat1 },
+    { u: 0.70, side: -20.0, tan: -6.0, w: 8.5,  d: 8.0, h: 24.0, mat: stoneTowerMat },
+    { u: 0.73, side: -26.0, tan:  8.0, w: 11.0, d: 9.5, h: 32.0, mat: stoneTowerMat, isArtDeco: true },
+    { u: 0.77, side: -22.0, tan: -4.0, w: 9.5,  d: 9.0, h: 26.0, mat: stoneTowerMat },
+    { u: 0.81, side: -30.0, tan:  5.0, w: 10.0, d: 9.0, h: 30.0, mat: glassTowerMat2 },
+    { u: 0.85, side: -24.0, tan: -6.0, w: 12.0, d: 10.0, h: 28.0, mat: stoneTowerMat },
+    { u: 0.88, side: -28.0, tan:  4.0, w: 11.0, d: 9.5, h: 32.0, mat: glassTowerMat1 },
+
+    // --- THE NARROWS / STATEN ISLAND & BAY RIDGE WATERFRONT (u = 0.06 - 0.14) ---
+    { u: 0.06, side:  22.0, tan:  4.0, w: 9.0,  d: 8.5, h: 22.0, mat: stoneTowerMat },
+    { u: 0.08, side:  28.0, tan: -6.0, w: 10.0, d: 9.0, h: 26.0, mat: stoneTowerMat },
+    { u: 0.12, side:  24.0, tan:  5.0, w: 9.5,  d: 8.5, h: 24.0, mat: stoneTowerMat },
+    { u: 0.06, side: -22.0, tan: -4.0, w: 9.0,  d: 8.5, h: 22.0, mat: stoneTowerMat },
+    { u: 0.08, side: -28.0, tan:  6.0, w: 10.0, d: 9.0, h: 26.0, mat: stoneTowerMat },
+    { u: 0.12, side: -24.0, tan: -5.0, w: 9.5,  d: 8.5, h: 24.0, mat: stoneTowerMat }
+  ];
+
+  bankBuildingSpecs.forEach((b) => {
+    const f = getRiverFrame(b.u);
+    const bPos = f.pt.clone().addScaledVector(f.side, b.side).addScaledVector(f.tangent, b.tan);
+    bPos.y = getGroundY(bPos.x, bPos.z, 2.8);
+
+    const bGroup = new THREE.Group();
+    bGroup.position.copy(bPos);
+    bGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f.tangent);
+
+    const bldgMesh = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, b.d), b.mat);
+    bldgMesh.position.y = b.h * 0.5;
+    bldgMesh.castShadow = true;
+    bldgMesh.receiveShadow = true;
+    bGroup.add(bldgMesh);
+
+    if (b.isArtDeco) {
+      const setback = new THREE.Mesh(new THREE.BoxGeometry(b.w * 0.75, 4.0, b.d * 0.75), stoneTowerMat);
+      setback.position.y = b.h + 2.0;
+      bGroup.add(setback);
+
+      const crown = new THREE.Mesh(new THREE.ConeGeometry(b.w * 0.5, 6.0, 4), copperRoofMat);
+      crown.position.y = b.h + 7.0;
+      bGroup.add(crown);
+    } else {
+      const bulkhead = new THREE.Mesh(new THREE.BoxGeometry(b.w * 0.45, 3.2, b.d * 0.45), concreteMat);
+      bulkhead.position.y = b.h + 1.6;
+      bGroup.add(bulkhead);
+
+      const tank = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 2.2, 10), new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 }));
+      tank.position.set(b.w * 0.2, b.h + 2.5, b.d * 0.2);
+      bGroup.add(tank);
+    }
+
+    bankBuildingsGroup.add(bGroup);
+  });
+
+  // Also add 6 historic brick lofts with water tanks in Brooklyn Heights & DUMBO (u = 0.62 - 0.74)
+  for (let bk = 0; bk < 6; bk++) {
+    const uBk = 0.62 + bk * 0.022;
+    const fBk = getRiverFrame(uBk);
+    const loft = createWaterfrontBrickBuilding(9.0, 15.0, 8.5, brickColors[bk % brickColors.length]);
+    const lPos = fBk.pt.clone().addScaledVector(fBk.side, -16.0 - (bk % 2) * 4.0);
+    lPos.y = getGroundY(lPos.x, lPos.z, 2.8);
+    loft.group.position.copy(lPos);
+    loft.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fBk.tangent);
+    bankBuildingsGroup.add(loft.group);
+  }
+
+  group.add(bankBuildingsGroup);
+
   function updateTubes(uWave) {
     // 1. Update 7 Under-River Transit Tubes
     for (let i = 0; i < tubesList.length; i++) {
@@ -3466,6 +3791,7 @@ export function buildNewYorkScene(group, river, terrain) {
     arcLight,
     arcMesh,
     updateTubes,
-    updateFloatingItems
+    updateFloatingItems,
+    updateBridgeTraffic
   };
 }
