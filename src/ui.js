@@ -593,6 +593,12 @@ export class UIManager {
     if (this.currentScenario.waypoints && this.currentScenario.waypoints.length > 0) {
       this.renderAnalytics(this.currentScenario.waypoints[0]);
     }
+
+    // Update scenario button active states
+    const scenarioBtns = document.querySelectorAll('.scenario-btn');
+    scenarioBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.id === id);
+    });
   }
 
   getAgencyTagsHtml() {

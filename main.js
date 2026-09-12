@@ -11,9 +11,19 @@ class ExplainerApp {
     this.container = document.getElementById('canvas-container');
     this.clock = new THREE.Clock();
 
-    // Default starting scenario is Delhi
-    this.currentScenarioId = 'delhi';
-    setCurrentScenarioId('delhi');
+    // Parse URL query parameter (e.g. ?scenario=newyork) or URL hash (e.g. #newyork)
+    const urlParams = new URLSearchParams(window.location.search);
+    const hash = window.location.hash.replace('#', '').toLowerCase();
+    const validScenarios = ['newyork', 'delhi', 'rasuwa', 'beijing', 'tokyo', 'london'];
+    const paramScenario = urlParams.get('scenario')?.toLowerCase();
+    const requestedScenario = (paramScenario && validScenarios.includes(paramScenario))
+      ? paramScenario
+      : (hash && validScenarios.includes(hash))
+        ? hash
+        : 'newyork'; // Default to New York
+
+    this.currentScenarioId = requestedScenario;
+    setCurrentScenarioId(requestedScenario);
 
     // Timeline state
     this.t = 0.0;
@@ -232,6 +242,9 @@ class ExplainerApp {
       this.ui.setGuided(isGuided, mode);
     };
 
+    // Ensure UI elements and KPI cards reflect current starting scenario
+    this.ui.setScenario(this.currentScenarioId);
+
     // Involuntary autoplay timer removed: simulation remains comfortably paused at t=0
     if (this.ui.elIntroTimer) {
       this.ui.elIntroTimer.style.display = 'none';
@@ -246,6 +259,10 @@ class ExplainerApp {
     if (this.currentScenarioId === scenarioId) return;
     this.currentScenarioId = scenarioId;
     setCurrentScenarioId(scenarioId);
+
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState(null, '', `?scenario=${scenarioId}`);
+    }
 
     // 0. Clean up previous camera director controls
     if (this.cameraDirector && this.cameraDirector.dispose) {
