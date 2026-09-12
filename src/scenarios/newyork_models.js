@@ -415,10 +415,10 @@ export function buildNewYorkScene(group, river, terrain) {
     const routeBulletMat = new THREE.MeshBasicMaterial({ color: 0x2563eb }); // MTA Blue (A) Eighth Ave Express Bullet
     materials.push(carSteelMat, darkWinMat, litWinMat, doorFrameMat, wheelMat, gangwayMat, headlightMat, redTailMat, routeBulletMat);
 
-    const carLen = 14.5;
-    const carW = 3.2;
-    const carH = 3.2;
-    const numCars = 4;
+    const carLen = 13.5;
+    const carW = 2.8;
+    const carH = 2.8;
+    const numCars = 2;
 
     for (let c = 0; c < numCars; c++) {
       const carGroup = new THREE.Group();
@@ -815,34 +815,41 @@ export function buildNewYorkScene(group, river, terrain) {
     materials.push(concreteMat, woodCreosoteMat, woodPlankMat, steelGantryMat, metalBandMat, bollardMat);
 
     // 1. Concrete Terminal Bulkhead Promenade (along shore)
-    const mainBulkhead = new THREE.Mesh(new THREE.BoxGeometry(6.0, 2.8, 32.0), concreteMat);
+    const mainBulkhead = new THREE.Mesh(new THREE.BoxGeometry(6.0, 2.8, 38.0), concreteMat);
     mainBulkhead.position.set(0, 1.4, 0);
     mainBulkhead.receiveShadow = true;
     slipsGroup.add(mainBulkhead);
 
-    // 2. Center Dividing Slip Pier (separating Slip 1 & Slip 2)
-    const centerPier = new THREE.Mesh(new THREE.BoxGeometry(16.0, 2.2, 3.2), concreteMat);
-    centerPier.position.set(-8.0, 1.1, 0);
+    // 2. Center Dividing Pier (4m wide, separating Berth 1 and Berth 2)
+    const centerPier = new THREE.Mesh(new THREE.BoxGeometry(24.0, 2.2, 4.0), concreteMat);
+    centerPier.position.set(-12.0, 1.1, 0);
     centerPier.castShadow = true;
     centerPier.receiveShadow = true;
     slipsGroup.add(centerPier);
 
-    // Flanking outer slip guide piers
-    [-15.0, 15.0].forEach(zOff => {
-      const outerPier = new THREE.Mesh(new THREE.BoxGeometry(14.0, 2.2, 2.4), concreteMat);
-      outerPier.position.set(-7.0, 1.1, zOff);
-      outerPier.castShadow = true;
-      outerPier.receiveShadow = true;
-      slipsGroup.add(outerPier);
-    });
+    // 3. Flanking outer slip piers
+    // Outer West Pier (Berth 1 Staten Island Ferry)
+    const outerWestPier = new THREE.Mesh(new THREE.BoxGeometry(26.0, 2.2, 2.6), concreteMat);
+    outerWestPier.position.set(-13.0, 1.1, -16.0);
+    outerWestPier.castShadow = true;
+    outerWestPier.receiveShadow = true;
+    slipsGroup.add(outerWestPier);
 
-    // 3. Timber Pile Fender Dolphins (Clusters of 7 creosote wooden pilings wrapped with steel cables)
+    // Outer East Pier (Berth 2 NYC Catamaran)
+    const outerEastPier = new THREE.Mesh(new THREE.BoxGeometry(20.0, 2.2, 2.4), concreteMat);
+    outerEastPier.position.set(-10.0, 1.1, 14.5);
+    outerEastPier.castShadow = true;
+    outerEastPier.receiveShadow = true;
+    slipsGroup.add(outerEastPier);
+
+    // 4. Clustered Timber Pile Fender Dolphins (6 clusters at pier heads)
     const dolphinPositions = [
-      [-15.0, -15.0], // West outer mouth
-      [-17.0, 0],     // Center outer divider
-      [-15.0, 15.0],  // East outer mouth
-      [-7.5,  -15.0], // Mid west rack
-      [-7.5,  15.0]   // Mid east rack
+      [-26.5, -16.0], // West outer pier head
+      [-24.5, -2.0],  // Center pier west head
+      [-20.5, 2.0],   // Center pier east head
+      [-20.5, 14.5],  // East outer pier head
+      [-13.0, -16.0], // Mid west fender
+      [-10.0, 14.5]   // Mid east fender
     ];
 
     dolphinPositions.forEach(([dx, dz]) => {
@@ -861,7 +868,6 @@ export function buildNewYorkScene(group, river, terrain) {
         dolphinGroup.add(log);
       });
 
-      // 3 Steel wrapping tension bands holding the cluster
       [1.5, 2.8, 4.2].forEach(by => {
         const band = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.72, 0.16, 12), metalBandMat);
         band.position.y = by;
@@ -871,33 +877,41 @@ export function buildNewYorkScene(group, river, terrain) {
       slipsGroup.add(dolphinGroup);
     });
 
-    // 4. Wooden Slip Guide Walls / Rubbing Strakes
-    [-7.5, 7.5].forEach(slipCenterZ => {
-      [-5.0, 5.0].forEach(zGuide => {
-        const rack = new THREE.Mesh(new THREE.BoxGeometry(14.0, 1.8, 0.35), woodPlankMat);
-        rack.position.set(-7.0, 1.5, slipCenterZ + zGuide);
-        slipsGroup.add(rack);
-      });
-    });
+    // 5. Wooden Slip Guide Walls / Rubbing Strakes
+    // Berth 1 guides (z = -14.6 and z = -2.1)
+    const rackW1 = new THREE.Mesh(new THREE.BoxGeometry(22.0, 1.8, 0.35), woodPlankMat);
+    rackW1.position.set(-11.0, 1.5, -14.6);
+    slipsGroup.add(rackW1);
 
-    // 5. Overhead Hydraulic Apron Gantries (Green Steel Portal Frames)
+    const rackW2 = new THREE.Mesh(new THREE.BoxGeometry(20.0, 1.8, 0.35), woodPlankMat);
+    rackW2.position.set(-10.0, 1.5, -2.1);
+    slipsGroup.add(rackW2);
+
+    // Berth 2 guides (z = +2.1 and z = +13.2)
+    const rackE1 = new THREE.Mesh(new THREE.BoxGeometry(18.0, 1.8, 0.35), woodPlankMat);
+    rackE1.position.set(-9.0, 1.5, 2.1);
+    slipsGroup.add(rackE1);
+
+    const rackE2 = new THREE.Mesh(new THREE.BoxGeometry(16.0, 1.8, 0.35), woodPlankMat);
+    rackE2.position.set(-8.0, 1.5, 13.2);
+    slipsGroup.add(rackE2);
+
+    // 6. Overhead Hydraulic Apron Gantries
     let apron1 = null;
     let apron2 = null;
 
-    [-7.5, 7.5].forEach((slipCenterZ, idx) => {
+    [[-8.5, 12.0], [8.0, 9.0]].forEach(([slipZ, spanW], idx) => {
       const gantry = new THREE.Group();
-      gantry.position.set(-2.5, 0, slipCenterZ);
+      gantry.position.set(-2.5, 0, slipZ);
 
-      // Twin vertical steel H-columns
-      [-4.0, 4.0].forEach(zCol => {
+      [-spanW * 0.45, spanW * 0.45].forEach(zCol => {
         const col = new THREE.Mesh(new THREE.BoxGeometry(0.6, 6.5, 0.6), steelGantryMat);
         col.position.set(0, 3.25, zCol);
         col.castShadow = true;
         gantry.add(col);
       });
 
-      // Overhead cross girder with winch machinery
-      const beam = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.8, 9.0), steelGantryMat);
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.8, spanW), steelGantryMat);
       beam.position.set(0, 6.2, 0);
       gantry.add(beam);
 
@@ -905,8 +919,7 @@ export function buildNewYorkScene(group, river, terrain) {
       winch.position.set(0, 6.9, 0);
       gantry.add(winch);
 
-      // Adjustable passenger loading apron ramp
-      const apron = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.35, 5.2), steelGantryMat);
+      const apron = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.35, spanW * 0.6), steelGantryMat);
       apron.position.set(-2.5, 1.8, 0);
       apron.rotation.z = -0.12;
       gantry.add(apron);
@@ -917,8 +930,8 @@ export function buildNewYorkScene(group, river, terrain) {
       slipsGroup.add(gantry);
     });
 
-    // 6. Dock Bollards
-    [-12.0, -6.0, 0, 6.0, 12.0].forEach(bz => {
+    // 7. Dock Bollards
+    [-15.0, -8.5, 0, 8.0, 15.0].forEach(bz => {
       const bollard = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.65, 8), bollardMat);
       bollard.position.set(1.5, 2.9, bz);
       slipsGroup.add(bollard);
@@ -2446,23 +2459,26 @@ export function buildNewYorkScene(group, river, terrain) {
   whitehallSlips.group.position.set(fMan.side.x * 11.0, 1.2, 22.0);
   manGroup.add(whitehallSlips.group);
 
-  // 1. Staten Island Ferry (Moored in Slip 1 at z = 22.0 - 7.5 = 14.5)
+  // 1. Staten Island Ferry (Moored in Berth 1 at z = 22.0 - 8.5 = 13.5, oriented along slip pocket)
   const siFerryObj = createStatenIslandFerry();
-  siFerryObj.group.position.set(fMan.side.x * 11.0 - 7.0, 1.8, 22.0 - 7.5);
-  siFerryObj.group.rotation.y = 0;
+  siFerryObj.group.position.set(fMan.side.x * 11.0 - 13.0, 1.8, 22.0 - 8.5);
+  siFerryObj.group.rotation.y = Math.PI * 0.5;
   manGroup.add(siFerryObj.group);
 
-  // 2. NYC Fast Catamaran (Moored in Slip 2 at z = 22.0 + 7.5 = 29.5)
+  // 2. NYC Fast Catamaran (Moored in Berth 2 at z = 22.0 + 8.0 = 30.0, oriented along slip pocket)
   const catamaranObj = createNYCFerryCatamaran();
-  catamaranObj.group.position.set(fMan.side.x * 11.0 - 6.5, 1.7, 22.0 + 7.5);
-  catamaranObj.group.rotation.y = 0;
+  catamaranObj.group.position.set(fMan.side.x * 11.0 - 10.0, 1.7, 22.0 + 8.0);
+  catamaranObj.group.rotation.y = Math.PI * 0.5;
   manGroup.add(catamaranObj.group);
 
-  // 3. Adrift Commercial Tanker Barge ("John B. Caddell" Benchmark)
+  // 3. Adrift Commercial Tanker Barge ("John B. Caddell" Benchmark in Upper Bay fairway)
   const tankerBargeObj = createHarborTankerBarge();
-  tankerBargeObj.group.position.set(-14.0, 1.5, 8.0);
-  tankerBargeObj.group.rotation.y = 0.35;
-  manGroup.add(tankerBargeObj.group);
+  const fTanker = getRiverFrame(0.40);
+  const tankerPos = fTanker.pt.clone().addScaledVector(fTanker.side, -14.0);
+  tankerPos.y = 1.6;
+  tankerBargeObj.group.position.copy(tankerPos);
+  tankerBargeObj.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fTanker.tangent);
+  group.add(tankerBargeObj.group);
 
   vesselsObj = {
     siFerry: {
@@ -2912,30 +2928,43 @@ export function buildNewYorkScene(group, river, terrain) {
   // -------------------------------------------------------------------------
   // SUBTERRANEAN METRO STATION & 7 UNDER-RIVER TRANSIT TUBES
   // -------------------------------------------------------------------------
-  // Subsurface Cutaway Metro Station Vault at South Ferry (u = 0.54)
-  metroStation = buildSubsurfaceMetroStationCutaway(fSub);
+  // Subsurface Cutaway Metro Station Vault relocated to open Battery Park lawn near Castle Clinton (u = 0.47)
+  const fSubVault = getRiverFrame(0.47);
+  metroStation = buildSubsurfaceMetroStationCutaway(fSubVault);
 
-  // The 7 Historical Under-River Transit Tubes Crossing Upper NY Bay & East River
+  // The 7 Historical Under-River Transit Tubes Crossing Upper NY Bay & East River (evenly spaced, non-overlapping)
   const tubeConfigs = [
     {
       id: 'battery_tunnel',
       name: 'Hugh L. Carey (Battery) Tunnel',
       bullets: 'VEHICULAR',
       desc: 'Twin Road Tubes • 86M Gal Inundation',
-      u: 0.50,
-      uTrigger: 0.50,
+      u: 0.45,
+      uTrigger: 0.45,
       isVehicular: true,
       lineColor: 0x0284c7,
       tubeSpan: 36.0,
       radius: 2.5
     },
     {
+      id: 'south_ferry_tube',
+      name: 'South Ferry Loop Tube',
+      bullets: '(1)',
+      desc: '1 Subway • 14.5M Gal Terminal Flooding',
+      u: 0.49,
+      uTrigger: 0.49,
+      isVehicular: false,
+      lineColor: 0xdc2626,
+      tubeSpan: 32.0,
+      radius: 2.4
+    },
+    {
       id: 'joralemon_tube',
       name: 'Joralemon Street Tube',
       bullets: '(4)(5)',
       desc: '4/5 Subway • 1908 Historic River Crossing',
-      u: 0.51,
-      uTrigger: 0.51,
+      u: 0.55,
+      uTrigger: 0.55,
       isVehicular: false,
       lineColor: 0x16a34a,
       tubeSpan: 34.0,
@@ -2946,23 +2975,11 @@ export function buildNewYorkScene(group, river, terrain) {
       name: 'Clark Street Tube',
       bullets: '(2)(3)',
       desc: '2/3 Subway • Clark St / William St Bore',
-      u: 0.525,
-      uTrigger: 0.525,
+      u: 0.61,
+      uTrigger: 0.61,
       isVehicular: false,
       lineColor: 0xdc2626,
       tubeSpan: 34.0,
-      radius: 2.4
-    },
-    {
-      id: 'south_ferry_tube',
-      name: 'South Ferry Loop Tube',
-      bullets: '(1)',
-      desc: '1 Subway • 14.5M Gal Terminal Flooding',
-      u: 0.54,
-      uTrigger: 0.54,
-      isVehicular: false,
-      lineColor: 0xdc2626,
-      tubeSpan: 32.0,
       radius: 2.4
     },
     {
@@ -2970,8 +2987,8 @@ export function buildNewYorkScene(group, river, terrain) {
       name: 'Montague Street Tube',
       bullets: '(N)(R)',
       desc: 'N/R Subway • 27M Gal Saltwater Breach',
-      u: 0.57,
-      uTrigger: 0.57,
+      u: 0.67,
+      uTrigger: 0.67,
       isVehicular: false,
       lineColor: 0xca8a04,
       tubeSpan: 35.0,
@@ -2982,8 +2999,8 @@ export function buildNewYorkScene(group, river, terrain) {
       name: 'Cranberry Street Tube',
       bullets: '(A)(C)',
       desc: 'A/C Subway • Deep Rock Bore Inundation',
-      u: 0.66,
-      uTrigger: 0.66,
+      u: 0.73,
+      uTrigger: 0.73,
       isVehicular: false,
       lineColor: 0x2563eb,
       tubeSpan: 35.0,
@@ -2994,8 +3011,8 @@ export function buildNewYorkScene(group, river, terrain) {
       name: 'Rutgers Street Tube',
       bullets: '(F)',
       desc: 'F Subway • Lower East Side River Crossing',
-      u: 0.71,
-      uTrigger: 0.71,
+      u: 0.81,
+      uTrigger: 0.81,
       isVehicular: false,
       lineColor: 0xea580c,
       tubeSpan: 35.0,
@@ -3703,30 +3720,32 @@ export function buildNewYorkScene(group, river, terrain) {
     const stLen = stVec.length() + 4.0;
     const stDir = stVec.clone().normalize();
 
-    // Raised Concrete Platform
-    const stPlat = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.45, stLen), platformMat);
-    stPlat.position.copy(stCenter).addScaledVector(stBent1.f.side, 4.2);
+    // Raised Concrete Platform (adjacent to outbound track at side +1.9, train right edge at +3.3)
+    const platW = 2.7;
+    const platSideOff = 4.75; // inner edge at 4.75 - 1.35 = 3.40 (0.1m clearance from 2.8m train)
+    const stPlat = new THREE.Mesh(new THREE.BoxGeometry(platW, 0.45, stLen), platformMat);
+    stPlat.position.copy(stCenter).addScaledVector(stBent1.f.side, platSideOff);
     stPlat.position.y = stBent1.deckY + 0.5;
     stPlat.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), stDir);
     stPlat.castShadow = true;
     stPlat.receiveShadow = true;
     viaductGroup.add(stPlat);
 
-    // Yellow Tactile Safety Warning Strip
+    // Yellow Tactile Safety Warning Strip along platform edge facing the track
     const tactileStrip = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.47, stLen), yellowEdgeMat);
-    tactileStrip.position.copy(stPlat.position).addScaledVector(stBent1.f.side, -2.05);
+    tactileStrip.position.copy(stPlat.position).addScaledVector(stBent1.f.side, -1.18);
     tactileStrip.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), stDir);
     viaductGroup.add(tactileStrip);
 
     // Arched Station Canopy Roof & Steel Trusses
-    const canopyRoof = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.25, stLen), stationRoofMat);
+    const canopyRoof = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.25, stLen), stationRoofMat);
     canopyRoof.position.copy(stPlat.position);
     canopyRoof.position.y = stBent1.deckY + 4.2;
     canopyRoof.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), stDir);
     canopyRoof.castShadow = true;
     viaductGroup.add(canopyRoof);
 
-    // Station Canopy Columns
+    // Station Canopy Columns (along centerline of platform)
     for (let cp = -stLen * 0.4; cp <= stLen * 0.4; cp += 6.0) {
       const cPost = new THREE.Mesh(new THREE.BoxGeometry(0.24, 3.8, 0.24), viadSteelMat);
       cPost.position.copy(stPlat.position).addScaledVector(stDir, cp);
@@ -3747,25 +3766,26 @@ export function buildNewYorkScene(group, river, terrain) {
 
     // Mezzanine Covered Stairway Tower descending to street level
     const stairH = stBent1.deckY - stBent1.groundY;
-    const stairTower = new THREE.Mesh(new THREE.BoxGeometry(3.2, stairH, 4.2), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 }));
-    stairTower.position.copy(stPlat.position).addScaledVector(stBent1.f.side, 3.2);
+    const stairTower = new THREE.Mesh(new THREE.BoxGeometry(2.8, stairH, 4.2), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 }));
+    stairTower.position.copy(stPlat.position).addScaledVector(stBent1.f.side, 2.2);
     stairTower.position.y = stBent1.groundY + stairH * 0.5;
     stairTower.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), stDir);
     stairTower.castShadow = true;
     viaductGroup.add(stairTower);
   }
 
-  // 4-Car MTA Stainless Steel Subway Train Set positioned along elevated inbound track
+  // 2-Car MTA Stainless Steel Subway Train Set docked along elevated outbound track at platform
   {
     const trainSet = createMTASubwayTrain();
-    const tBent1 = bentFrames[3];
-    const tBent2 = bentFrames[6];
-    const trainPos = tBent1.deckCenter.clone().lerp(tBent2.deckCenter, 0.5).addScaledVector(tBent1.f.side, -1.9);
-    trainPos.y = tBent1.deckY + 0.35;
+    const stBent1 = bentFrames[5];
+    const stBent2 = bentFrames[7];
+    const stCenter = stBent1.deckCenter.clone().lerp(stBent2.deckCenter, 0.5);
+    const stDir = stBent2.deckCenter.clone().sub(stBent1.deckCenter).normalize();
+    const trainPos = stCenter.clone().addScaledVector(stBent1.f.side, 1.9);
+    trainPos.y = stBent1.deckY + 0.32;
 
-    const tDir = tBent2.deckCenter.clone().sub(tBent1.deckCenter).normalize();
     trainSet.group.position.copy(trainPos);
-    trainSet.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tDir);
+    trainSet.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), stDir);
     viaductGroup.add(trainSet.group);
   }
 
@@ -3782,8 +3802,8 @@ export function buildNewYorkScene(group, river, terrain) {
     { kind: 'vehicle', sub: 'cop',    u: 0.28, side: -8.0, rotY: -0.25, drift: 0.58, bAmp: 0.35, bFreq: 3.5, pFreq: 2.3, rFreq: 2.0 },
     { kind: 'vehicle', sub: 'van',    u: 0.34, side:  7.5, rotY:  0.45, drift: 0.48, bAmp: 0.28, bFreq: 2.8, pFreq: 1.9, rFreq: 1.6, hex: 0x0284c7 },
     { kind: 'vehicle', sub: 'sedan',  u: 0.42, side: -9.0, rotY: -0.60, drift: 0.55, bAmp: 0.30, bFreq: 3.1, pFreq: 2.2, rFreq: 1.9, hex: 0x94a3b8 },
-    { kind: 'vehicle', sub: 'cab',    u: 0.47, side:  8.0, rotY:  0.20, drift: 0.50, bAmp: 0.34, bFreq: 3.4, pFreq: 2.4, rFreq: 1.7 },
-    { kind: 'vehicle', sub: 'cop',    u: 0.53, side:  9.5, rotY:  0.75, drift: 0.60, bAmp: 0.36, bFreq: 3.6, pFreq: 2.5, rFreq: 2.1 },
+    { kind: 'vehicle', sub: 'cab',    u: 0.47, side: -6.5, rotY:  0.20, drift: 0.50, bAmp: 0.34, bFreq: 3.4, pFreq: 2.4, rFreq: 1.7 },
+    { kind: 'vehicle', sub: 'cop',    u: 0.53, side: -8.5, rotY:  0.75, drift: 0.60, bAmp: 0.36, bFreq: 3.6, pFreq: 2.5, rFreq: 2.1 },
     { kind: 'vehicle', sub: 'van',    u: 0.58, side: -7.0, rotY: -0.40, drift: 0.46, bAmp: 0.26, bFreq: 2.7, pFreq: 1.8, rFreq: 1.5, hex: 0x15803d },
     { kind: 'vehicle', sub: 'sedan',  u: 0.64, side:  8.5, rotY:  0.55, drift: 0.54, bAmp: 0.32, bFreq: 3.3, pFreq: 2.2, rFreq: 1.8, hex: 0xb91c1c },
     { kind: 'vehicle', sub: 'cab',    u: 0.70, side: -6.5, rotY: -0.30, drift: 0.52, bAmp: 0.33, bFreq: 3.2, pFreq: 2.1, rFreq: 1.9 },
@@ -3794,9 +3814,9 @@ export function buildNewYorkScene(group, river, terrain) {
     { kind: 'debris', sub: 'pallet',    u: 0.24, side:  4.0, rotY: -0.80, drift: 0.68, bAmp: 0.42, bFreq: 4.2, pFreq: 2.8, rFreq: 2.5 },
     { kind: 'debris', sub: 'drums',     u: 0.30, side: -6.5, rotY:  0.30, drift: 0.65, bAmp: 0.38, bFreq: 3.8, pFreq: 2.6, rFreq: 2.2 },
     { kind: 'debris', sub: 'log',       u: 0.36, side:  5.5, rotY:  0.90, drift: 0.60, bAmp: 0.35, bFreq: 3.5, pFreq: 2.4, rFreq: 2.0 },
-    { kind: 'debris', sub: 'container', u: 0.44, side:  6.0, rotY: -0.45, drift: 0.58, bAmp: 0.24, bFreq: 2.3, pFreq: 1.5, rFreq: 1.3, hex: 0x065f46 },
+    { kind: 'debris', sub: 'container', u: 0.44, side: -7.5, rotY: -0.45, drift: 0.58, bAmp: 0.24, bFreq: 2.3, pFreq: 1.5, rFreq: 1.3, hex: 0x065f46 },
     { kind: 'debris', sub: 'pallet',    u: 0.49, side: -4.5, rotY:  0.65, drift: 0.70, bAmp: 0.44, bFreq: 4.4, pFreq: 3.0, rFreq: 2.6 },
-    { kind: 'debris', sub: 'drums',     u: 0.55, side:  5.0, rotY: -0.55, drift: 0.64, bAmp: 0.37, bFreq: 3.7, pFreq: 2.5, rFreq: 2.3 },
+    { kind: 'debris', sub: 'drums',     u: 0.55, side: -5.0, rotY: -0.55, drift: 0.64, bAmp: 0.37, bFreq: 3.7, pFreq: 2.5, rFreq: 2.3 },
     { kind: 'debris', sub: 'container', u: 0.60, side: -8.0, rotY:  0.35, drift: 0.60, bAmp: 0.26, bFreq: 2.5, pFreq: 1.7, rFreq: 1.4, hex: 0xea580c },
     { kind: 'debris', sub: 'log',       u: 0.66, side:  4.0, rotY: -0.70, drift: 0.62, bAmp: 0.36, bFreq: 3.6, pFreq: 2.3, rFreq: 2.1 },
     { kind: 'debris', sub: 'pallet',    u: 0.72, side: -5.5, rotY:  0.40, drift: 0.69, bAmp: 0.41, bFreq: 4.1, pFreq: 2.9, rFreq: 2.4 },
@@ -4051,22 +4071,22 @@ export function buildNewYorkScene(group, river, terrain) {
 
   const bankBuildingSpecs = [
     // --- MANHATTAN EAST RIVER & FDR DRIVE WATERFRONT (u = 0.58 - 0.84) ---
-    { u: 0.58, side: 25.0, tan:  4.0, w: 10.0, d: 9.0, h: 36.0, mat: stoneTowerMat, isArtDeco: true },
-    { u: 0.60, side: 32.0, tan: -6.0, w: 12.0, d: 10.0, h: 42.0, mat: glassTowerMat1 },
-    { u: 0.63, side: 24.0, tan:  8.0, w: 9.0,  d: 8.5, h: 34.0, mat: stoneTowerMat },
+    { u: 0.58, side: 29.0, tan:  4.0, w: 10.0, d: 9.0, h: 36.0, mat: stoneTowerMat, isArtDeco: true },
+    { u: 0.60, side: 33.0, tan: -6.0, w: 12.0, d: 10.0, h: 42.0, mat: glassTowerMat1 },
+    { u: 0.63, side: 30.0, tan:  8.0, w: 9.0,  d: 8.5, h: 34.0, mat: stoneTowerMat },
     { u: 0.65, side: 35.0, tan: -4.0, w: 11.0, d: 11.0, h: 46.0, mat: glassTowerMat2 },
-    { u: 0.68, side: 22.0, tan:  6.0, w: 9.5,  d: 9.0, h: 32.0, mat: stoneTowerMat, isArtDeco: true },
-    { u: 0.70, side: 30.0, tan: -8.0, w: 10.0, d: 9.0, h: 40.0, mat: glassTowerMat1 },
-    { u: 0.75, side: 24.0, tan: 12.0, w: 12.0, d: 10.0, h: 44.0, mat: glassTowerMat2 },
+    { u: 0.68, side: 29.0, tan:  6.0, w: 9.5,  d: 9.0, h: 32.0, mat: stoneTowerMat, isArtDeco: true },
+    { u: 0.70, side: 31.0, tan: -8.0, w: 10.0, d: 9.0, h: 40.0, mat: glassTowerMat1 },
+    { u: 0.75, side: 28.0, tan: 12.0, w: 12.0, d: 10.0, h: 44.0, mat: glassTowerMat2 },
     { u: 0.78, side: 34.0, tan: -2.0, w: 10.5, d: 9.5, h: 38.0, mat: stoneTowerMat },
-    { u: 0.82, side: 26.0, tan:  5.0, w: 11.0, d: 10.0, h: 36.0, mat: stoneTowerMat },
+    { u: 0.82, side: 28.0, tan:  5.0, w: 11.0, d: 10.0, h: 36.0, mat: stoneTowerMat },
     { u: 0.84, side: 36.0, tan: -6.0, w: 12.0, d: 11.0, h: 42.0, mat: glassTowerMat1 },
 
     // --- MANHATTAN BATTERY & FINANCIAL DISTRICT WATERFRONT (u = 0.44 - 0.54) ---
-    { u: 0.44, side: 24.0, tan:  6.0, w: 11.0, d: 10.0, h: 38.0, mat: stoneTowerMat, isArtDeco: true },
-    { u: 0.46, side: 32.0, tan: -4.0, w: 12.0, d: 11.0, h: 44.0, mat: glassTowerMat2 },
+    { u: 0.44, side: 28.0, tan:  6.0, w: 11.0, d: 10.0, h: 38.0, mat: stoneTowerMat, isArtDeco: true },
+    { u: 0.46, side: 33.0, tan: -4.0, w: 12.0, d: 11.0, h: 44.0, mat: glassTowerMat2 },
     { u: 0.48, side: 36.0, tan: 12.0, w: 10.0, d: 9.0,  h: 40.0, mat: glassTowerMat1 },
-    { u: 0.52, side: 28.0, tan: -8.0, w: 9.5,  d: 9.0,  h: 36.0, mat: stoneTowerMat, isArtDeco: true },
+    { u: 0.52, side: 29.0, tan: -8.0, w: 9.5,  d: 9.0,  h: 36.0, mat: stoneTowerMat, isArtDeco: true },
     { u: 0.54, side: 38.0, tan:  6.0, w: 11.5, d: 10.5, h: 48.0, mat: glassTowerMat2 },
 
     // --- BROOKLYN / DUMBO / BROOKLYN HEIGHTS WATERFRONT (u = 0.56 - 0.88) ---
@@ -4198,16 +4218,16 @@ export function buildNewYorkScene(group, river, terrain) {
       }
     }
 
-    // 2. Update South Ferry Subsurface Metro Station Cutaway
+    // 2. Update Battery Park Subsurface Metro Station Cutaway (u = 0.47)
     if (metroStation) {
-      if (uWave < 0.53) {
+      if (uWave < 0.47) {
         metroStation.waterMesh.visible = false;
         metroStation.waterMesh.scale.y = 0.001;
         metroStation.waterMesh.position.y = -metroStation.sH * 0.5 + 0.1;
         metroStation.stairCascade.visible = false;
         metroStation.alarmLight.intensity = 0.0;
       } else {
-        const stProg = Math.min(1.0, (uWave - 0.53) / 0.045);
+        const stProg = Math.min(1.0, (uWave - 0.47) / 0.045);
         metroStation.waterMesh.visible = true;
         metroStation.waterMesh.scale.y = 0.05 + stProg * 0.95;
         metroStation.waterMesh.position.y = -metroStation.sH * 0.5 + 0.1 + stProg * (metroStation.sH * 0.55);
