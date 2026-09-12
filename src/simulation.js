@@ -93,13 +93,14 @@ export class FloodSimulation {
     this.initNewYorkGenesis();
 
     // Procedural New York landmarks, bridges, skyscrapers, and countermeasures
-    const { wipeableItems, arcLight, arcMesh, updateTubes, updateFloatingItems, updateBridgeTraffic } = buildNewYorkScene(this.group, this.river, this.terrain);
+    const { wipeableItems, arcLight, arcMesh, updateTubes, updateFloatingItems, updateBridgeTraffic, updateFerryTerminalVessels } = buildNewYorkScene(this.group, this.river, this.terrain);
     this.wipeableItems = wipeableItems;
     this.nyArcLight = arcLight;
     this.nyArcMesh = arcMesh;
     this.nyUpdateTubes = updateTubes;
     this.nyUpdateFloating = updateFloatingItems;
     this.nyUpdateBridgeTraffic = updateBridgeTraffic;
+    this.nyUpdateFerryVessels = updateFerryTerminalVessels;
 
     // New York landmark badges
     this.initNewYorkLandmarkBadges();
@@ -3423,6 +3424,7 @@ export class FloodSimulation {
         if (this.nyUpdateTubes) this.nyUpdateTubes(0);
         if (this.nyUpdateFloating) this.nyUpdateFloating(0);
         if (this.nyUpdateBridgeTraffic) this.nyUpdateBridgeTraffic(clampedT, 0);
+        if (this.nyUpdateFerryVessels) this.nyUpdateFerryVessels(clampedT, 0);
       } else {
         if (this.floodGroup) this.floodGroup.visible = true;
         uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
@@ -3432,6 +3434,7 @@ export class FloodSimulation {
         if (this.nyUpdateTubes) this.nyUpdateTubes(uWave);
         if (this.nyUpdateFloating) this.nyUpdateFloating(uWave);
         if (this.nyUpdateBridgeTraffic) this.nyUpdateBridgeTraffic(clampedT, uWave);
+        if (this.nyUpdateFerryVessels) this.nyUpdateFerryVessels(clampedT, uWave);
 
         if (this.nyArcLight && this.nyArcMesh) {
           if (uWave >= 0.70 && uWave <= 0.82) {
