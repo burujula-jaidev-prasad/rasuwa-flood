@@ -255,7 +255,15 @@ export function buildNewYorkScene(group, river, terrain) {
       cabGroup.add(wheel);
     });
 
-    return { group: cabGroup, materials, primaryMat: yellowMat };
+    const tailLights = [];
+    [-0.65, 0.65].forEach(lx => {
+      const tl = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.16, 0.08), new THREE.MeshBasicMaterial({ color: 0x7f1d1d }));
+      tl.position.set(lx, 0.65, 2.22);
+      cabGroup.add(tl);
+      tailLights.push(tl);
+    });
+
+    return { group: cabGroup, materials, primaryMat: yellowMat, tailLights };
   }
 
   // NYPD Highway Patrol Squad Cruiser
@@ -321,7 +329,15 @@ export function buildNewYorkScene(group, river, terrain) {
       carGroup.add(wheel);
     });
 
-    return { group: carGroup, materials, primaryMat: bodyMat };
+    const tailLights = [];
+    [-0.62, 0.62].forEach(lx => {
+      const tl = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.15, 0.08), new THREE.MeshBasicMaterial({ color: 0x7f1d1d }));
+      tl.position.set(lx, 0.6, 2.12);
+      carGroup.add(tl);
+      tailLights.push(tl);
+    });
+
+    return { group: carGroup, materials, primaryMat: bodyMat, tailLights };
   }
 
   // 20-ft Intermodal Cargo Shipping Container
@@ -613,7 +629,15 @@ export function buildNewYorkScene(group, river, terrain) {
       vanGroup.add(wheel);
     });
 
-    return { group: vanGroup, materials, primaryMat: vanMat };
+    const tailLights = [];
+    [-0.85, 0.85].forEach(lx => {
+      const tl = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.35, 0.08), new THREE.MeshBasicMaterial({ color: 0x7f1d1d }));
+      tl.position.set(lx, 1.2, 2.32);
+      vanGroup.add(tl);
+      tailLights.push(tl);
+    });
+
+    return { group: vanGroup, materials, primaryMat: vanMat, tailLights };
   }
 
   // Harbor Tugboat
@@ -4289,6 +4313,7 @@ export function buildNewYorkScene(group, river, terrain) {
     activeBridgeVehicles.push({
       bridge: 'verrazzano',
       mesh: veh.group,
+      tailLights: veh.tailLights || [],
       dir: def.dir,
       laneX: def.laneX,
       initZ: def.initZ,
@@ -4300,7 +4325,9 @@ export function buildNewYorkScene(group, river, terrain) {
       quat: vzQuat,
       uBreachW: 0.108,
       uBreachE: 0.114,
-      plungeZRange: vzTowerZ
+      plungeZRange: vzTowerZ,
+      tBrake: 0.10,
+      tStop: 0.16
     });
   });
 
@@ -4326,6 +4353,7 @@ export function buildNewYorkScene(group, river, terrain) {
     activeBridgeVehicles.push({
       bridge: 'brooklyn',
       mesh: veh.group,
+      tailLights: veh.tailLights || [],
       dir: def.dir,
       laneX: def.laneX,
       initZ: def.initZ,
@@ -4337,7 +4365,9 @@ export function buildNewYorkScene(group, river, terrain) {
       quat: brQuat,
       uBreachW: 0.738,
       uBreachE: 0.742,
-      plungeZRange: brTowerZ
+      plungeZRange: brTowerZ,
+      tBrake: 0.50,
+      tStop: 0.65
     });
   });
 
@@ -4346,7 +4376,23 @@ export function buildNewYorkScene(group, river, terrain) {
       const v = activeBridgeVehicles[i];
       const spanHalf = v.spanLen * 0.5;
 
-      const dist = v.initZ + v.dir * v.speed * (t * 36.0);
+      // Smooth deceleration and permanent complete stop during and after disaster
+      let tauEff = t;
+      let speedRatio = 1.0;
+      if (t <= v.tBrake) {
+        tauEff = t;
+        speedRatio = 1.0;
+      } else if (t < v.tStop) {
+        const p = (t - v.tBrake) / (v.tStop - v.tBrake);
+        speedRatio = (1.0 - p) * (1.0 - p);
+        tauEff = v.tBrake + (v.tStop - v.tBrake) * (p - p * p + (p * p * p) / 3.0);
+      } else {
+        // Permanent complete stop for all t >= tStop (speed is exactly 0, position 100% frozen)
+        speedRatio = 0.0;
+        tauEff = v.tBrake + (v.tStop - v.tBrake) / 3.0;
+      }
+
+      const dist = v.initZ + v.dir * v.speed * (tauEff * 36.0);
       let localZ = ((dist % v.spanLen) + v.spanLen) % v.spanLen - spanHalf;
 
       const worldPos = v.f.pt.clone()
@@ -4383,6 +4429,28 @@ export function buildNewYorkScene(group, river, terrain) {
         if (v.dir < 0) {
           v.mesh.rotateY(Math.PI);
         }
+        // Add subtle braking dip when decelerating
+        if (speedRatio < 1.0) {
+          const brakeDip = (1.0 - speedRatio) * 0.03;
+          v.mesh.rotateX(v.dir > 0 ? -brakeDip : brakeDip);
+        }
+      }
+
+      // Dynamic brake & hazard lights on vehicles
+      if (v.tailLights && v.tailLights.length > 0) {
+        const isBraking = (speedRatio < 0.95 && speedRatio > 0.0);
+        const isStopped = (speedRatio === 0.0);
+        const isHazardBlink = isStopped && ((Math.floor(Date.now() * 0.005) % 2) === 0);
+
+        v.tailLights.forEach(tl => {
+          if (isHazardBlink) {
+            tl.material.color.setHex(0xf59e0b); // Amber hazard blink
+          } else if (isBraking || isStopped) {
+            tl.material.color.setHex(0xef4444); // Bright emergency brake light
+          } else {
+            tl.material.color.setHex(0x7f1d1d); // Dim running light
+          }
+        });
       }
     }
   }
