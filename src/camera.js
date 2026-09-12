@@ -30,6 +30,20 @@ export class CameraDirector {
     });
 
     this.onModeChange = null;
+    this.isGoogle3D = false;
+  }
+
+  setGoogle3DActive(isActive) {
+    this.isGoogle3D = Boolean(isActive);
+    if (this.controls) {
+      if (this.isGoogle3D) {
+        this.controls.minDistance = 20;
+        this.controls.maxDistance = 850;
+      } else {
+        this.controls.minDistance = 50;
+        this.controls.maxDistance = 420;
+      }
+    }
   }
 
   setViewMode(mode) {
@@ -229,25 +243,50 @@ export class CameraDirector {
       }
 
       // Multiple Director View Angle Overrides (Top, Left, Right/Opposite, Chaser, Isometric)
-      if (this.viewMode === 'top') {
-        desiredPhi = 0.38;   // Elevated bird's-eye map view with clear 3D architectural relief
-        desiredRadius = 155;
-        desiredTheta = -1.15;
-      } else if (this.viewMode === 'left') {
-        desiredPhi = 0.70;   // West-bank cinematic perspective
-        desiredRadius = 135;
-        desiredTheta = -2.35;
-      } else if (this.viewMode === 'right') {
-        desiredPhi = 0.68;   // East-bank / Brooklyn / Harbor frontal perspective (Opposite View)
-        desiredRadius = 135;
-        desiredTheta = 0.85; // Directly opposite left view, looking across the river with zero occlusion
-      } else if (this.viewMode === 'chaser') {
-        desiredPhi = 0.72;
-        desiredRadius = 90;
-      } else if (this.viewMode === 'iso') {
-        desiredPhi = 0.58;   // 3D Isometric overview
-        desiredRadius = 140;
-        desiredTheta = -0.90;
+      if (this.isGoogle3D) {
+        desiredTarget.set(20, 2.5, 20); // Focus on Battery Park / South Ferry
+        if (this.viewMode === 'top') {
+          desiredPhi = 0.28;
+          desiredRadius = 380;
+          desiredTheta = -1.15;
+        } else if (this.viewMode === 'left') {
+          desiredPhi = 0.85;
+          desiredRadius = 260;
+          desiredTheta = -2.25;
+        } else if (this.viewMode === 'right') {
+          desiredPhi = 0.85;
+          desiredRadius = 260;
+          desiredTheta = 0.90;
+        } else if (this.viewMode === 'chaser') {
+          desiredPhi = 0.90;
+          desiredRadius = 140;
+          desiredTheta = -1.15;
+        } else if (this.viewMode === 'iso') {
+          desiredPhi = 0.65;
+          desiredRadius = 340;
+          desiredTheta = -0.85;
+        }
+      } else {
+        if (this.viewMode === 'top') {
+          desiredPhi = 0.38;   // Elevated bird's-eye map view with clear 3D architectural relief
+          desiredRadius = 155;
+          desiredTheta = -1.15;
+        } else if (this.viewMode === 'left') {
+          desiredPhi = 0.70;   // West-bank cinematic perspective
+          desiredRadius = 135;
+          desiredTheta = -2.35;
+        } else if (this.viewMode === 'right') {
+          desiredPhi = 0.68;   // East-bank / Brooklyn / Harbor frontal perspective (Opposite View)
+          desiredRadius = 135;
+          desiredTheta = 0.85; // Directly opposite left view, looking across the river with zero occlusion
+        } else if (this.viewMode === 'chaser') {
+          desiredPhi = 0.72;
+          desiredRadius = 90;
+        } else if (this.viewMode === 'iso') {
+          desiredPhi = 0.58;   // 3D Isometric overview
+          desiredRadius = 140;
+          desiredTheta = -0.90;
+        }
       }
 
       if (!this.initialized) {

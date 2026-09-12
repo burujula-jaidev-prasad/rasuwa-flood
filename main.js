@@ -5,6 +5,7 @@ import { FloodSimulation } from './src/simulation.js';
 import { CameraDirector } from './src/camera.js';
 import { UIManager } from './src/ui.js';
 import { TIMELINE_CONFIG, getScenario, setCurrentScenarioId, getCurrentScenarioId } from './src/data.js';
+import { Google3DTilesManager } from './src/scenarios/google_3dtiles.js';
 
 class ExplainerApp {
   constructor() {
@@ -25,6 +26,10 @@ class ExplainerApp {
     this.currentScenarioId = requestedScenario;
     setCurrentScenarioId(requestedScenario);
 
+    // Google Photorealistic 3D Tiles State
+    this.isGoogle3DActive = false;
+    this.google3DManager = null;
+
     // Timeline state
     this.t = 0.0;
     this.isPlaying = false; // Starts paused until intro card dismisses
@@ -36,6 +41,13 @@ class ExplainerApp {
     this.initEnvironment();
     this.initSceneObjects();
     this.initUI();
+
+    // Check if real 3D photogrammetry is requested via URL (?3d=true or ?googleKey=...)
+    if (urlParams.get('3d') === 'true' || urlParams.get('map') === 'google' || urlParams.has('googleKey')) {
+      if (this.currentScenarioId === 'newyork') {
+        this.enableGoogle3D();
+      }
+    }
 
     window.addEventListener('resize', () => this.onResize());
     this.animate();
@@ -235,6 +247,15 @@ class ExplainerApp {
       },
       onSelectViewMode: (mode) => {
         this.cameraDirector.setViewMode(mode);
+      },
+      onToggleGoogle3D: () => {
+        this.toggleGoogle3D();
+      },
+      onSaveGoogleKey: (key) => {
+        this.saveGoogleKey(key);
+      },
+      onFallbackLocal: () => {
+        this.disableGoogle3D();
       }
     });
 
@@ -264,12 +285,15 @@ class ExplainerApp {
       window.history.replaceState(null, '', `?scenario=${scenarioId}`);
     }
 
-    // 0. Clean up previous camera director controls
+    // 0. Clean up previous Google 3D Photogrammetry if active
+    this.disableGoogle3D();
+
+    // 1. Clean up previous camera director controls
     if (this.cameraDirector && this.cameraDirector.dispose) {
       this.cameraDirector.dispose();
     }
 
-    // 1. Clean up existing objects
+    // 2. Clean up existing objects
     if (this.waterMesh) this.scene.remove(this.waterMesh);
     if (this.terrainSystem && this.terrainSystem.mesh) this.scene.remove(this.terrainSystem.mesh);
     if (this.simulation) {
@@ -277,13 +301,13 @@ class ExplainerApp {
       if (this.simulation.group) this.scene.remove(this.simulation.group);
     }
 
-    // 2. Re-create objects for new scenario
+    // 3. Re-create objects for new scenario
     this.initSceneObjects();
 
-    // 3. Update environment (sky, fog, sun)
+    // 4. Update environment (sky, fog, sun)
     this.updateEnvironmentForScenario(getScenario(scenarioId));
 
-    // 4. Update UI & timeline (start paused at t=0 so user has full control)
+    // 5. Update UI & timeline (start paused at t=0 so user has full control)
     this.t = 0.0;
     this.introDismissed = true;
     this.ui.hideIntroCard();
@@ -292,6 +316,66 @@ class ExplainerApp {
     this.ui.updatePlayBtnState();
     this.ui.setScenario(scenarioId);
     this.updateSimulationState(0.016);
+  }
+
+  toggleGoogle3D() {
+    if (this.currentScenarioId !== 'newyork') return;
+    if (this.isGoogle3DActive) {
+      this.disableGoogle3D();
+    } else {
+      this.enableGoogle3D();
+    }
+  }
+
+  enableGoogle3D() {
+    if (this.currentScenarioId !== 'newyork') return;
+
+    if (!this.google3DManager) {
+      this.google3DManager = new Google3DTilesManager(this.scene, this.camera, this.renderer, {
+        onStatusChange: (status) => {
+          if (status.status === 'needs_key') {
+            this.ui.showGoogleKeyModal();
+          } else if (status.status === 'active') {
+            this.ui.setGoogle3DActive(true);
+          }
+        }
+      });
+    }
+
+    if (!this.google3DManager.apiKey) {
+      this.ui.showGoogleKeyModal();
+      return;
+    }
+
+    this.isGoogle3DActive = true;
+    if (this.terrainSystem && this.terrainSystem.mesh) this.terrainSystem.mesh.visible = false;
+    if (this.waterMesh) this.waterMesh.visible = false;
+    if (this.simulation && this.simulation.group) this.simulation.group.visible = false;
+    this.google3DManager.show();
+    if (this.cameraDirector) this.cameraDirector.setGoogle3DActive(true);
+    if (this.ui) this.ui.setGoogle3DActive(true);
+  }
+
+  disableGoogle3D() {
+    this.isGoogle3DActive = false;
+    if (this.google3DManager) {
+      this.google3DManager.hide();
+    }
+    if (this.terrainSystem && this.terrainSystem.mesh) this.terrainSystem.mesh.visible = true;
+    if (this.waterMesh) this.waterMesh.visible = true;
+    if (this.simulation && this.simulation.group) this.simulation.group.visible = true;
+    if (this.cameraDirector) this.cameraDirector.setGoogle3DActive(false);
+    if (this.ui) this.ui.setGoogle3DActive(false);
+  }
+
+  saveGoogleKey(key) {
+    if (!this.google3DManager) {
+      this.google3DManager = new Google3DTilesManager(this.scene, this.camera, this.renderer);
+    }
+    this.google3DManager.setApiKey(key);
+    if (key && key.length > 10) {
+      this.enableGoogle3D();
+    }
   }
 
   dismissIntro() {
@@ -306,6 +390,9 @@ class ExplainerApp {
   updateSimulationState(deltaSec) {
     try {
       const uWave = this.simulation.update(this.t, deltaSec);
+      if (this.isGoogle3DActive && this.google3DManager) {
+        this.google3DManager.update(this.t, deltaSec);
+      }
       this.cameraDirector.update(this.t, deltaSec);
       this.ui.update(this.t, this.t * TIMELINE_CONFIG.DUR, uWave);
     } catch (err) {
@@ -319,6 +406,9 @@ class ExplainerApp {
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
+    if (this.google3DManager && this.google3DManager.tiles) {
+      this.google3DManager.tiles.setResolutionFromRenderer(this.camera, this.renderer);
+    }
   }
 
   animate() {

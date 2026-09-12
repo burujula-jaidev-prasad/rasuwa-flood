@@ -67,6 +67,17 @@ export class UIManager {
     this.elGuidedBtn = document.getElementById('guided-btn');
     this.elRainBtn = document.getElementById('rain-btn');
     this.elSpeedBtn = document.getElementById('speed-btn');
+
+    // Real 3D Map controls & modal elements
+    this.elMapModeContainer = document.getElementById('map-mode-container');
+    this.elMapModeToggle = document.getElementById('map-mode-toggle');
+    this.elMapModeBadge = document.getElementById('map-mode-badge');
+    this.elMapKeyBtn = document.getElementById('map-key-btn');
+    this.elGoogleKeyModal = document.getElementById('google-key-modal');
+    this.elKeyModalClose = document.getElementById('key-modal-close');
+    this.elGoogleKeyInput = document.getElementById('google-api-key-input');
+    this.elKeyBtnSave = document.getElementById('key-btn-save');
+    this.elKeyBtnFallback = document.getElementById('key-btn-fallback');
   }
 
   renderWaypointNav() {
@@ -176,6 +187,46 @@ export class UIManager {
         }
       });
     });
+
+    // Real 3D Map & Google API Key modal event listeners
+    if (this.elMapModeToggle) {
+      this.elMapModeToggle.addEventListener('click', () => {
+        if (this.options.onToggleGoogle3D) {
+          this.options.onToggleGoogle3D();
+        }
+      });
+    }
+
+    if (this.elMapKeyBtn) {
+      this.elMapKeyBtn.addEventListener('click', () => {
+        this.showGoogleKeyModal();
+      });
+    }
+
+    if (this.elKeyModalClose) {
+      this.elKeyModalClose.addEventListener('click', () => {
+        this.hideGoogleKeyModal();
+      });
+    }
+
+    if (this.elKeyBtnFallback) {
+      this.elKeyBtnFallback.addEventListener('click', () => {
+        this.hideGoogleKeyModal();
+        if (this.options.onFallbackLocal) {
+          this.options.onFallbackLocal();
+        }
+      });
+    }
+
+    if (this.elKeyBtnSave) {
+      this.elKeyBtnSave.addEventListener('click', () => {
+        const key = this.elGoogleKeyInput ? this.elGoogleKeyInput.value.trim() : '';
+        if (this.options.onSaveGoogleKey) {
+          this.options.onSaveGoogleKey(key);
+        }
+        this.hideGoogleKeyModal();
+      });
+    }
   }
 
   updatePlayBtnState() {
@@ -599,6 +650,40 @@ export class UIManager {
     scenarioBtns.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.id === id);
     });
+
+    this.updateMapModeVisibility(id);
+  }
+
+  showGoogleKeyModal() {
+    if (this.elGoogleKeyModal) {
+      this.elGoogleKeyModal.style.display = 'flex';
+      if (this.elGoogleKeyInput) {
+        const currentKey = (typeof localStorage !== 'undefined') ? (localStorage.getItem('google_3d_tiles_api_key') || '') : '';
+        this.elGoogleKeyInput.value = currentKey;
+        this.elGoogleKeyInput.focus();
+      }
+    }
+  }
+
+  hideGoogleKeyModal() {
+    if (this.elGoogleKeyModal) {
+      this.elGoogleKeyModal.style.display = 'none';
+    }
+  }
+
+  setGoogle3DActive(isActive) {
+    if (this.elMapModeToggle) {
+      this.elMapModeToggle.classList.toggle('active', isActive);
+    }
+    if (this.elMapModeBadge) {
+      this.elMapModeBadge.textContent = isActive ? '3D TILES' : 'OFF';
+    }
+  }
+
+  updateMapModeVisibility(scenarioId) {
+    if (this.elMapModeContainer) {
+      this.elMapModeContainer.style.display = (scenarioId === 'newyork') ? 'flex' : 'none';
+    }
   }
 
   getAgencyTagsHtml() {
