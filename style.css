@@ -1154,6 +1154,13 @@ html, body {
   background: rgba(148, 163, 184, 0.2);
   color: #94a3b8;
   letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+}
+
+.map-mode-badge.satellite {
+  background: rgba(16, 185, 129, 0.22);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.4);
 }
 
 .map-mode-btn.active .map-mode-badge {

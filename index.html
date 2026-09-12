@@ -57,14 +57,14 @@
       </button>
     </nav>
 
-    <!-- Real 3D Photogrammetry Map Mode Toggle (Google 3D Tiles) -->
+    <!-- Real 3D Aerial Satellite & Google 3D Map Mode -->
     <div class="map-mode-container" id="map-mode-container">
-      <button class="map-mode-btn" id="map-mode-toggle" title="Toggle Real 3D Photogrammetry Map vs Local Simulation">
-        <span class="map-mode-icon">🗺️</span>
+      <button class="map-mode-btn" id="map-mode-toggle" title="Real 3D Aerial Satellite & Architectural Map">
+        <span class="map-mode-icon">🛰️</span>
         <span class="map-mode-text">REAL 3D MAP</span>
-        <span class="map-mode-badge" id="map-mode-badge">OFF</span>
+        <span class="map-mode-badge satellite" id="map-mode-badge">SATELLITE</span>
       </button>
-      <button class="map-key-btn" id="map-key-btn" title="Configure Google Cloud Maps API Key">
+      <button class="map-key-btn" id="map-key-btn" title="Google Cloud 3D Tiles Settings">
         <span>🔑</span>
       </button>
     </div>
@@ -254,18 +254,19 @@
         <div class="key-badge">Google Maps Platform</div>
         <button class="key-modal-close" id="key-modal-close" title="Close">&times;</button>
       </div>
-      <h3 class="key-modal-title">Google Photorealistic 3D Tiles</h3>
+      <h3 class="key-modal-title">Real 3D Imaging Map</h3>
       <p class="key-modal-desc">
-        Stream real 3D building photogrammetry of New York City directly from Google Earth into Three.js.
-        Requires a Google Cloud API Key with the <strong>Map Tiles API</strong> enabled.
+        ✨ <strong>Built-in 3D Satellite & Architectural Imaging Map is ACTIVE</strong> (High-res 2048px aerial orthophoto, authentic NYC skyscraper facades, 60 FPS, zero API key required).
+        <br><br>
+        <strong>Optional:</strong> If you have a Google Cloud API Key with the <strong>Map Tiles API</strong> enabled, you can enter it below to stream Google Photogrammetry 3D Tiles.
       </p>
       <div class="key-input-group">
-        <label for="google-api-key-input">Google Cloud API Key:</label>
-        <input type="password" id="google-api-key-input" placeholder="AIzaSy..." autocomplete="off">
+        <label for="google-api-key-input">Google Cloud API Key (Optional):</label>
+        <input type="password" id="google-api-key-input" placeholder="AIzaSy... (Leave empty for Built-in 3D Satellite Map)" autocomplete="off">
       </div>
       <div class="key-modal-footer">
-        <button class="key-btn key-btn-secondary" id="key-btn-fallback">Use Local Simulation</button>
-        <button class="key-btn key-btn-primary" id="key-btn-save">Stream Real 3D Tiles</button>
+        <button class="key-btn key-btn-secondary" id="key-btn-fallback">Use 3D Satellite Map</button>
+        <button class="key-btn key-btn-primary" id="key-btn-save">Stream Google 3D Tiles</button>
       </div>
       <div class="key-modal-hint">
         <span>🔒</span> Stored locally in your browser. Never sent to any external server.

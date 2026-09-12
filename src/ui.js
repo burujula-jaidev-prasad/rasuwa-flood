@@ -676,7 +676,8 @@ export class UIManager {
       this.elMapModeToggle.classList.toggle('active', isActive);
     }
     if (this.elMapModeBadge) {
-      this.elMapModeBadge.textContent = isActive ? '3D TILES' : 'OFF';
+      this.elMapModeBadge.textContent = isActive ? 'GOOGLE 3D' : 'SATELLITE';
+      this.elMapModeBadge.classList.toggle('satellite', !isActive);
     }
   }
 

@@ -1,4 +1,10 @@
 import * as THREE from 'three';
+import {
+  getModernGlassFacadeTexture,
+  getStoneMasonryFacadeTexture,
+  getHistoricBrickFacadeTexture,
+  get1WTCFacadeTexture
+} from './newyork_textures.js';
 
 /**
  * Procedural 3D Landmarks, Skyscrapers, Bridges, Transit Portals & Dynamic Collapsing Architecture
@@ -46,9 +52,42 @@ export function buildNewYorkScene(group, river, terrain) {
   const tarmacMat       = new THREE.MeshStandardMaterial({ color: 0x374151, roughness: 0.8 });
   const concreteMat     = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.7, metalness: 0.1 });
   const seawallGranite  = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.75 });
-  const glassTowerMat1  = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1, metalness: 0.9, transparent: true, opacity: 0.9 });
-  const glassTowerMat2  = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.12, metalness: 0.85, transparent: true, opacity: 0.9 });
-  const stoneTowerMat   = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.75 });
+  const glassTex1 = getModernGlassFacadeTexture(0x0284c7);
+  const glassTex2 = getModernGlassFacadeTexture(0x0369a1);
+  const stoneTex  = getStoneMasonryFacadeTexture();
+  const wtcTex    = get1WTCFacadeTexture();
+  const brickTex  = getHistoricBrickFacadeTexture();
+
+  const glassTowerMat1  = new THREE.MeshStandardMaterial({
+    map: glassTex1,
+    color: 0xffffff,
+    roughness: 0.16,
+    metalness: 0.75,
+    transparent: true,
+    opacity: 0.94
+  });
+  const glassTowerMat2  = new THREE.MeshStandardMaterial({
+    map: glassTex2,
+    color: 0xffffff,
+    roughness: 0.18,
+    metalness: 0.70,
+    transparent: true,
+    opacity: 0.94
+  });
+  const stoneTowerMat   = new THREE.MeshStandardMaterial({
+    map: stoneTex,
+    color: 0xffffff,
+    roughness: 0.75,
+    metalness: 0.10
+  });
+  const oneWtcMat       = new THREE.MeshStandardMaterial({
+    map: wtcTex,
+    color: 0xffffff,
+    roughness: 0.12,
+    metalness: 0.85,
+    transparent: true,
+    opacity: 0.98
+  });
   const copperRoofMat   = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.6, metalness: 0.3 });
   const escrSteelMat    = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.4, metalness: 0.6 });
   const floodgateGrayMat= new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.45, metalness: 0.7 });
@@ -75,7 +114,11 @@ export function buildNewYorkScene(group, river, terrain) {
     const bldgGroup = new THREE.Group();
     const materials = [];
 
-    const brickMat = new THREE.MeshStandardMaterial({ color: brickHex, roughness: 0.85 });
+    const brickMat = new THREE.MeshStandardMaterial({
+      map: brickTex,
+      color: brickHex,
+      roughness: 0.82
+    });
     const stoneTrimMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.6 });
     const darkWindowMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.15, metalness: 0.7 });
     const woodTankMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 });
@@ -2703,7 +2746,7 @@ export function buildNewYorkScene(group, river, terrain) {
   // Featuring One World Trade Center, Art Deco classic towers & modern glass high-rises
   const towerDefs = [
     // ONE WORLD TRADE CENTER (Freedom Tower): 68m tall soaring faceted glass spire
-    { offSide: 28.0, offTan: -6.0, w: 11, d: 11, h: 68, mat: glassTowerMat1, is1WTC: true },
+    { offSide: 28.0, offTan: -6.0, w: 11, d: 11, h: 68, mat: oneWtcMat, is1WTC: true },
     // 3 World Trade Center: Modern reflective tower
     { offSide: 38.0, offTan: -12.0, w: 9, d: 9, h: 48, mat: glassTowerMat2, spire: true },
     // 40 Wall Street: Classic Art Deco limestone bank tower with green copper pyramidal roof
@@ -2733,7 +2776,7 @@ export function buildNewYorkScene(group, river, terrain) {
 
     if (t.is1WTC) {
       // 1 WTC Chamfered Triangular Facets (Octagonal transition crown)
-      const chamferCrown = new THREE.Mesh(new THREE.CylinderGeometry(t.w * 0.35, t.w * 0.5, 6.0, 8), glassTowerMat1);
+      const chamferCrown = new THREE.Mesh(new THREE.CylinderGeometry(t.w * 0.35, t.w * 0.5, 6.0, 8), oneWtcMat);
       chamferCrown.position.y = t.h + 3.0;
       towerGroup.add(chamferCrown);
 

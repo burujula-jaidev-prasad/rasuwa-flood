@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { PEAKS, getScenario } from './data.js';
+import { getNYCAerialSatelliteTexture } from './scenarios/newyork_textures.js';
 
 // Deterministic 2D noise generator
 function hash2D(x, z) {
@@ -257,7 +258,13 @@ export function createTerrain(riverSystem, scenarioId = null) {
 
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-    const material = new THREE.MeshStandardMaterial({
+    const satelliteTex = getNYCAerialSatelliteTexture();
+    const material = satelliteTex ? new THREE.MeshStandardMaterial({
+      map: satelliteTex,
+      roughness: 0.68,
+      metalness: 0.12,
+      flatShading: false
+    }) : new THREE.MeshStandardMaterial({
       vertexColors: true,
       roughness: 0.65,
       metalness: 0.05,
