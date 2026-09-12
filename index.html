@@ -57,18 +57,53 @@
       </button>
     </nav>
 
-    <!-- Real 3D Aerial Satellite & Google 3D Map Mode -->
+    <!-- Digital Twin Mapping & 3D Reality Modes -->
     <div class="map-mode-container" id="map-mode-container">
-      <button class="map-mode-btn" id="map-mode-toggle" title="Real 3D Aerial Satellite & Architectural Map">
-        <span class="map-mode-icon">🛰️</span>
-        <span class="map-mode-text">REAL 3D MAP</span>
-        <span class="map-mode-badge satellite" id="map-mode-badge">SATELLITE</span>
+      <button class="map-mode-btn" id="map-mode-toggle" title="Digital Twin Mapping: Toggle between Satellite 3D Twin and GIS Cyber Twin">
+        <span class="map-mode-icon" id="twin-mode-icon">🌐</span>
+        <span class="map-mode-text" id="twin-mode-text">DIGITAL TWIN</span>
+        <span class="map-mode-badge satellite" id="map-mode-badge">GIS TWIN</span>
       </button>
-      <button class="map-key-btn" id="map-key-btn" title="Google Cloud 3D Tiles Settings">
+      <button class="twin-split-btn" id="twin-split-toggle" title="Twin Split Comparison: Pre-Disaster Reality vs Digital Twin Simulation">
+        <span>🔀</span>
+        <span class="twin-split-text">TWIN SPLIT</span>
+      </button>
+      <button class="map-key-btn" id="map-key-btn" title="Google Cloud 3D Tiles Settings (Optional)">
         <span>🔑</span>
       </button>
     </div>
   </header>
+
+  <!-- Digital Twin Telemetry & Inundation Sensor HUD -->
+  <div class="digital-twin-hud" id="digital-twin-hud" style="display: none;">
+    <div class="twin-hud-header">
+      <div class="twin-pulse-dot"></div>
+      <span class="twin-hud-title">NYC DIGITAL TWIN TELEMETRY</span>
+      <span class="twin-badge-live">LIVE SENSOR FEED</span>
+    </div>
+    <div class="twin-sensor-grid">
+      <div class="twin-sensor-cell">
+        <div class="twin-s-label">USGS #01374019 TIDE GAUGE</div>
+        <div class="twin-s-val" id="twin-gauge-val">+4.2 ft <small>NAVD88</small></div>
+        <div class="twin-s-sub" id="twin-gauge-sub">Tide stage: High astro tide</div>
+      </div>
+      <div class="twin-sensor-cell">
+        <div class="twin-s-label">SUBWAY SYSTEM INUNDATION</div>
+        <div class="twin-s-val" id="twin-subway-val">0.0 M <small>GAL</small></div>
+        <div class="twin-s-sub" id="twin-subway-sub">7 river tubes monitored</div>
+      </div>
+      <div class="twin-sensor-cell">
+        <div class="twin-s-label">SEAWALL HYDROSTATIC LOAD</div>
+        <div class="twin-s-val" id="twin-seawall-val">12% <small>NOMINAL</small></div>
+        <div class="twin-s-sub" id="twin-seawall-sub">Battery Park Bulkhead</div>
+      </div>
+      <div class="twin-sensor-cell">
+        <div class="twin-s-label">SURGE DISCHARGE RATE</div>
+        <div class="twin-s-val" id="twin-flow-val">120 <small>m³/s</small></div>
+        <div class="twin-s-sub" id="twin-flow-sub">The Narrows throat</div>
+      </div>
+    </div>
+  </div>
 
   <!-- KPI Disaster Command Dashboard -->
   <div class="tally-container">

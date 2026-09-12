@@ -26,6 +26,10 @@ class ExplainerApp {
     this.currentScenarioId = requestedScenario;
     setCurrentScenarioId(requestedScenario);
 
+    // Digital Twin Mapping State
+    this.twinMode = 'digital_twin';
+    this.isTwinSplit = false;
+
     // Google Photorealistic 3D Tiles State
     this.isGoogle3DActive = false;
     this.google3DManager = null;
@@ -215,7 +219,18 @@ class ExplainerApp {
     // 3. Flood & Physics Simulation
     this.simulation = new FloodSimulation(this.scene, this.riverSystem, this.terrainSystem, this.currentScenarioId);
 
-    // 4. Camera Choreography Director
+    // 4. Digital Twin state initialization for New York
+    if (this.currentScenarioId === 'newyork') {
+      const mode = this.twinMode || 'digital_twin';
+      if (this.terrainSystem && this.terrainSystem.setTwinMode) {
+        this.terrainSystem.setTwinMode(mode);
+      }
+      if (this.simulation && this.simulation.setTwinMode) {
+        this.simulation.setTwinMode(mode);
+      }
+    }
+
+    // 5. Camera Choreography Director
     this.cameraDirector = new CameraDirector(this.camera, this.renderer.domElement, this.riverSystem, this.currentScenarioId);
     if (this.ui) {
       this.cameraDirector.onModeChange = (isGuided, mode) => {
@@ -248,6 +263,12 @@ class ExplainerApp {
       onSelectViewMode: (mode) => {
         this.cameraDirector.setViewMode(mode);
       },
+      onToggleTwinMode: () => {
+        this.toggleTwinMode();
+      },
+      onToggleTwinSplit: () => {
+        this.toggleTwinSplit();
+      },
       onToggleGoogle3D: () => {
         this.toggleGoogle3D();
       },
@@ -265,6 +286,9 @@ class ExplainerApp {
 
     // Ensure UI elements and KPI cards reflect current starting scenario
     this.ui.setScenario(this.currentScenarioId);
+    if (this.currentScenarioId === 'newyork') {
+      this.ui.setTwinMode(this.twinMode || 'digital_twin');
+    }
 
     // Involuntary autoplay timer removed: simulation remains comfortably paused at t=0
     if (this.ui.elIntroTimer) {
@@ -285,8 +309,11 @@ class ExplainerApp {
       window.history.replaceState(null, '', `?scenario=${scenarioId}`);
     }
 
-    // 0. Clean up previous Google 3D Photogrammetry if active
+    // 0. Clean up previous Google 3D Photogrammetry & Twin Split if active
     this.disableGoogle3D();
+    if (this.isTwinSplit) {
+      this.setTwinSplit(false);
+    }
 
     // 1. Clean up previous camera director controls
     if (this.cameraDirector && this.cameraDirector.dispose) {
@@ -315,7 +342,70 @@ class ExplainerApp {
     this.ui.isPlaying = false;
     this.ui.updatePlayBtnState();
     this.ui.setScenario(scenarioId);
+    if (scenarioId === 'newyork') {
+      this.ui.setTwinMode(this.twinMode || 'digital_twin');
+    }
     this.updateSimulationState(0.016);
+  }
+
+  toggleTwinMode() {
+    if (this.currentScenarioId !== 'newyork') return;
+    if (this.isTwinSplit) {
+      this.setTwinSplit(false);
+    }
+    const nextMode = (this.twinMode === 'digital_twin') ? 'satellite' : 'digital_twin';
+    this.setTwinMode(nextMode);
+  }
+
+  setTwinMode(mode) {
+    this.twinMode = mode;
+    if (this.terrainSystem && this.terrainSystem.setTwinMode) {
+      this.terrainSystem.setTwinMode(mode);
+    }
+    if (this.simulation && this.simulation.setTwinMode) {
+      this.simulation.setTwinMode(mode);
+    }
+    if (this.ui) {
+      this.ui.setTwinMode(mode);
+    }
+  }
+
+  toggleTwinSplit() {
+    if (this.currentScenarioId !== 'newyork') return;
+    this.setTwinSplit(!this.isTwinSplit);
+  }
+
+  setTwinSplit(active) {
+    this.isTwinSplit = active;
+    if (!this.isTwinSplit) {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      this.renderer.setScissorTest(false);
+      this.renderer.setViewport(0, 0, w, h);
+      this.camera.aspect = w / h;
+      this.camera.updateProjectionMatrix();
+      if (this.terrainSystem && this.terrainSystem.setTwinMode) this.terrainSystem.setTwinMode(this.twinMode);
+      if (this.simulation && this.simulation.setTwinMode) this.simulation.setTwinMode(this.twinMode);
+    }
+    if (this.ui) {
+      this.ui.setTwinSplitActive(this.isTwinSplit);
+    }
+    let divider = document.getElementById('twin-split-divider');
+    if (this.isTwinSplit) {
+      if (!divider) {
+        divider = document.createElement('div');
+        divider.id = 'twin-split-divider';
+        divider.className = 'twin-split-divider';
+        divider.innerHTML = `
+          <div class="twin-split-tag-left">🛰️ SATELLITE 3D</div>
+          <div class="twin-split-tag-right">🌐 DIGITAL TWIN GIS</div>
+        `;
+        document.body.appendChild(divider);
+      }
+      divider.style.display = 'block';
+    } else if (divider) {
+      divider.style.display = 'none';
+    }
   }
 
   toggleGoogle3D() {
@@ -430,7 +520,38 @@ class ExplainerApp {
     }
 
     this.updateSimulationState(effectiveDelta);
-    this.renderer.render(this.scene, this.camera);
+
+    if (this.isTwinSplit && this.currentScenarioId === 'newyork') {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const halfW = Math.floor(w / 2);
+      this.renderer.setScissorTest(true);
+
+      // Left viewport: Satellite Reality
+      this.renderer.setScissor(0, 0, halfW, h);
+      this.renderer.setViewport(0, 0, halfW, h);
+      this.camera.aspect = halfW / h;
+      this.camera.updateProjectionMatrix();
+      if (this.terrainSystem && this.terrainSystem.setTwinMode) this.terrainSystem.setTwinMode('satellite');
+      if (this.simulation && this.simulation.setTwinMode) this.simulation.setTwinMode('satellite');
+      this.renderer.render(this.scene, this.camera);
+
+      // Right viewport: Digital Twin GIS
+      this.renderer.setScissor(halfW, 0, w - halfW, h);
+      this.renderer.setViewport(halfW, 0, w - halfW, h);
+      this.camera.aspect = (w - halfW) / h;
+      this.camera.updateProjectionMatrix();
+      if (this.terrainSystem && this.terrainSystem.setTwinMode) this.terrainSystem.setTwinMode('digital_twin');
+      if (this.simulation && this.simulation.setTwinMode) this.simulation.setTwinMode('digital_twin');
+      this.renderer.render(this.scene, this.camera);
+
+      this.renderer.setScissorTest(false);
+      this.renderer.setViewport(0, 0, w, h);
+      this.camera.aspect = w / h;
+      this.camera.updateProjectionMatrix();
+    } else {
+      this.renderer.render(this.scene, this.camera);
+    }
   }
 }
 

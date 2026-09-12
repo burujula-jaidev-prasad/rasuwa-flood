@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { PEAKS, getScenario } from './data.js';
-import { getNYCAerialSatelliteTexture } from './scenarios/newyork_textures.js';
+import { getNYCAerialSatelliteTexture, getNYCDigitalTwinTexture } from './scenarios/newyork_textures.js';
 
 // Deterministic 2D noise generator
 function hash2D(x, z) {
@@ -259,6 +259,8 @@ export function createTerrain(riverSystem, scenarioId = null) {
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
     const satelliteTex = getNYCAerialSatelliteTexture();
+    const digitalTwinTex = getNYCDigitalTwinTexture();
+
     const material = satelliteTex ? new THREE.MeshStandardMaterial({
       map: satelliteTex,
       roughness: 0.68,
@@ -275,6 +277,25 @@ export function createTerrain(riverSystem, scenarioId = null) {
     terrainMesh.name = "TerrainMesh";
     terrainMesh.receiveShadow = true;
     terrainMesh.castShadow = true;
+
+    function setTwinMode(mode) {
+      if (activeScenarioId !== 'newyork') return;
+      if (mode === 'digital_twin') {
+        if (digitalTwinTex) {
+          material.map = digitalTwinTex;
+          material.roughness = 0.45;
+          material.metalness = 0.35;
+          material.needsUpdate = true;
+        }
+      } else {
+        if (satelliteTex) {
+          material.map = satelliteTex;
+          material.roughness = 0.68;
+          material.metalness = 0.12;
+          material.needsUpdate = true;
+        }
+      }
+    }
 
     function getTerrainHeight(x, z) {
       const riverInfo = riverSystem.getClosestRiverInfo(x, z);
@@ -297,7 +318,7 @@ export function createTerrain(riverSystem, scenarioId = null) {
       return h;
     }
 
-    return { mesh: terrainMesh, geometry, getTerrainHeight };
+    return { mesh: terrainMesh, geometry, getTerrainHeight, setTwinMode };
   }
 
   const isBeijing = (activeScenarioId === 'beijing');

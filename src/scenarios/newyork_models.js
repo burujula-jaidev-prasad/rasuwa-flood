@@ -3,7 +3,8 @@ import {
   getModernGlassFacadeTexture,
   getStoneMasonryFacadeTexture,
   getHistoricBrickFacadeTexture,
-  get1WTCFacadeTexture
+  get1WTCFacadeTexture,
+  getDigitalTwinBuildingTexture
 } from './newyork_textures.js';
 
 /**
@@ -4573,6 +4574,35 @@ export function buildNewYorkScene(group, river, terrain) {
     }
   }
 
+  const twinBuildingTex = getDigitalTwinBuildingTexture();
+
+  function setTwinMode(mode) {
+    const isTwin = (mode === 'digital_twin');
+    if (isTwin && twinBuildingTex) {
+      glassTowerMat1.map = twinBuildingTex;
+      glassTowerMat2.map = twinBuildingTex;
+      stoneTowerMat.map = twinBuildingTex;
+      oneWtcMat.map = twinBuildingTex;
+      glassTowerMat1.color.setHex(0x0ea5e9);
+      glassTowerMat2.color.setHex(0x0ea5e9);
+      stoneTowerMat.color.setHex(0x0284c7);
+      oneWtcMat.color.setHex(0x38bdf8);
+    } else {
+      glassTowerMat1.map = glassTex1;
+      glassTowerMat2.map = glassTex2;
+      stoneTowerMat.map = stoneTex;
+      oneWtcMat.map = wtcTex;
+      glassTowerMat1.color.setHex(0xffffff);
+      glassTowerMat2.color.setHex(0xffffff);
+      stoneTowerMat.color.setHex(0xffffff);
+      oneWtcMat.color.setHex(0xffffff);
+    }
+    glassTowerMat1.needsUpdate = true;
+    glassTowerMat2.needsUpdate = true;
+    stoneTowerMat.needsUpdate = true;
+    oneWtcMat.needsUpdate = true;
+  }
+
   return {
     wipeableItems,
     dynamicWaterItems,
@@ -4581,6 +4611,7 @@ export function buildNewYorkScene(group, river, terrain) {
     updateTubes,
     updateFloatingItems,
     updateBridgeTraffic,
-    updateFerryTerminalVessels
+    updateFerryTerminalVessels,
+    setTwinMode
   };
 }
