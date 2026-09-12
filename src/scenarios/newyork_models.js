@@ -1078,11 +1078,9 @@ export function buildNewYorkScene(group, river, terrain) {
 
     // 6. Timber Pile Fender Dolphins (Creosote log clusters at pier heads)
     const dolphinPositions = [
-      [-10.0, -25.2], // West outer pier head
-      [0.0,   -23.2], // Center pier head
-      [8.8,   -20.2], // East outer pier head
-      [-10.0, -12.5], // West mid fender
-      [8.8,   -10.0]  // East mid fender
+      [-10.0, -24.5], // West outer pier head
+      [0.0,   -22.5], // Center pier head
+      [8.8,   -19.5]  // East outer pier head
     ];
 
     dolphinPositions.forEach(([dx, dz]) => {
@@ -1090,18 +1088,17 @@ export function buildNewYorkScene(group, river, terrain) {
       dolphin.position.set(dx, 0, dz);
 
       const pileOffsets = [
-        [0, 0], [0.4, 0], [-0.4, 0],
-        [0.2, 0.35], [-0.2, 0.35], [0.2, -0.35], [-0.2, -0.35]
+        [0, 0.25], [-0.22, -0.15], [0.22, -0.15]
       ];
       pileOffsets.forEach(([px, pz]) => {
-        const log = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.24, 4.8, 8), woodCreosoteMat);
-        log.position.set(px, 1.8 + Math.sin(px * 10 + pz) * 0.12, pz);
+        const log = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 3.8, 8), woodCreosoteMat);
+        log.position.set(px, 1.2, pz);
         log.castShadow = true;
         dolphin.add(log);
       });
 
-      [1.2, 2.5, 3.8].forEach(by => {
-        const band = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.68, 0.14, 12), metalBandMat);
+      [1.0, 2.2].forEach(by => {
+        const band = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.10, 10), metalBandMat);
         band.position.y = by;
         dolphin.add(band);
       });
@@ -2258,18 +2255,6 @@ export function buildNewYorkScene(group, river, terrain) {
     foamManhattan.visible = false;
     tubeGroup.add(foamManhattan);
 
-    // 3D Floating Billboard Badge
-    const badgeTextures = createTubeBadgeTextures(cfg.name, cfg.bullets, cfg.desc);
-    const spriteMat = new THREE.SpriteMaterial({
-      map: badgeTextures.texDry,
-      transparent: true,
-      depthTest: false
-    });
-    const badgeSprite = new THREE.Sprite(spriteMat);
-    badgeSprite.scale.set(15, 4.1, 1);
-    badgeSprite.position.set(0, 15.0, 0);
-    tubeGroup.add(badgeSprite);
-
     group.add(tubeGroup);
 
     return {
@@ -2280,8 +2265,8 @@ export function buildNewYorkScene(group, river, terrain) {
       lights,
       foamManhattan,
       foamBrooklyn,
-      badgeSprite,
-      badgeTextures
+      badgeSprite: null,
+      badgeTextures: null
     };
   }
 
@@ -2990,59 +2975,65 @@ export function buildNewYorkScene(group, river, terrain) {
     });
   }
 
-  // 7. Paved Asphalt Road Grid (West Street / Battery Place & Broad Street)
+  // 7. Paved Coastal Boulevard & Avenue Grid (State Street / Battery Place)
   {
-    // Main North-South Coastal Boulevard with double-yellow center line & zebra crosswalks
-    const road1 = createPavedRoadGrid(9.5, 52.0, true);
-    const r1Pos = fMan.pt.clone().addScaledVector(fMan.side, 21.5);
-    r1Pos.y = getGroundY(r1Pos.x, r1Pos.z, 2.75);
+    // State Street Coastal Boulevard (Inland behind Battery Park at bank offset 24.0m)
+    const road1 = createPavedRoadGrid(9.5, 46.0, true);
+    const r1Pos = fMan.pt.clone().addScaledVector(fMan.side, 24.0);
+    r1Pos.y = getGroundY(r1Pos.x, r1Pos.z, 2.75) + 0.05;
+    road1.group.position.copy(r1Pos);
     road1.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
-    manGroup.add(road1.group);
+    group.add(road1.group);
 
-    // East-West Connecting Avenue toward Wall Street
-    const road2 = createPavedRoadGrid(8.5, 36.0, true);
-    const r2Pos = fMan.pt.clone().addScaledVector(fMan.side, 25.5).addScaledVector(fMan.tangent, 7.5);
-    r2Pos.y = getGroundY(r2Pos.x, r2Pos.z, 2.75);
-    road2.group.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), fMan.tangent);
-    manGroup.add(road2.group);
+    // Broad Street Avenue connecting into Financial District
+    const road2 = createPavedRoadGrid(8.5, 28.0, false);
+    const r2Pos = fMan.pt.clone().addScaledVector(fMan.side, 30.0).addScaledVector(fMan.tangent, 8.0);
+    r2Pos.y = getGroundY(r2Pos.x, r2Pos.z, 2.75) + 0.05;
+    road2.group.position.copy(r2Pos);
+    road2.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.side);
+    group.add(road2.group);
   }
 
   // 8. Municipal Infrastructure: NYC Streetlamps, Traffic Signals, Hydrants & Benches
   {
-    // Classic Cast-Iron Double-Luminaire NYC Streetlamps along sidewalks
+    // Classic Cast-Iron NYC Streetlamps along the waterfront promenade (offset 16.5m)
     [-18.0, -6.0, 6.0, 18.0].forEach((lampZ) => {
       const lamp = createNYCStreetLamp();
       const lPos = fMan.pt.clone().addScaledVector(fMan.side, 16.5).addScaledVector(fMan.tangent, lampZ);
       lPos.y = getGroundY(lPos.x, lPos.z, 2.8);
+      lamp.group.position.copy(lPos);
       lamp.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
-      manGroup.add(lamp.group);
+      group.add(lamp.group);
     });
 
-    // Traffic Signal Mast Arms at intersections
-    [-14.0, 14.0].forEach((sigZ) => {
+    // Traffic Signals at State St & Broad St intersection
+    [-12.0, 12.0].forEach((sigZ) => {
       const signal = createTrafficSignal();
-      const sPos = fMan.pt.clone().addScaledVector(fMan.side, 26.5).addScaledVector(fMan.tangent, sigZ);
+      const sPos = fMan.pt.clone().addScaledVector(fMan.side, 28.5).addScaledVector(fMan.tangent, sigZ);
       sPos.y = getGroundY(sPos.x, sPos.z, 2.8);
+      signal.group.position.copy(sPos);
       signal.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
-      manGroup.add(signal.group);
+      group.add(signal.group);
     });
 
-    // Classic Red/Silver NYC Fire Hydrants on curb corners
-    [-12.0, 12.0].forEach((hydZ) => {
+    // Classic Fire Hydrants along sidewalk curbs
+    [-10.0, 10.0].forEach((hydZ) => {
       const hyd = createNYCFireHydrant();
-      const hPos = fMan.pt.clone().addScaledVector(fMan.side, 17.0).addScaledVector(fMan.tangent, hydZ);
+      const hPos = fMan.pt.clone().addScaledVector(fMan.side, 20.0).addScaledVector(fMan.tangent, hydZ);
       hPos.y = getGroundY(hPos.x, hPos.z, 2.8);
+      hyd.group.position.copy(hPos);
       hyd.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
-      manGroup.add(hyd.group);
+      group.add(hyd.group);
     });
 
-    // World's Fair Cast-Iron & Wood Park Benches along Battery Park esplanade
-    [-15.0, -5.0, 5.0, 15.0].forEach((benchZ) => {
+    // World's Fair Park Benches along Battery Park esplanade
+    [-14.0, -4.0, 4.0, 14.0].forEach((benchZ) => {
       const bench = createParkBench();
-      const bPos = fMan.pt.clone().addScaledVector(fMan.side, 13.5).addScaledVector(fMan.tangent, benchZ);
+      const bPos = fMan.pt.clone().addScaledVector(fMan.side, 15.0).addScaledVector(fMan.tangent, benchZ);
       bPos.y = getGroundY(bPos.x, bPos.z, 2.4);
+      bench.group.position.copy(bPos);
       bench.group.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), fMan.side);
-      manGroup.add(bench.group);
+      group.add(bench.group);
     });
   }
 
@@ -3130,12 +3121,13 @@ export function buildNewYorkScene(group, river, terrain) {
   // -------------------------------------------------------------------------
   // ZONE 3: BATTERY PARK COLLAPSING PIERS, KIOSKS & CARS (u = 0.44 - 0.54)
   // -------------------------------------------------------------------------
-  // Harbor Timber Piers along Battery waterfront
+  // Harbor Timber Piers along Battery Park West waterfront (u = 0.41 - 0.47, clear of ferry slips)
+  const pierUList = [0.41, 0.43, 0.45, 0.47];
   for (let p = 0; p < 4; p++) {
-    const uP = 0.46 + p * 0.025;
+    const uP = pierUList[p];
     const fP = getRiverFrame(uP);
     const pier = createTimberPier(14.0, 4.2);
-    const pos = fP.pt.clone().addScaledVector(fP.side, 7.5).addScaledVector(fP.tangent, -3.0 + p * 3.5);
+    const pos = fP.pt.clone().addScaledVector(fP.side, 7.5).addScaledVector(fP.tangent, -2.0 + p * 2.5);
     pos.y = getGroundY(pos.x, pos.z, 2.0);
     pier.group.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), fP.side);
 
@@ -3148,12 +3140,13 @@ export function buildNewYorkScene(group, river, terrain) {
     });
   }
 
-  // Maritime ticket kiosks & harbor sheds
+  // Maritime ticket kiosks along Battery Park inland promenade (offset 19.0m, strictly on dry land)
+  const kioskUList = [0.43, 0.45, 0.47];
   for (let k = 0; k < 3; k++) {
-    const uK = 0.47 + k * 0.03;
+    const uK = kioskUList[k];
     const fK = getRiverFrame(uK);
     const kiosk = createMaritimeKiosk(3.4, 2.8, 3.8, (k % 2 === 0 ? 0x0284c7 : 0xd97706));
-    const pos = fK.pt.clone().addScaledVector(fK.side, 13.5).addScaledVector(fK.tangent, -4.0 + k * 4.0);
+    const pos = fK.pt.clone().addScaledVector(fK.side, 19.0).addScaledVector(fK.tangent, -3.0 + k * 3.0);
     pos.y = getGroundY(pos.x, pos.z, 2.6);
     kiosk.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fK.tangent);
 
@@ -3403,28 +3396,59 @@ export function buildNewYorkScene(group, river, terrain) {
   // -------------------------------------------------------------------------
   const fFDR = getRiverFrame(0.62);
   const fdrGroup = new THREE.Group();
-  fdrGroup.position.copy(fFDR.pt);
+  const fdrPos = fFDR.pt.clone().addScaledVector(fFDR.side, 18.0);
+  fdrPos.y = getGroundY(fdrPos.x, fdrPos.z, 2.8);
+  fdrGroup.position.copy(fdrPos);
+  fdrGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fFDR.tangent);
 
-  const highwayLen = 38.0;
-  const highway = new THREE.Mesh(new THREE.BoxGeometry(7.5, 0.8, highwayLen), tarmacMat);
-  highway.position.set(fFDR.side.x * 14.0, 2.8, 0);
-  highway.castShadow = true;
+  const highwayLen = 42.0;
+  const highwayW = 8.5;
+
+  // Paved multi-lane highway deck
+  const highway = new THREE.Mesh(new THREE.BoxGeometry(highwayW, 0.4, highwayLen), tarmacMat);
+  highway.position.set(0, 0.2, 0);
+  highway.receiveShadow = true;
   fdrGroup.add(highway);
 
-  const median = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, highwayLen), concreteMat);
-  median.position.set(fFDR.side.x * 14.0, 3.5, 0);
+  // Double yellow center line
+  const fdrCenterLine = new THREE.Mesh(
+    new THREE.BoxGeometry(0.14, 0.02, highwayLen * 0.94),
+    new THREE.MeshBasicMaterial({ color: 0xfbbf24 })
+  );
+  fdrCenterLine.position.set(0, 0.42, 0);
+  fdrGroup.add(fdrCenterLine);
+
+  // Concrete Jersey barrier median
+  const median = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, highwayLen), concreteMat);
+  median.position.set(0, 0.55, 0);
   fdrGroup.add(median);
 
-  const escrBerm = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4.0, highwayLen), concreteMat);
-  escrBerm.position.set(fFDR.side.x * 10.0, 2.2, 0);
+  // Concrete barriers along landward and riverward shoulders
+  [-highwayW * 0.5, highwayW * 0.5].forEach(bx => {
+    const barrier = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.8, highwayLen), concreteMat);
+    barrier.position.set(bx, 0.6, 0);
+    fdrGroup.add(barrier);
+  });
+
+  // ESCR Reinforced Flood Berm along the riverward side
+  const escrBerm = new THREE.Mesh(new THREE.BoxGeometry(3.0, 2.5, highwayLen), concreteMat);
+  escrBerm.position.set(-highwayW * 0.5 - 1.5, 1.25, 0);
   fdrGroup.add(escrBerm);
+
+  // Highway light stanchions along median
+  [-14.0, 0, 14.0].forEach(lz => {
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 4.5, 8), steelCableMat);
+    pole.position.set(0, 2.65, lz);
+    fdrGroup.add(pole);
+  });
+
   group.add(fdrGroup);
 
   // ESCR Sliding Roller Gates (Red steel flood barriers)
   [-8.0, 8.0].forEach((gZ, gIdx) => {
-    const gateMesh = new THREE.Mesh(new THREE.BoxGeometry(1.0, 5.0, 7.5), escrSteelMat);
-    const pos = fFDR.pt.clone().addScaledVector(fFDR.side, 10.0).addScaledVector(fFDR.tangent, gZ);
-    pos.y = getGroundY(pos.x, pos.z, 2.8) + 2.5;
+    const gateMesh = new THREE.Mesh(new THREE.BoxGeometry(1.0, 4.5, 7.5), escrSteelMat);
+    const pos = fdrPos.clone().addScaledVector(fFDR.side, -highwayW * 0.5 - 1.5).addScaledVector(fFDR.tangent, gZ);
+    pos.y = getGroundY(pos.x, pos.z, 2.8) + 2.25;
     gateMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fFDR.tangent);
 
     registerWipeable(gateMesh, 0.62 + gIdx * 0.015, pos, fFDR.tangent, fFDR.side, {
@@ -3906,237 +3930,7 @@ export function buildNewYorkScene(group, river, terrain) {
   }
   group.add(armyGroup);
 
-  // -------------------------------------------------------------------------
-  // 8. ELEVATED METRO VIADUCT, SOUTH FERRY TERMINAL & 4-CAR MTA SUBWAY TRAIN
-  // -------------------------------------------------------------------------
-  const viaductGroup = new THREE.Group();
-  const numBents = 14;
-  const bentFrames = [];
-
-  const viadSteelMat  = new THREE.MeshStandardMaterial({ color: 0x1e3a2b, roughness: 0.45, metalness: 0.75 }); // NYC transit dark green steel
-  const trackBedMat   = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 });
-  const sleeperMat    = new THREE.MeshStandardMaterial({ color: 0x3e2723, roughness: 0.9 });
-  const railSteelMat  = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.2, metalness: 0.95 });
-  const thirdRailMat  = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.45 });
-  const platformMat   = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.6 });
-  const yellowEdgeMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.35 });
-  const stationRoofMat= new THREE.MeshStandardMaterial({ color: 0x064e3b, roughness: 0.4, metalness: 0.5 });
-  const stationSignMat= new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 });
-
-  for (let b = 0; b < numBents; b++) {
-    const uViad = 0.46 + b * 0.015; // spans u = 0.46 to 0.655
-    const fV = getRiverFrame(uViad);
-    const deckCenter = fV.pt.clone().addScaledVector(fV.side, 18.2);
-    const groundY = getGroundY(deckCenter.x, deckCenter.z, 2.7);
-    const deckY = 11.2;
-    deckCenter.y = deckY;
-    bentFrames.push({ u: uViad, deckCenter, f: fV, groundY, deckY });
-
-    // Steel Trestle Bents (Twin heavy H-columns with cross lacing)
-    const colH = deckY - groundY;
-    const colY = groundY + colH * 0.5;
-
-    // Dual columns spaced 6.2m apart laterally
-    [-3.1, 3.1].forEach(colOff => {
-      const colPos = deckCenter.clone().addScaledVector(fV.side, colOff);
-      colPos.y = colY;
-
-      const col = new THREE.Mesh(new THREE.BoxGeometry(0.7, colH, 0.7), viadSteelMat);
-      col.position.copy(colPos);
-      col.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fV.tangent);
-      col.castShadow = true;
-      col.receiveShadow = true;
-      viaductGroup.add(col);
-
-      // Heavy concrete footing block at ground level
-      const footing = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.6, 1.4), concreteMat);
-      footing.position.copy(colPos);
-      footing.position.y = groundY + 0.3;
-      viaductGroup.add(footing);
-    });
-
-    // Transverse Heavy Cross Girder at top of bent
-    const crossGirder = new THREE.Mesh(new THREE.BoxGeometry(7.6, 0.7, 0.8), viadSteelMat);
-    crossGirder.position.copy(deckCenter);
-    crossGirder.position.y = deckY - 0.35;
-    crossGirder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fV.tangent);
-    crossGirder.rotateY(Math.PI * 0.5);
-    crossGirder.castShadow = true;
-    viaductGroup.add(crossGirder);
-
-    // Diagonal Cross Bracing (X-struts) between twin columns
-    const braceLen = Math.sqrt(6.2 * 6.2 + colH * colH * 0.6 * 0.6);
-    const braceAng = Math.atan2(colH * 0.6, 6.2);
-    [-1, 1].forEach(dir => {
-      const brace = new THREE.Mesh(new THREE.BoxGeometry(braceLen, 0.22, 0.22), viadSteelMat);
-      brace.position.copy(deckCenter);
-      brace.position.y = colY;
-      brace.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fV.tangent);
-      brace.rotateY(Math.PI * 0.5);
-      brace.rotateZ(dir * braceAng);
-      viaductGroup.add(brace);
-    });
-  }
-
-  // Longitudinal Spans: Girders, Track Deck, Ties, Rails & Third Rails
-  for (let b = 0; b < numBents - 1; b++) {
-    const b1 = bentFrames[b];
-    const b2 = bentFrames[b + 1];
-    const spanCenter = b1.deckCenter.clone().add(b2.deckCenter).multiplyScalar(0.5);
-    const spanVec = b2.deckCenter.clone().sub(b1.deckCenter);
-    const spanLen = spanVec.length();
-    const spanDir = spanVec.clone().normalize();
-
-    // 4 Longitudinal Plate Girders carrying the deck
-    [-2.8, -1.0, 1.0, 2.8].forEach(gOff => {
-      const gPos = spanCenter.clone().addScaledVector(b1.f.side, gOff);
-      gPos.y = b1.deckY - 0.45;
-      const girder = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.9, spanLen), viadSteelMat);
-      girder.position.copy(gPos);
-      girder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), spanDir);
-      girder.castShadow = true;
-      viaductGroup.add(girder);
-    });
-
-    // Solid Deck Bed Slab
-    const deckSlab = new THREE.Mesh(new THREE.BoxGeometry(7.4, 0.25, spanLen), trackBedMat);
-    deckSlab.position.copy(spanCenter);
-    deckSlab.position.y = b1.deckY;
-    deckSlab.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), spanDir);
-    viaductGroup.add(deckSlab);
-
-    // Track Cross-Ties (Sleepers) along the span
-    const numTies = Math.floor(spanLen / 0.85);
-    for (let ti = 0; ti < numTies; ti++) {
-      const alpha = (ti + 0.5) / numTies;
-      const tiePos = b1.deckCenter.clone().lerp(b2.deckCenter, alpha);
-      tiePos.y = b1.deckY + 0.18;
-
-      // Inbound track tie
-      const tie1 = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.16, 0.28), sleeperMat);
-      tie1.position.copy(tiePos).addScaledVector(b1.f.side, -1.9);
-      tie1.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), spanDir);
-      tie1.rotateY(Math.PI * 0.5);
-      viaductGroup.add(tie1);
-
-      // Outbound track tie
-      const tie2 = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.16, 0.28), sleeperMat);
-      tie2.position.copy(tiePos).addScaledVector(b1.f.side, 1.9);
-      tie2.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), spanDir);
-      tie2.rotateY(Math.PI * 0.5);
-      viaductGroup.add(tie2);
-    }
-
-    // Dual Running Rails (Track 1: side -1.9 ± 0.75, Track 2: side +1.9 ± 0.75)
-    [-2.65, -1.15, 1.15, 2.65].forEach(rOff => {
-      const railPos = spanCenter.clone().addScaledVector(b1.f.side, rOff);
-      railPos.y = b1.deckY + 0.32;
-      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, spanLen), railSteelMat);
-      rail.position.copy(railPos);
-      rail.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), spanDir);
-      viaductGroup.add(rail);
-    });
-
-    // Outer Third Rails (600V DC Conductor Rail with safety timber cover)
-    [-3.3, 3.3].forEach(trOff => {
-      const trPos = spanCenter.clone().addScaledVector(b1.f.side, trOff);
-      trPos.y = b1.deckY + 0.38;
-      const tr = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.14, spanLen), thirdRailMat);
-      tr.position.copy(trPos);
-      tr.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), spanDir);
-      viaductGroup.add(tr);
-    });
-
-    // Safety Walkway Handrails along both edges
-    [-3.65, 3.65].forEach(hrOff => {
-      const hrPos = spanCenter.clone().addScaledVector(b1.f.side, hrOff);
-      hrPos.y = b1.deckY + 0.65;
-      const hr = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.85, spanLen), viadSteelMat);
-      hr.position.copy(hrPos);
-      hr.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), spanDir);
-      viaductGroup.add(hr);
-    });
-  }
-
-  // Elevated Station ("South Ferry Elevated Viaduct Terminal") at bents 5 - 7
-  {
-    const stBent1 = bentFrames[5];
-    const stBent2 = bentFrames[7];
-    const stCenter = stBent1.deckCenter.clone().lerp(stBent2.deckCenter, 0.5);
-    const stVec = stBent2.deckCenter.clone().sub(stBent1.deckCenter);
-    const stLen = stVec.length() + 4.0;
-    const stDir = stVec.clone().normalize();
-
-    // Raised Concrete Platform (adjacent to outbound track at side +1.9, train right edge at +3.3)
-    const platW = 2.7;
-    const platSideOff = 4.75; // inner edge at 4.75 - 1.35 = 3.40 (0.1m clearance from 2.8m train)
-    const stPlat = new THREE.Mesh(new THREE.BoxGeometry(platW, 0.45, stLen), platformMat);
-    stPlat.position.copy(stCenter).addScaledVector(stBent1.f.side, platSideOff);
-    stPlat.position.y = stBent1.deckY + 0.5;
-    stPlat.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), stDir);
-    stPlat.castShadow = true;
-    stPlat.receiveShadow = true;
-    viaductGroup.add(stPlat);
-
-    // Yellow Tactile Safety Warning Strip along platform edge facing the track
-    const tactileStrip = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.47, stLen), yellowEdgeMat);
-    tactileStrip.position.copy(stPlat.position).addScaledVector(stBent1.f.side, -1.18);
-    tactileStrip.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), stDir);
-    viaductGroup.add(tactileStrip);
-
-    // Arched Station Canopy Roof & Steel Trusses
-    const canopyRoof = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.25, stLen), stationRoofMat);
-    canopyRoof.position.copy(stPlat.position);
-    canopyRoof.position.y = stBent1.deckY + 4.2;
-    canopyRoof.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), stDir);
-    canopyRoof.castShadow = true;
-    viaductGroup.add(canopyRoof);
-
-    // Station Canopy Columns (along centerline of platform)
-    for (let cp = -stLen * 0.4; cp <= stLen * 0.4; cp += 6.0) {
-      const cPost = new THREE.Mesh(new THREE.BoxGeometry(0.24, 3.8, 0.24), viadSteelMat);
-      cPost.position.copy(stPlat.position).addScaledVector(stDir, cp);
-      cPost.position.y = stBent1.deckY + 2.4;
-      viaductGroup.add(cPost);
-    }
-
-    // MTA Enamel Station Nameplate: "SOUTH FERRY ELEVATED TERMINAL"
-    const stSign = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.6, 6.5), stationSignMat);
-    stSign.position.copy(stPlat.position);
-    stSign.position.y = stBent1.deckY + 3.2;
-    stSign.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), stDir);
-    viaductGroup.add(stSign);
-
-    const stSignText = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.35, 6.0), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-    stSignText.position.copy(stSign.position);
-    viaductGroup.add(stSignText);
-
-    // Mezzanine Covered Stairway Tower descending to street level
-    const stairH = stBent1.deckY - stBent1.groundY;
-    const stairTower = new THREE.Mesh(new THREE.BoxGeometry(2.8, stairH, 4.2), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 }));
-    stairTower.position.copy(stPlat.position).addScaledVector(stBent1.f.side, 2.2);
-    stairTower.position.y = stBent1.groundY + stairH * 0.5;
-    stairTower.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), stDir);
-    stairTower.castShadow = true;
-    viaductGroup.add(stairTower);
-  }
-
-  // 2-Car MTA Stainless Steel Subway Train Set docked along elevated outbound track at platform
-  {
-    const trainSet = createMTASubwayTrain();
-    const stBent1 = bentFrames[5];
-    const stBent2 = bentFrames[7];
-    const stCenter = stBent1.deckCenter.clone().lerp(stBent2.deckCenter, 0.5);
-    const stDir = stBent2.deckCenter.clone().sub(stBent1.deckCenter).normalize();
-    const trainPos = stCenter.clone().addScaledVector(stBent1.f.side, 1.9);
-    trainPos.y = stBent1.deckY + 0.32;
-
-    trainSet.group.position.copy(trainPos);
-    trainSet.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), stDir);
-    viaductGroup.add(trainSet.group);
-  }
-
-  group.add(viaductGroup);
+  // Note: South Ferry transit is authentically subterranean (underground cutaways and river tubes)
 
   // -------------------------------------------------------------------------
   // 9. ACTIVE BUOYANT FLOATING CARS & MARITIME DEBRIS FLOTILLA

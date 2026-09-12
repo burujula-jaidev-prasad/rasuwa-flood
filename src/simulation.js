@@ -109,13 +109,13 @@ export class FloodSimulation {
   initNewYorkLandmarkBadges() {
     this.landmarkBadges = [];
     const landmarks = [
-      { name: "Verrazzano Narrows", sub: "Morning Surge Funnel • 4.8m", u: 0.10, offset: new THREE.Vector3(0, 16, 0) },
-      { name: "Wall St Financial District", sub: "14.9 ft Surge Peak • Seawall Breached", u: 0.48, offset: new THREE.Vector3(-14, 14, 0) },
-      { name: "South Ferry Subway Portal", sub: "7 Under-River Tubes Inundated", u: 0.54, offset: new THREE.Vector3(-12, 12, 0) },
-      { name: "FDR Drive & ESCR", sub: "16.5-ft Roller Floodgates", u: 0.62, offset: new THREE.Vector3(-12, 12, 0) },
-      { name: "Brooklyn Bridge", sub: "DUMBO Waterfront Submerged", u: 0.74, offset: new THREE.Vector3(0, 16, 0) },
-      { name: "ConEd 14th St Substation", sub: "345 kV Arc Blast • Blackout", u: 0.86, offset: new THREE.Vector3(-14, 14, 0) },
-      { name: "USACE Unwatering Armada", sub: "380k GPM Tunnel Dewatering", u: 0.94, offset: new THREE.Vector3(-12, 12, 0) }
+      { name: "Verrazzano Narrows", sub: "Morning Surge Funnel • 4.8m", u: 0.10, offset: new THREE.Vector3(0, 24, 0) },
+      { name: "Wall St Financial District", sub: "14.9 ft Surge Peak • Seawall Breached", u: 0.49, offset: new THREE.Vector3(-26, 32, 8) },
+      { name: "South Ferry & Battery Park", sub: "7 Under-River Tubes Inundated", u: 0.52, offset: new THREE.Vector3(-14, 15, -8) },
+      { name: "FDR Drive & ESCR", sub: "16.5-ft Roller Floodgates", u: 0.63, offset: new THREE.Vector3(-20, 16, 14) },
+      { name: "Brooklyn Bridge", sub: "DUMBO Waterfront Submerged", u: 0.74, offset: new THREE.Vector3(0, 34, 0) },
+      { name: "ConEd 14th St Substation", sub: "345 kV Arc Blast • Blackout", u: 0.86, offset: new THREE.Vector3(-16, 18, 0) },
+      { name: "USACE Unwatering Armada", sub: "380k GPM Tunnel Dewatering", u: 0.94, offset: new THREE.Vector3(-12, 16, 0) }
     ];
 
     for (const lm of landmarks) {
@@ -3196,11 +3196,12 @@ export class FloodSimulation {
     const spriteMat = new THREE.SpriteMaterial({
       map: texture,
       transparent: true,
-      depthTest: false
+      depthTest: true,
+      depthWrite: false
     });
 
     const sprite = new THREE.Sprite(spriteMat);
-    sprite.scale.set(16, 4.4, 1);
+    sprite.scale.set(13, 3.6, 1);
     return sprite;
   }
 
