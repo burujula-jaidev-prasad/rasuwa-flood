@@ -149,18 +149,18 @@ export function getNYCAerialSatelliteTexture() {
   // 5. Lower Manhattan Peninsula (West / North shore of the river)
   ctx.fillStyle = '#1e293b'; // Manhattan urban street base
   ctx.beginPath();
-  const m1 = toCanvas(2.8, 1.4);    // The Battery southern tip
-  const m2 = toCanvas(17.1, 21.4);  // Whitehall Ferry Terminal
-  const m3 = toCanvas(35, 32);      // Wall St Pier 11
-  const m4 = toCanvas(60.5, 57.3);  // Brooklyn Bridge Manhattan pier
-  const m5 = toCanvas(84.2, 68.5);  // ConEd 14th St Substation
-  const m6 = toCanvas(120, 95);     // East River northeast outfall
-  const m7 = toCanvas(120, 120);    // Top-right corner
-  const m8 = toCanvas(-65, 120);    // Hudson River northwest edge
-  const m9 = toCanvas(-48, 80);     // Chelsea / Midtown Hudson
-  const m10 = toCanvas(-32, 40);    // Tribeca Hudson
-  const m11 = toCanvas(-20, 8);     // Battery Park City
-  const m12 = toCanvas(-16.3, 11.8);// Castle Clinton tip
+  const m1 = toCanvas(-22.0, 5.0);   // The Battery southern tip
+  const m2 = toCanvas(-1.1, 15.5);   // Whitehall Ferry Terminal
+  const m3 = toCanvas(25.0, 28.0);   // Wall St Pier 11
+  const m4 = toCanvas(60.5, 57.3);   // Brooklyn Bridge Manhattan pier
+  const m5 = toCanvas(84.2, 68.5);   // ConEd 14th St Substation
+  const m6 = toCanvas(120, 95);      // East River northeast outfall
+  const m7 = toCanvas(120, 120);     // Top-right corner
+  const m8 = toCanvas(-65, 120);     // Hudson River northwest edge
+  const m9 = toCanvas(-48, 80);      // Chelsea / Midtown Hudson
+  const m10 = toCanvas(-32, 40);     // Tribeca Hudson
+  const m11 = toCanvas(-24, 18);     // Battery Park City
+  const m12 = toCanvas(-18.0, 15.0); // Castle Clinton tip
   ctx.moveTo(m1.x, m1.y);
   ctx.bezierCurveTo(m2.x, m2.y, m3.x, m3.y, m4.x, m4.y);
   ctx.lineTo(m5.x, m5.y);
@@ -173,10 +173,10 @@ export function getNYCAerialSatelliteTexture() {
   ctx.fill();
 
   // 6. Battery Park Lush Green Canopy & Promenade
-  const bLawn1 = toCanvas(-20, 8);
-  const bLawn2 = toCanvas(2.8, 1.4);
-  const bLawn3 = toCanvas(17.1, 21.4);
-  const bLawn4 = toCanvas(-6, 22);
+  const bLawn1 = toCanvas(-24, 10);
+  const bLawn2 = toCanvas(-20, 6);
+  const bLawn3 = toCanvas(-1.1, 15.5);
+  const bLawn4 = toCanvas(-6, 26);
   ctx.fillStyle = '#166534'; // Lush lawn
   ctx.beginPath();
   ctx.moveTo(bLawn1.x, bLawn1.y);
@@ -197,7 +197,7 @@ export function getNYCAerialSatelliteTexture() {
   }
 
   // Castle Clinton Historic Fort (Circular red sandstone fort in Battery Park)
-  const castlePt = toCanvas(-16.3, 11.8);
+  const castlePt = toCanvas(-17.7, 14.8);
   ctx.fillStyle = '#b91c1c'; // Red sandstone
   ctx.beginPath();
   ctx.arc(castlePt.x, castlePt.y, 20, 0, Math.PI * 2);
@@ -212,18 +212,21 @@ export function getNYCAerialSatelliteTexture() {
   ctx.fill();
 
   // 7. Whitehall Ferry Terminal Slips & Water Pockets
-  const whPt = toCanvas(17.1, 21.4);
+  const whPt = toCanvas(-1.1, 15.5);
   ctx.fillStyle = '#334155'; // Terminal apron
-  ctx.fillRect(whPt.x - 24, whPt.y - 12, 38, 30);
+  ctx.fillRect(whPt.x - 18, whPt.y - 10, 36, 26);
   // Slips water pockets cut into bulkhead
   ctx.fillStyle = '#0369a1';
-  ctx.fillRect(whPt.x - 22, whPt.y - 8, 24, 11);  // Slip 1 (SI Ferry)
-  ctx.fillRect(whPt.x - 18, whPt.y + 8, 20, 9);   // Slip 2 (NYC Catamaran)
+  ctx.fillRect(whPt.x - 16, whPt.y - 18, 14, 18);  // Slip 1 (SI Ferry)
+  ctx.fillRect(whPt.x + 2, whPt.y - 16, 12, 16);   // Slip 2 (NYC Catamaran)
   // Timber pile dolphins around slips
   ctx.fillStyle = '#78350f';
-  for (let dp = -10; dp <= 20; dp += 6) {
+  for (let dp = -18; dp <= 14; dp += 6) {
     ctx.beginPath();
-    ctx.arc(whPt.x - 26, whPt.y + dp, 3, 0, Math.PI * 2);
+    ctx.arc(whPt.x - 18, whPt.y + dp, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(whPt.x + 16, whPt.y + dp, 3, 0, Math.PI * 2);
     ctx.fill();
   }
 

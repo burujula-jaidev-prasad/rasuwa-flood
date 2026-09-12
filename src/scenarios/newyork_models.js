@@ -646,125 +646,139 @@ export function buildNewYorkScene(group, river, terrain) {
   // -------------------------------------------------------------------------
   // STATEN ISLAND FERRY (Double-Ended 24m Passenger Ferry)
   // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // STATEN ISLAND FERRY (Double-Ended 19m Municipal Passenger Ferry)
+  // -------------------------------------------------------------------------
   function createStatenIslandFerry() {
     const ferryGroup = new THREE.Group();
     const materials = [];
 
-    // Classic Staten Island Ferry Orange & Navy Blue
+    // Classic Staten Island Ferry Municipal Orange & Navy Blue
     const orangeHullMat = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.35, metalness: 0.2 });
     const navyStripeMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.4 });
+    const redBottomMat = new THREE.MeshStandardMaterial({ color: 0x7f1d1d, roughness: 0.5 });
     const whiteDeckMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.28 });
     const darkDeckMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.75 });
-    const windowMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.6, emissive: 0xfef08a, emissiveIntensity: 0.18 });
+    const windowMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.6, emissive: 0xfef08a, emissiveIntensity: 0.22 });
     const funnelMat = new THREE.MeshStandardMaterial({ color: 0xc2410c, roughness: 0.35 });
     const blackCapMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.5 });
     const railingMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
-    materials.push(orangeHullMat, navyStripeMat, whiteDeckMat, darkDeckMat, windowMat, funnelMat, blackCapMat, railingMat);
+    materials.push(orangeHullMat, navyStripeMat, redBottomMat, whiteDeckMat, darkDeckMat, windowMat, funnelMat, blackCapMat, railingMat);
 
-    // 1. Double-ended symmetrical main hull
-    const mainHull = new THREE.Mesh(new THREE.BoxGeometry(6.6, 2.6, 17.0), orangeHullMat);
-    mainHull.position.y = 1.3;
+    // 1. Double-ended symmetrical main hull (19m x 5.4m x 2.4m)
+    const mainHull = new THREE.Mesh(new THREE.BoxGeometry(5.4, 2.2, 15.0), orangeHullMat);
+    mainHull.position.y = 1.1;
     mainHull.castShadow = true;
     ferryGroup.add(mainHull);
 
-    // Tapered double-ended bow and stern wedges
-    [-9.5, 9.5].forEach(zPos => {
-      const wedge = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 3.3, 2.6, 16, 1, false, 0, Math.PI), orangeHullMat);
+    // Tapered double-ended rounded bow and stern wedges
+    [-8.2, 8.2].forEach(zPos => {
+      const wedge = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 2.7, 2.2, 16, 1, false, 0, Math.PI), orangeHullMat);
       wedge.rotation.y = zPos > 0 ? 0 : Math.PI;
-      wedge.position.set(0, 1.3, zPos);
-      wedge.scale.set(1.0, 1.0, 0.7);
+      wedge.position.set(0, 1.1, zPos);
+      wedge.scale.set(1.0, 1.0, 0.65);
       wedge.castShadow = true;
       ferryGroup.add(wedge);
     });
 
+    // Red anti-fouling lower keel
+    const keel = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.45, 16.5), redBottomMat);
+    keel.position.y = 0.22;
+    ferryGroup.add(keel);
+
     // Waterline boot-topping navy blue stripe
-    const stripe = new THREE.Mesh(new THREE.BoxGeometry(6.75, 0.45, 20.0), navyStripeMat);
-    stripe.position.y = 0.35;
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(5.5, 0.38, 17.2), navyStripeMat);
+    stripe.position.y = 0.55;
     ferryGroup.add(stripe);
 
     // Vehicle loading portals & gate bars at ends
-    [-9.2, 9.2].forEach(zPos => {
-      const gate = new THREE.Mesh(new THREE.BoxGeometry(5.2, 1.2, 0.4), darkDeckMat);
-      gate.position.set(0, 1.9, zPos);
+    [-8.0, 8.0].forEach(zPos => {
+      const gate = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.1, 0.35), darkDeckMat);
+      gate.position.set(0, 1.7, zPos);
       ferryGroup.add(gate);
     });
 
     // 2. Lower Passenger Saloon Deck (Tier 1)
-    const saloon1 = new THREE.Mesh(new THREE.BoxGeometry(5.8, 1.8, 16.0), whiteDeckMat);
-    saloon1.position.y = 3.5;
+    const saloon1 = new THREE.Mesh(new THREE.BoxGeometry(4.8, 1.6, 14.2), whiteDeckMat);
+    saloon1.position.y = 3.0;
     saloon1.castShadow = true;
     ferryGroup.add(saloon1);
 
     // Continuous passenger window ribbons (port & starboard)
-    [-3.0, 3.0].forEach(xSide => {
-      const winRibbon = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.75, 14.5), windowMat);
-      winRibbon.position.set(xSide, 3.6, 0);
+    [-2.45, 2.45].forEach(xSide => {
+      const winRibbon = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.7, 13.0), windowMat);
+      winRibbon.position.set(xSide, 3.1, 0);
       ferryGroup.add(winRibbon);
     });
 
     // 3. Upper Hurricane / Observation Deck (Tier 2)
-    const saloon2 = new THREE.Mesh(new THREE.BoxGeometry(4.8, 1.6, 12.0), whiteDeckMat);
-    saloon2.position.y = 5.2;
+    const saloon2 = new THREE.Mesh(new THREE.BoxGeometry(4.0, 1.4, 10.5), whiteDeckMat);
+    saloon2.position.y = 4.5;
     saloon2.castShadow = true;
     ferryGroup.add(saloon2);
 
-    [-2.5, 2.5].forEach(xSide => {
-      const winRibbon2 = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.65, 10.5), windowMat);
-      winRibbon2.position.set(xSide, 5.3, 0);
+    [-2.05, 2.05].forEach(xSide => {
+      const winRibbon2 = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.6, 9.2), windowMat);
+      winRibbon2.position.set(xSide, 4.6, 0);
       ferryGroup.add(winRibbon2);
     });
 
+    // Non-skid promenade deck walkway
+    const upperWalkway = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.12, 12.0), darkDeckMat);
+    upperWalkway.position.y = 3.85;
+    ferryGroup.add(upperWalkway);
+
     // 4. Dual Symmetrical Pilothouses (Forward & Aft Wheelhouses)
-    [-6.8, 6.8].forEach(zPos => {
-      const wheelhouse = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.4, 2.4), whiteDeckMat);
-      wheelhouse.position.set(0, 6.7, zPos);
+    [-5.8, 5.8].forEach(zPos => {
+      const wheelhouse = new THREE.Mesh(new THREE.BoxGeometry(3.0, 1.2, 2.0), whiteDeckMat);
+      wheelhouse.position.set(0, 5.8, zPos);
       ferryGroup.add(wheelhouse);
 
-      const bridgeWin = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.65, 2.5), windowMat);
-      bridgeWin.position.set(0, 6.85, zPos);
+      const bridgeWin = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.55, 2.1), windowMat);
+      bridgeWin.position.set(0, 5.95, zPos);
       ferryGroup.add(bridgeWin);
 
-      const bridgeRoof = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.25, 2.6), darkDeckMat);
-      bridgeRoof.position.set(0, 7.5, zPos);
+      const bridgeRoof = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.2, 2.2), darkDeckMat);
+      bridgeRoof.position.set(0, 6.5, zPos);
       ferryGroup.add(bridgeRoof);
     });
 
     // 5. Twin Classic Orange Funnels (Smokestacks)
-    [-2.2, 2.2].forEach(zPos => {
-      const funnel = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.65, 2.2, 12), funnelMat);
-      funnel.position.set(0, 7.1, zPos);
-      funnel.scale.set(1.4, 1.0, 0.9);
+    [-2.0, 2.0].forEach(zPos => {
+      const funnel = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.55, 1.8, 12), funnelMat);
+      funnel.position.set(0, 6.1, zPos);
+      funnel.scale.set(1.3, 1.0, 0.85);
       ferryGroup.add(funnel);
 
-      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.58, 0.58, 0.4, 12), blackCapMat);
-      cap.position.set(0, 8.2, zPos);
-      cap.scale.set(1.4, 1.0, 0.9);
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.35, 12), blackCapMat);
+      cap.position.set(0, 7.05, zPos);
+      cap.scale.set(1.3, 1.0, 0.85);
       ferryGroup.add(cap);
     });
 
     // 6. Navigation Radar Mast & Running Lights
-    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 3.2, 8), railingMat);
-    mast.position.set(0, 7.6, 0);
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 2.8, 8), railingMat);
+    mast.position.set(0, 6.6, 0);
     ferryGroup.add(mast);
 
-    const radarBar = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.12, 0.25), darkDeckMat);
-    radarBar.position.set(0, 9.2, 0);
+    const radarBar = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.1, 0.22), darkDeckMat);
+    radarBar.position.set(0, 8.0, 0);
     ferryGroup.add(radarBar);
 
     // Red & Green Navigation Running Lights
-    const portLight = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
-    portLight.position.set(-2.5, 6.9, 0);
+    const portLight = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+    portLight.position.set(-2.1, 6.0, 0);
     ferryGroup.add(portLight);
 
-    const stbdLight = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshBasicMaterial({ color: 0x22c55e }));
-    stbdLight.position.set(2.5, 6.9, 0);
+    const stbdLight = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color: 0x22c55e }));
+    stbdLight.position.set(2.1, 6.0, 0);
     ferryGroup.add(stbdLight);
 
     return { group: ferryGroup, materials, primaryMat: orangeHullMat };
   }
 
   // -------------------------------------------------------------------------
-  // NYC FERRY FAST HIGH-SPEED CATAMARAN (Twin-Hull 14m Passenger Boat)
+  // NYC FERRY FAST HIGH-SPEED CATAMARAN (Twin-Hull 13m Passenger Boat)
   // -------------------------------------------------------------------------
   function createNYCFerryCatamaran() {
     const catGroup = new THREE.Group();
@@ -778,68 +792,175 @@ export function buildNewYorkScene(group, river, terrain) {
     const railingMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.2 });
     materials.push(alumHullMat, nycFerryBlueMat, whiteCabinMat, darkGlassMat, deckMat, railingMat);
 
-    // Twin Aluminum Pontoons (Port & Starboard)
-    [-1.8, 1.8].forEach(xOff => {
-      const pontoon = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.4, 12.0), alumHullMat);
-      pontoon.position.set(xOff, 0.7, 0);
+    // Twin Aluminum Pontoons (Port & Starboard, beam 3.8m, length 13m)
+    [-1.45, 1.45].forEach(xOff => {
+      const pontoon = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.2, 11.0), alumHullMat);
+      pontoon.position.set(xOff, 0.6, 0);
       pontoon.castShadow = true;
       catGroup.add(pontoon);
 
       // Wave-piercing bow wedge
-      const bow = new THREE.Mesh(new THREE.ConeGeometry(0.8, 2.2, 4), alumHullMat);
+      const bow = new THREE.Mesh(new THREE.ConeGeometry(0.65, 2.0, 4), alumHullMat);
       bow.rotation.x = Math.PI * 0.5;
       bow.rotation.y = Math.PI * 0.25;
-      bow.position.set(xOff, 0.7, -6.8);
-      bow.scale.set(0.9, 1.2, 0.8);
+      bow.position.set(xOff, 0.6, -6.3);
+      bow.scale.set(0.85, 1.2, 0.75);
       bow.castShadow = true;
       catGroup.add(bow);
     });
 
     // Bridging Cross-Deck
-    const crossDeck = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.3, 11.5), deckMat);
-    crossDeck.position.set(0, 1.45, -0.2);
+    const crossDeck = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.25, 10.5), deckMat);
+    crossDeck.position.set(0, 1.25, -0.2);
     catGroup.add(crossDeck);
 
     // Aerodynamic Passenger Salon Cabin
-    const cabin = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.6, 9.0), whiteCabinMat);
-    cabin.position.set(0, 2.35, 0.2);
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(3.4, 1.4, 8.2), whiteCabinMat);
+    cabin.position.set(0, 2.05, 0.2);
     cabin.castShadow = true;
     catGroup.add(cabin);
 
     // Slanted aerodynamic bow cabin profile
-    const cabinBow = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.1, 1.6, 16, 1, false, Math.PI, Math.PI), whiteCabinMat);
-    cabinBow.position.set(0, 2.35, -4.3);
-    cabinBow.scale.set(1.0, 1.0, 0.6);
+    const cabinBow = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.7, 1.4, 16, 1, false, Math.PI, Math.PI), whiteCabinMat);
+    cabinBow.position.set(0, 2.05, -3.9);
+    cabinBow.scale.set(1.0, 1.0, 0.55);
     catGroup.add(cabinBow);
 
     // NYC Ferry Royal Blue Stripe
-    const blueStripe = new THREE.Mesh(new THREE.BoxGeometry(4.28, 0.35, 9.5), nycFerryBlueMat);
-    blueStripe.position.set(0, 1.8, 0.0);
+    const blueStripe = new THREE.Mesh(new THREE.BoxGeometry(3.46, 0.32, 8.6), nycFerryBlueMat);
+    blueStripe.position.set(0, 1.55, 0.0);
     catGroup.add(blueStripe);
 
     // Panoramic Dark Glass Windows
-    [-2.15, 2.15].forEach(xSide => {
-      const win = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.7, 7.8), darkGlassMat);
-      win.position.set(xSide, 2.45, 0.3);
+    [-1.74, 1.74].forEach(xSide => {
+      const win = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.6, 7.2), darkGlassMat);
+      win.position.set(xSide, 2.15, 0.3);
       catGroup.add(win);
     });
 
     // Wheelhouse Windshield
-    const bridgeWin = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.6, 0.8), darkGlassMat);
-    bridgeWin.position.set(0, 2.65, -4.2);
+    const bridgeWin = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.55, 0.7), darkGlassMat);
+    bridgeWin.position.set(0, 2.32, -3.8);
     bridgeWin.rotation.x = -0.3;
     catGroup.add(bridgeWin);
 
     // Upper Sun Deck Railings & Radar Dome
-    const sunDeck = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.15, 6.0), deckMat);
-    sunDeck.position.set(0, 3.2, 1.2);
+    const sunDeck = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.12, 5.2), deckMat);
+    sunDeck.position.set(0, 2.82, 1.0);
     catGroup.add(sunDeck);
 
-    const radome = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.35, 12), whiteCabinMat);
-    radome.position.set(0, 3.5, -1.8);
+    const radome = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.3, 12), whiteCabinMat);
+    radome.position.set(0, 3.1, -1.6);
     catGroup.add(radome);
 
     return { group: catGroup, materials, primaryMat: alumHullMat };
+  }
+
+  // -------------------------------------------------------------------------
+  // US COAST GUARD RB-M 45FT RESPONSE BOAT PATROL CUTTER
+  // -------------------------------------------------------------------------
+  function createCoastGuardCutter() {
+    const uscgGroup = new THREE.Group();
+    const materials = [];
+
+    const alumHullMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.7, roughness: 0.32 });
+    const collarMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.9 });
+    const redStripeMat = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.35 });
+    const blueStripeMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.35 });
+    const cabinMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.25, metalness: 0.5 });
+    const darkGlassMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.8 });
+    const deckMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.75 });
+    const mastMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.25 });
+    const strobeMat = new THREE.MeshBasicMaterial({ color: 0x3b82f6 });
+    materials.push(alumHullMat, collarMat, redStripeMat, blueStripeMat, cabinMat, darkGlassMat, deckMat, mastMat, strobeMat);
+
+    // Deep-V Aluminum Hull (13.5m length, 4.2m beam, 1.4m depth)
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(4.0, 1.4, 11.0), alumHullMat);
+    hull.position.y = 0.7;
+    hull.castShadow = true;
+    uscgGroup.add(hull);
+
+    // Raked bow wedge
+    const bow = new THREE.Mesh(new THREE.ConeGeometry(2.0, 3.2, 4), alumHullMat);
+    bow.rotation.x = Math.PI * 0.5;
+    bow.rotation.y = Math.PI * 0.25;
+    bow.position.set(0, 0.7, -6.8);
+    bow.scale.set(1.0, 1.4, 0.75);
+    bow.castShadow = true;
+    uscgGroup.add(bow);
+
+    // Heavy black closed-cell foam fendering collar wrapping gunwales
+    [-2.05, 2.05].forEach(xSide => {
+      const collarSide = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 11.2, 10), collarMat);
+      collarSide.rotation.x = Math.PI * 0.5;
+      collarSide.position.set(xSide, 1.35, -0.2);
+      uscgGroup.add(collarSide);
+    });
+
+    // Bow collar wrap
+    const bowCollar = new THREE.Mesh(new THREE.TorusGeometry(1.8, 0.24, 8, 16, Math.PI), collarMat);
+    bowCollar.position.set(0, 1.35, -5.5);
+    uscgGroup.add(bowCollar);
+
+    // US Coast Guard Iconic Racing Stripe (Diagonal sash on forward hull)
+    [-2.03, 2.03].forEach(xSide => {
+      const redSash = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.1, 1.4), redStripeMat);
+      redSash.position.set(xSide, 0.75, -3.8);
+      redSash.rotation.y = (xSide > 0 ? 0.25 : -0.25);
+      uscgGroup.add(redSash);
+
+      const blueSash = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.1, 0.28), blueStripeMat);
+      blueSash.position.set(xSide, 0.75, -3.0);
+      blueSash.rotation.y = (xSide > 0 ? 0.25 : -0.25);
+      uscgGroup.add(blueSash);
+    });
+
+    // Weather-tight Aluminum Pilothouse
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(3.0, 1.5, 5.2), cabinMat);
+    cabin.position.set(0, 2.05, 0.2);
+    cabin.castShadow = true;
+    uscgGroup.add(cabin);
+
+    // Forward-raked bridge windshield (reverse shear)
+    const bridge = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.65, 0.8), darkGlassMat);
+    bridge.position.set(0, 2.25, -2.4);
+    bridge.rotation.x = 0.25;
+    uscgGroup.add(bridge);
+
+    // Side ballistic dark windows
+    [-1.53, 1.53].forEach(xSide => {
+      const win = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.55, 3.8), darkGlassMat);
+      win.position.set(xSide, 2.15, 0.3);
+      uscgGroup.add(win);
+    });
+
+    // Tactical Electronics Arch Mast
+    const mastArch = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.08, 8, 16, Math.PI), mastMat);
+    mastArch.position.set(0, 2.8, 0.8);
+    uscgGroup.add(mastArch);
+
+    const radome = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.25, 12), cabinMat);
+    radome.position.set(0, 3.9, 0.8);
+    uscgGroup.add(radome);
+
+    // Law Enforcement Flashing Blue LED Strobe Beacon
+    const strobeBeacon = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), strobeMat);
+    strobeBeacon.position.set(0, 4.3, 0.8);
+    uscgGroup.add(strobeBeacon);
+
+    const strobeLight = new THREE.PointLight(0x3b82f6, 1.5, 18.0);
+    strobeLight.position.set(0, 4.3, 0.8);
+    uscgGroup.add(strobeLight);
+
+    // Twin Waterjet exhaust cowlings at transom
+    [-0.9, 0.9].forEach(xNozzle => {
+      const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.6, 8), collarMat);
+      nozzle.rotation.x = Math.PI * 0.5;
+      nozzle.position.set(xNozzle, 0.4, 5.7);
+      uscgGroup.add(nozzle);
+    });
+
+    return { group: uscgGroup, materials, primaryMat: alumHullMat, strobeLight };
   }
 
   // -------------------------------------------------------------------------
@@ -850,137 +971,197 @@ export function buildNewYorkScene(group, river, terrain) {
     const materials = [];
 
     const concreteMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.8 });
-    const woodCreosoteMat = new THREE.MeshStandardMaterial({ color: 0x3b2314, roughness: 0.95 });
-    const woodPlankMat = new THREE.MeshStandardMaterial({ color: 0x5a3825, roughness: 0.9 });
-    const steelGantryMat = new THREE.MeshStandardMaterial({ color: 0x14532d, metalness: 0.6, roughness: 0.4 });
+    const concretePierMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.85 });
+    const woodCreosoteMat = new THREE.MeshStandardMaterial({ color: 0x27170c, roughness: 0.95 });
+    const woodPlankMat = new THREE.MeshStandardMaterial({ color: 0x452a19, roughness: 0.9 });
+    const steelGantryMat = new THREE.MeshStandardMaterial({ color: 0x14532d, metalness: 0.65, roughness: 0.35 });
     const metalBandMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8, roughness: 0.3 });
     const bollardMat = new THREE.MeshStandardMaterial({ color: 0x09090b, metalness: 0.9, roughness: 0.2 });
-    materials.push(concreteMat, woodCreosoteMat, woodPlankMat, steelGantryMat, metalBandMat, bollardMat);
+    const terminalGlassMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.2, metalness: 0.5, transparent: true, opacity: 0.85 });
+    const yellowStripeMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+    materials.push(concreteMat, concretePierMat, woodCreosoteMat, woodPlankMat, steelGantryMat, metalBandMat, bollardMat, terminalGlassMat, yellowStripeMat);
 
-    // 1. Concrete Terminal Bulkhead Promenade (along shore)
-    const mainBulkhead = new THREE.Mesh(new THREE.BoxGeometry(6.0, 2.8, 38.0), concreteMat);
-    mainBulkhead.position.set(0, 1.4, 0);
-    mainBulkhead.receiveShadow = true;
-    slipsGroup.add(mainBulkhead);
+    // Frame:
+    // X axis: along shoreline (promenade length ~ 26m, from X = -13 to X = +13)
+    // Y axis: vertical
+    // Z axis: inland (+Z > 0), water (-Z < 0)
 
-    // 2. Center Dividing Pier (4m wide, separating Berth 1 and Berth 2)
-    const centerPier = new THREE.Mesh(new THREE.BoxGeometry(24.0, 2.2, 4.0), concreteMat);
-    centerPier.position.set(-12.0, 1.1, 0);
+    // 1. Shoreline Bulkhead Quay Promenade
+    const promenade = new THREE.Mesh(new THREE.BoxGeometry(26.0, 1.8, 5.0), concreteMat);
+    promenade.position.set(0, 0.9, 2.5); // extends from Z = 0 to Z = 5.0
+    promenade.receiveShadow = true;
+    slipsGroup.add(promenade);
+
+    // Modern Whitehall Terminal Pavilion (glass entrance hall behind promenade)
+    const termBldg = new THREE.Mesh(new THREE.BoxGeometry(22.0, 5.5, 4.0), terminalGlassMat);
+    termBldg.position.set(0, 3.65, 5.0);
+    termBldg.castShadow = true;
+    slipsGroup.add(termBldg);
+
+    const termCanopy = new THREE.Mesh(new THREE.BoxGeometry(24.0, 0.5, 5.5), steelGantryMat);
+    termCanopy.position.set(0, 6.5, 4.5);
+    slipsGroup.add(termCanopy);
+
+    // 2. Heavy Center Pier (dividing Berth 1 and Berth 2)
+    // Centered at X = 0, extends from Z = 0 outward into water to Z = -22.0
+    const centerPier = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.0, 22.0), concretePierMat);
+    centerPier.position.set(0, 0.8, -11.0);
     centerPier.castShadow = true;
     centerPier.receiveShadow = true;
     slipsGroup.add(centerPier);
 
-    // 3. Flanking outer slip piers
-    // Outer West Pier (Berth 1 Staten Island Ferry)
-    const outerWestPier = new THREE.Mesh(new THREE.BoxGeometry(26.0, 2.2, 2.6), concreteMat);
-    outerWestPier.position.set(-13.0, 1.1, -16.0);
-    outerWestPier.castShadow = true;
-    outerWestPier.receiveShadow = true;
-    slipsGroup.add(outerWestPier);
+    // Center pier safety edge yellow stripes
+    [-2.0, 2.0].forEach(sx => {
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.04, 21.8), yellowStripeMat);
+      stripe.position.set(sx, 1.82, -11.0);
+      slipsGroup.add(stripe);
+    });
 
-    // Outer East Pier (Berth 2 NYC Catamaran)
-    const outerEastPier = new THREE.Mesh(new THREE.BoxGeometry(20.0, 2.2, 2.4), concreteMat);
-    outerEastPier.position.set(-10.0, 1.1, 14.5);
-    outerEastPier.castShadow = true;
-    outerEastPier.receiveShadow = true;
-    slipsGroup.add(outerEastPier);
+    // 3. Outer West Pier (encloses Berth 1 for Staten Island Ferry)
+    // Centered at X = -10.0, extends from Z = 0 to Z = -24.0
+    const westPier = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.0, 24.0), concretePierMat);
+    westPier.position.set(-10.0, 0.8, -12.0);
+    westPier.castShadow = true;
+    westPier.receiveShadow = true;
+    slipsGroup.add(westPier);
 
-    // 4. Clustered Timber Pile Fender Dolphins (6 clusters at pier heads)
+    // 4. Outer East Pier (encloses Berth 2 for NYC Catamaran)
+    // Centered at X = +8.8, extends from Z = 0 to Z = -19.0
+    const eastPier = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.0, 19.0), concretePierMat);
+    eastPier.position.set(8.8, 0.8, -9.5);
+    eastPier.castShadow = true;
+    eastPier.receiveShadow = true;
+    slipsGroup.add(eastPier);
+
+    // 5. Timber Guide Racks / Rubbing Strakes along Slip Channels
+    // Berth 1: from X = -8.8 to X = -2.2 (inner width 6.6m)
+    const rackW1 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.8, 21.0), woodPlankMat);
+    rackW1.position.set(-8.8, 0.9, -11.0);
+    slipsGroup.add(rackW1);
+
+    const rackW2 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.8, 20.0), woodPlankMat);
+    rackW2.position.set(-2.2, 0.9, -10.5);
+    slipsGroup.add(rackW2);
+
+    // Berth 2: from X = +2.2 to X = +7.6 (inner width 5.4m)
+    const rackE1 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.8, 18.0), woodPlankMat);
+    rackE1.position.set(2.2, 0.9, -9.5);
+    slipsGroup.add(rackE1);
+
+    const rackE2 = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.8, 17.0), woodPlankMat);
+    rackE2.position.set(7.6, 0.9, -9.0);
+    slipsGroup.add(rackE2);
+
+    // 6. Timber Pile Fender Dolphins (Creosote log clusters at pier heads)
     const dolphinPositions = [
-      [-26.5, -16.0], // West outer pier head
-      [-24.5, -2.0],  // Center pier west head
-      [-20.5, 2.0],   // Center pier east head
-      [-20.5, 14.5],  // East outer pier head
-      [-13.0, -16.0], // Mid west fender
-      [-10.0, 14.5]   // Mid east fender
+      [-10.0, -25.2], // West outer pier head
+      [0.0,   -23.2], // Center pier head
+      [8.8,   -20.2], // East outer pier head
+      [-10.0, -12.5], // West mid fender
+      [8.8,   -10.0]  // East mid fender
     ];
 
     dolphinPositions.forEach(([dx, dz]) => {
-      const dolphinGroup = new THREE.Group();
-      dolphinGroup.position.set(dx, 0, dz);
+      const dolphin = new THREE.Group();
+      dolphin.position.set(dx, 0, dz);
 
       const pileOffsets = [
-        [0, 0], [0.42, 0], [-0.42, 0],
-        [0.21, 0.38], [-0.21, 0.38], [0.21, -0.38], [-0.21, -0.38]
+        [0, 0], [0.4, 0], [-0.4, 0],
+        [0.2, 0.35], [-0.2, 0.35], [0.2, -0.35], [-0.2, -0.35]
       ];
-
       pileOffsets.forEach(([px, pz]) => {
-        const log = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.25, 5.5, 8), woodCreosoteMat);
-        log.position.set(px, 2.2 + (Math.sin(px * 10 + pz) * 0.15), pz);
+        const log = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.24, 4.8, 8), woodCreosoteMat);
+        log.position.set(px, 1.8 + Math.sin(px * 10 + pz) * 0.12, pz);
         log.castShadow = true;
-        dolphinGroup.add(log);
+        dolphin.add(log);
       });
 
-      [1.5, 2.8, 4.2].forEach(by => {
-        const band = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.72, 0.16, 12), metalBandMat);
+      [1.2, 2.5, 3.8].forEach(by => {
+        const band = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.68, 0.14, 12), metalBandMat);
         band.position.y = by;
-        dolphinGroup.add(band);
+        dolphin.add(band);
       });
 
-      slipsGroup.add(dolphinGroup);
+      slipsGroup.add(dolphin);
     });
 
-    // 5. Wooden Slip Guide Walls / Rubbing Strakes
-    // Berth 1 guides (z = -14.6 and z = -2.1)
-    const rackW1 = new THREE.Mesh(new THREE.BoxGeometry(22.0, 1.8, 0.35), woodPlankMat);
-    rackW1.position.set(-11.0, 1.5, -14.6);
-    slipsGroup.add(rackW1);
-
-    const rackW2 = new THREE.Mesh(new THREE.BoxGeometry(20.0, 1.8, 0.35), woodPlankMat);
-    rackW2.position.set(-10.0, 1.5, -2.1);
-    slipsGroup.add(rackW2);
-
-    // Berth 2 guides (z = +2.1 and z = +13.2)
-    const rackE1 = new THREE.Mesh(new THREE.BoxGeometry(18.0, 1.8, 0.35), woodPlankMat);
-    rackE1.position.set(-9.0, 1.5, 2.1);
-    slipsGroup.add(rackE1);
-
-    const rackE2 = new THREE.Mesh(new THREE.BoxGeometry(16.0, 1.8, 0.35), woodPlankMat);
-    rackE2.position.set(-8.0, 1.5, 13.2);
-    slipsGroup.add(rackE2);
-
-    // 6. Overhead Hydraulic Apron Gantries
+    // 7. Hydraulic Boarding Gantries (Elevated green steel passenger boarding spans)
     let apron1 = null;
     let apron2 = null;
 
-    [[-8.5, 12.0], [8.0, 9.0]].forEach(([slipZ, spanW], idx) => {
-      const gantry = new THREE.Group();
-      gantry.position.set(-2.5, 0, slipZ);
+    // Berth 1 Gantry (Staten Island Ferry): centered at X = -5.5, Z = -1.2
+    {
+      const gantry1 = new THREE.Group();
+      gantry1.position.set(-5.5, 0, -1.2);
 
-      [-spanW * 0.45, spanW * 0.45].forEach(zCol => {
-        const col = new THREE.Mesh(new THREE.BoxGeometry(0.6, 6.5, 0.6), steelGantryMat);
-        col.position.set(0, 3.25, zCol);
+      // Upright portal steel columns
+      [-3.2, 3.2].forEach(cx => {
+        const col = new THREE.Mesh(new THREE.BoxGeometry(0.6, 6.2, 0.6), steelGantryMat);
+        col.position.set(cx, 3.1, 0);
         col.castShadow = true;
-        gantry.add(col);
+        gantry1.add(col);
       });
 
-      const beam = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.8, spanW), steelGantryMat);
-      beam.position.set(0, 6.2, 0);
-      gantry.add(beam);
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.75, 0.9), steelGantryMat);
+      beam.position.set(0, 6.0, 0);
+      gantry1.add(beam);
 
-      const winch = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.2, 1.8), metalBandMat);
-      winch.position.set(0, 6.9, 0);
-      gantry.add(winch);
+      const winch = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.0, 1.2), metalBandMat);
+      winch.position.set(0, 6.6, 0);
+      gantry1.add(winch);
 
-      const apron = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.35, spanW * 0.6), steelGantryMat);
-      apron.position.set(-2.5, 1.8, 0);
-      apron.rotation.z = -0.12;
-      gantry.add(apron);
+      apron1 = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.3, 4.2), steelGantryMat);
+      apron1.position.set(0, 1.8, -1.8);
+      apron1.rotation.x = 0.12;
+      gantry1.add(apron1);
 
-      if (idx === 0) apron1 = apron;
-      else apron2 = apron;
+      slipsGroup.add(gantry1);
+    }
 
-      slipsGroup.add(gantry);
-    });
+    // Berth 2 Gantry (NYC Catamaran): centered at X = +5.0, Z = -1.2
+    {
+      const gantry2 = new THREE.Group();
+      gantry2.position.set(5.0, 0, -1.2);
 
-    // 7. Dock Bollards
-    [-15.0, -8.5, 0, 8.0, 15.0].forEach(bz => {
+      [-2.6, 2.6].forEach(cx => {
+        const col = new THREE.Mesh(new THREE.BoxGeometry(0.5, 5.4, 0.5), steelGantryMat);
+        col.position.set(cx, 2.7, 0);
+        col.castShadow = true;
+        gantry2.add(col);
+      });
+
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(5.8, 0.65, 0.8), steelGantryMat);
+      beam.position.set(0, 5.2, 0);
+      gantry2.add(beam);
+
+      apron2 = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.28, 3.8), steelGantryMat);
+      apron2.position.set(0, 1.8, -1.6);
+      apron2.rotation.x = 0.14;
+      gantry2.add(apron2);
+
+      slipsGroup.add(gantry2);
+    }
+
+    // 8. Heavy Mooring Bollards along center and outer piers
+    [
+      [-10.0, -3.0], [-10.0, -9.0], [-10.0, -17.0],
+      [0.0, -4.0], [0.0, -10.0], [0.0, -16.0],
+      [8.8, -3.0], [8.8, -9.0], [8.8, -15.0]
+    ].forEach(([bx, bz]) => {
       const bollard = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.65, 8), bollardMat);
-      bollard.position.set(1.5, 2.9, bz);
+      bollard.position.set(bx, 1.9, bz);
       slipsGroup.add(bollard);
     });
 
-    return { group: slipsGroup, materials, primaryMat: concreteMat, apron1, apron2 };
+    return {
+      group: slipsGroup,
+      materials,
+      primaryMat: concreteMat,
+      apron1,
+      apron2,
+      berth1Pos: new THREE.Vector3(-5.5, 0.45, -12.5),
+      berth2Pos: new THREE.Vector3(5.0, 0.38, -10.0)
+    };
   }
 
   // -------------------------------------------------------------------------
@@ -1853,7 +2034,7 @@ export function buildNewYorkScene(group, river, terrain) {
     const fTube = getRiverFrame(cfg.u);
     const tubeGroup = new THREE.Group();
     tubeGroup.position.copy(fTube.pt);
-    tubeGroup.position.y = 1.0;
+    tubeGroup.position.y = -3.2;
 
     const basis = new THREE.Matrix4().makeBasis(fTube.tangent, fTube.up, fTube.side);
     tubeGroup.quaternion.setFromRotationMatrix(basis);
@@ -2062,7 +2243,7 @@ export function buildNewYorkScene(group, river, terrain) {
     });
     const badgeSprite = new THREE.Sprite(spriteMat);
     badgeSprite.scale.set(15, 4.1, 1);
-    badgeSprite.position.set(0, 11.5, 0);
+    badgeSprite.position.set(0, 15.0, 0);
     tubeGroup.add(badgeSprite);
 
     group.add(tubeGroup);
@@ -2456,25 +2637,66 @@ export function buildNewYorkScene(group, river, terrain) {
   const manGroup = new THREE.Group();
   manGroup.position.copy(fMan.pt);
 
-  // Flanking Granite Battery Park Seawall Promenade Sections
-  const seawallSouth = new THREE.Mesh(new THREE.BoxGeometry(4.0, 3.2, 16.0), seawallGranite);
-  seawallSouth.position.set(fMan.side.x * 12.0, 1.6, -18.0);
-  seawallSouth.castShadow = true;
-  manGroup.add(seawallSouth);
+  // 1. Continuous Granite Seawall & Paved Battery Promenade
+  // Following the authentic Lower Manhattan curve at bank offset 14.2m
+  const seawallSegments = [
+    { u: 0.44, len: 12.0 },
+    { u: 0.46, len: 12.0 },
+    // 0.48 is the Breached Seawall
+    // 0.50 - 0.52 is Whitehall Ferry Terminal Bulkhead
+    { u: 0.54, len: 12.0 },
+    { u: 0.56, len: 12.0 },
+    { u: 0.58, len: 12.0 }
+  ];
 
-  const seawallNorth = new THREE.Mesh(new THREE.BoxGeometry(4.0, 3.2, 16.0), seawallGranite);
-  seawallNorth.position.set(fMan.side.x * 12.0, 1.6, 18.0);
-  seawallNorth.castShadow = true;
-  manGroup.add(seawallNorth);
+  seawallSegments.forEach(seg => {
+    const fSeg = getRiverFrame(seg.u);
+    const swGroup = new THREE.Group();
+    const swPos = fSeg.pt.clone().addScaledVector(fSeg.side, 14.2);
+    swPos.y = 1.6;
+    swGroup.position.copy(swPos);
+    swGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fSeg.tangent);
 
-  // Dynamic Breached Granite Battery Park Seawall Segment that shears and collapses into harbor
+    // Granite seawall face
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.2, seg.len), seawallGranite);
+    wall.castShadow = true;
+    swGroup.add(wall);
+
+    // Granite top coping stone
+    const coping = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.35, seg.len), seawallGranite);
+    coping.position.y = 1.75;
+    swGroup.add(coping);
+
+    // Marine safety railing
+    const railMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5, metalness: 0.7 });
+    const railing = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.8, seg.len), railMat);
+    railing.position.set(0, 2.3, 0);
+    swGroup.add(railing);
+
+    // Paved promenade slab directly behind seawall
+    const promMesh = new THREE.Mesh(new THREE.BoxGeometry(6.0, 0.4, seg.len), concreteMat);
+    promMesh.position.set(4.2, 1.6, 0);
+    promMesh.receiveShadow = true;
+    swGroup.add(promMesh);
+
+    // Lush Battery Park green lawn behind promenade
+    const lawnMesh = new THREE.Mesh(new THREE.BoxGeometry(8.0, 0.4, seg.len), new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.85 }));
+    lawnMesh.position.set(11.2, 1.65, 0);
+    lawnMesh.receiveShadow = true;
+    swGroup.add(lawnMesh);
+
+    group.add(swGroup);
+  });
+
+  // Dynamic Breached Granite Battery Park Seawall Segment that shears and collapses into harbor (u = 0.48)
   {
-    const breachSeawall = createBatterySeawallBreachSegment(22.0);
-    const swPos = fMan.pt.clone().addScaledVector(fMan.side, 11.5);
-    swPos.y = getGroundY(swPos.x, swPos.z, 2.0);
-    breachSeawall.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
+    const breachSeawall = createBatterySeawallBreachSegment(16.0);
+    const fBreach = getRiverFrame(0.48);
+    const swPos = fBreach.pt.clone().addScaledVector(fBreach.side, 14.2);
+    swPos.y = 1.6;
+    breachSeawall.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fBreach.tangent);
 
-    registerWipeable(breachSeawall.group, 0.48, swPos, fMan.tangent, fMan.side, {
+    registerWipeable(breachSeawall.group, 0.48, swPos, fBreach.tangent, fBreach.side, {
       primaryMat: breachSeawall.primaryMat,
       materials: breachSeawall.materials,
       driftSpeed: 22.0,
@@ -2485,55 +2707,106 @@ export function buildNewYorkScene(group, river, terrain) {
     });
   }
 
-  // Lush Battery Park Green Lawns
-  const lawn = new THREE.Mesh(new THREE.BoxGeometry(14.0, 0.5, 52.0), new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.85 }));
-  lawn.position.set(fMan.side.x * 19.5, 1.85, fMan.side.z * 19.5);
-  manGroup.add(lawn);
+  // Historic Castle Clinton National Monument Sandstone Fort (in Battery Park at u = 0.46, offset 21.0m)
+  {
+    const fCC = getRiverFrame(0.46);
+    const ccPos = fCC.pt.clone().addScaledVector(fCC.side, 21.0);
+    ccPos.y = getGroundY(ccPos.x, ccPos.z, 2.4);
 
-  // Historic Castle Clinton Sandstone Fort in Battery Park
-  const castleClinton = new THREE.Mesh(new THREE.CylinderGeometry(6.5, 7.0, 3.2, 24), new THREE.MeshStandardMaterial({ color: 0x9a3412, roughness: 0.85 }));
-  castleClinton.position.set(fMan.side.x * 18.0, 2.5, -12.0);
-  manGroup.add(castleClinton);
+    const castleClintonGroup = new THREE.Group();
+    castleClintonGroup.position.copy(ccPos);
+
+    // Outer circular red sandstone fort wall
+    const ccWall = new THREE.Mesh(
+      new THREE.CylinderGeometry(7.0, 7.5, 3.6, 28, 1, true),
+      new THREE.MeshStandardMaterial({ color: 0x9a3412, roughness: 0.85 })
+    );
+    ccWall.position.y = 1.8;
+    ccWall.castShadow = true;
+    castleClintonGroup.add(ccWall);
+
+    // Interior paved parade ground
+    const ccFloor = new THREE.Mesh(
+      new THREE.CylinderGeometry(6.8, 6.8, 0.4, 28),
+      new THREE.MeshStandardMaterial({ color: 0x78716c, roughness: 0.9 })
+    );
+    ccFloor.position.y = 0.2;
+    castleClintonGroup.add(ccFloor);
+
+    // Historic stone entrance archway
+    const ccGate = new THREE.Mesh(
+      new THREE.BoxGeometry(2.6, 3.8, 1.8),
+      new THREE.MeshStandardMaterial({ color: 0x7c2d12, roughness: 0.8 })
+    );
+    ccGate.position.set(0, 1.9, 6.8);
+    castleClintonGroup.add(ccGate);
+
+    // US Flagpole in courtyard
+    const ccPole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 10.0, 8), steelCableMat);
+    ccPole.position.set(0, 5.0, 0);
+    castleClintonGroup.add(ccPole);
+
+    const ccFlag = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.0, 0.05), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+    ccFlag.position.set(0.8, 9.2, 0);
+    castleClintonGroup.add(ccFlag);
+
+    group.add(castleClintonGroup);
+  }
 
   // -------------------------------------------------------------------------
-  // STATEN ISLAND FERRY WHITEHALL TERMINAL SLIPS & VESSELS (u = 0.50 - 0.54)
+  // STATEN ISLAND FERRY WHITEHALL TERMINAL SLIPS & VESSELS (u = 0.51)
   // -------------------------------------------------------------------------
+  const fSlip = getRiverFrame(0.51);
+  const slipBasis = new THREE.Matrix4().makeBasis(fSlip.tangent, fSlip.up, fSlip.side);
+
   const whitehallSlips = createWhitehallFerrySlips();
-  whitehallSlips.group.position.set(fMan.side.x * 11.0, 1.2, 22.0);
-  manGroup.add(whitehallSlips.group);
+  whitehallSlips.group.quaternion.setFromRotationMatrix(slipBasis);
+  const slipOrigin = fSlip.pt.clone().addScaledVector(fSlip.side, 14.2);
+  slipOrigin.y = 1.35;
+  whitehallSlips.group.position.copy(slipOrigin);
+  group.add(whitehallSlips.group);
 
-  // 1. Staten Island Ferry (Moored in Berth 1 at z = 22.0 - 8.5 = 13.5, oriented along slip pocket)
+  // 1. Staten Island Ferry (Moored in Berth 1 at local berth1Pos, pointing outward into bay)
   const siFerryObj = createStatenIslandFerry();
-  siFerryObj.group.position.set(fMan.side.x * 11.0 - 13.0, 1.8, 22.0 - 8.5);
-  siFerryObj.group.rotation.y = Math.PI * 0.5;
-  manGroup.add(siFerryObj.group);
+  siFerryObj.group.position.copy(whitehallSlips.berth1Pos);
+  siFerryObj.group.rotation.set(0, 0, 0);
+  whitehallSlips.group.add(siFerryObj.group);
 
-  // 2. NYC Fast Catamaran (Moored in Berth 2 at z = 22.0 + 8.0 = 30.0, oriented along slip pocket)
+  // 2. NYC Fast Catamaran (Moored in Berth 2 at local berth2Pos, pointing outward into bay)
   const catamaranObj = createNYCFerryCatamaran();
-  catamaranObj.group.position.set(fMan.side.x * 11.0 - 10.0, 1.7, 22.0 + 8.0);
-  catamaranObj.group.rotation.y = Math.PI * 0.5;
-  manGroup.add(catamaranObj.group);
+  catamaranObj.group.position.copy(whitehallSlips.berth2Pos);
+  catamaranObj.group.rotation.set(0, 0, 0);
+  whitehallSlips.group.add(catamaranObj.group);
 
-  // 3. Adrift Commercial Tanker Barge ("John B. Caddell" Benchmark in Upper Bay fairway)
+  // 3. Adrift Commercial Tanker Barge ("John B. Caddell" Benchmark in Upper Bay fairway at u = 0.38)
   const tankerBargeObj = createHarborTankerBarge();
-  const fTanker = getRiverFrame(0.40);
+  const fTanker = getRiverFrame(0.38);
   const tankerPos = fTanker.pt.clone().addScaledVector(fTanker.side, -14.0);
   tankerPos.y = 1.6;
   tankerBargeObj.group.position.copy(tankerPos);
   tankerBargeObj.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fTanker.tangent);
   group.add(tankerBargeObj.group);
 
+  // 4. US Coast Guard RB-M 45ft Patrol Cutter (Stationed in Upper Bay Channel at u = 0.28)
+  const uscgCutterObj = createCoastGuardCutter();
+  const fUSCG = getRiverFrame(0.28);
+  const uscgPos = fUSCG.pt.clone().addScaledVector(fUSCG.side, -8.0);
+  uscgPos.y = 1.55;
+  uscgCutterObj.group.position.copy(uscgPos);
+  uscgCutterObj.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fUSCG.tangent);
+  group.add(uscgCutterObj.group);
+
   vesselsObj = {
     siFerry: {
       group: siFerryObj.group,
-      basePos: siFerryObj.group.position.clone(),
-      baseRot: siFerryObj.group.rotation.clone(),
+      basePos: whitehallSlips.berth1Pos.clone(),
+      baseRot: new THREE.Euler(0, 0, 0),
       materials: siFerryObj.materials
     },
     catamaran: {
       group: catamaranObj.group,
-      basePos: catamaranObj.group.position.clone(),
-      baseRot: catamaranObj.group.rotation.clone(),
+      basePos: whitehallSlips.berth2Pos.clone(),
+      baseRot: new THREE.Euler(0, 0, 0),
       materials: catamaranObj.materials
     },
     tankerBarge: {
@@ -2541,6 +2814,13 @@ export function buildNewYorkScene(group, river, terrain) {
       basePos: tankerBargeObj.group.position.clone(),
       baseRot: tankerBargeObj.group.rotation.clone(),
       materials: tankerBargeObj.materials
+    },
+    uscgCutter: {
+      group: uscgCutterObj.group,
+      basePos: uscgCutterObj.group.position.clone(),
+      baseRot: uscgCutterObj.group.rotation.clone(),
+      materials: uscgCutterObj.materials,
+      strobeLight: uscgCutterObj.strobeLight
     },
     slipAprons: {
       apron1: whitehallSlips.apron1,
@@ -4287,7 +4567,7 @@ export function buildNewYorkScene(group, river, terrain) {
   // -------------------------------------------------------------------------
   function updateFerryTerminalVessels(t, uWave) {
     if (!vesselsObj) return;
-    const { siFerry, catamaran, tankerBarge, slipAprons } = vesselsObj;
+    const { siFerry, catamaran, tankerBarge, uscgCutter, slipAprons } = vesselsObj;
 
     if (t <= 0.0001 || uWave <= 0.0001) {
       // Pristine baseline reset
@@ -4297,8 +4577,19 @@ export function buildNewYorkScene(group, river, terrain) {
       catamaran.group.rotation.copy(catamaran.baseRot);
       tankerBarge.group.position.copy(tankerBarge.basePos);
       tankerBarge.group.rotation.copy(tankerBarge.baseRot);
-      if (slipAprons && slipAprons.apron1) slipAprons.apron1.position.y = slipAprons.baseApron1Y;
-      if (slipAprons && slipAprons.apron2) slipAprons.apron2.position.y = slipAprons.baseApron2Y;
+      if (uscgCutter) {
+        uscgCutter.group.position.copy(uscgCutter.basePos);
+        uscgCutter.group.rotation.copy(uscgCutter.baseRot);
+        if (uscgCutter.strobeLight) uscgCutter.strobeLight.intensity = 1.5;
+      }
+      if (slipAprons && slipAprons.apron1) {
+        slipAprons.apron1.position.y = slipAprons.baseApron1Y;
+        slipAprons.apron1.rotation.x = 0.12;
+      }
+      if (slipAprons && slipAprons.apron2) {
+        slipAprons.apron2.position.y = slipAprons.baseApron2Y;
+        slipAprons.apron2.rotation.x = 0.14;
+      }
       return;
     }
 
@@ -4306,33 +4597,52 @@ export function buildNewYorkScene(group, river, terrain) {
       // Normal harbor state with gentle water rocking
       const calmPhase = t * 7.0;
       siFerry.group.position.copy(siFerry.basePos);
-      siFerry.group.position.y = siFerry.basePos.y + Math.sin(calmPhase) * 0.06;
+      siFerry.group.position.y = siFerry.basePos.y + Math.sin(calmPhase) * 0.04;
+      siFerry.group.position.x = siFerry.basePos.x + Math.sin(calmPhase * 0.5) * 0.04;
       siFerry.group.rotation.copy(siFerry.baseRot);
-      siFerry.group.rotation.z = siFerry.baseRot.z + Math.cos(calmPhase * 0.8) * 0.012;
+      siFerry.group.rotation.z = siFerry.baseRot.z + Math.cos(calmPhase * 0.8) * 0.008;
 
       catamaran.group.position.copy(catamaran.basePos);
-      catamaran.group.position.y = catamaran.basePos.y + Math.sin(calmPhase * 1.2 + 0.5) * 0.08;
+      catamaran.group.position.y = catamaran.basePos.y + Math.sin(calmPhase * 1.2 + 0.5) * 0.05;
+      catamaran.group.position.x = catamaran.basePos.x + Math.cos(calmPhase * 0.6) * 0.05;
       catamaran.group.rotation.copy(catamaran.baseRot);
-      catamaran.group.rotation.z = catamaran.baseRot.z + Math.cos(calmPhase * 1.1) * 0.018;
+      catamaran.group.rotation.z = catamaran.baseRot.z + Math.cos(calmPhase * 1.1) * 0.012;
 
       tankerBarge.group.position.copy(tankerBarge.basePos);
       tankerBarge.group.position.y = tankerBarge.basePos.y + Math.sin(calmPhase * 0.6) * 0.05;
       tankerBarge.group.rotation.copy(tankerBarge.baseRot);
       tankerBarge.group.rotation.z = tankerBarge.baseRot.z + Math.sin(calmPhase * 0.7) * 0.01;
 
-      if (slipAprons && slipAprons.apron1) slipAprons.apron1.position.y = slipAprons.baseApron1Y;
-      if (slipAprons && slipAprons.apron2) slipAprons.apron2.position.y = slipAprons.baseApron2Y;
+      if (uscgCutter) {
+        uscgCutter.group.position.copy(uscgCutter.basePos);
+        uscgCutter.group.position.y = uscgCutter.basePos.y + Math.sin(t * 8.0) * 0.06;
+        uscgCutter.group.rotation.copy(uscgCutter.baseRot);
+        uscgCutter.group.rotation.z = uscgCutter.baseRot.z + Math.cos(t * 9.0) * 0.02;
+        uscgCutter.group.rotation.x = uscgCutter.baseRot.x + Math.sin(t * 7.5) * 0.015;
+        if (uscgCutter.strobeLight) {
+          uscgCutter.strobeLight.intensity = (Math.sin(t * 22.0) > 0.0) ? 2.2 : 0.2;
+        }
+      }
+
+      if (slipAprons && slipAprons.apron1) {
+        slipAprons.apron1.position.y = slipAprons.baseApron1Y;
+        slipAprons.apron1.rotation.x = 0.12;
+      }
+      if (slipAprons && slipAprons.apron2) {
+        slipAprons.apron2.position.y = slipAprons.baseApron2Y;
+        slipAprons.apron2.rotation.x = 0.14;
+      }
     } else {
       // Storm Surge Inundation at South Ferry (u = 0.42 - 1.0)
       const surgeLocal = Math.min(1.0, (uWave - 0.42) / 0.12);
       const surgeRise = surgeLocal * 2.85; // 2.85m surge crest (~14.9 ft NAVD88)
 
-      // 1. Staten Island Ferry dynamic storm reaction
+      // 1. Staten Island Ferry dynamic storm reaction (within slip fender clearance)
       const stormPhase = t * 18.0;
-      const stormHeave = Math.sin(stormPhase) * 0.32 * surgeLocal;
-      const stormPitch = Math.sin(stormPhase * 0.8) * 0.065 * surgeLocal;
-      const stormRoll = Math.cos(stormPhase * 0.9) * 0.11 * surgeLocal;
-      const surgeSway = Math.sin(stormPhase * 0.7) * 0.35 * surgeLocal;
+      const stormHeave = Math.sin(stormPhase) * 0.24 * surgeLocal;
+      const stormPitch = Math.sin(stormPhase * 0.8) * 0.04 * surgeLocal;
+      const stormRoll = Math.cos(stormPhase * 0.9) * 0.055 * surgeLocal;
+      const surgeSway = Math.sin(stormPhase * 0.7) * 0.12 * surgeLocal; // Max 0.12m sway (well within 0.7m clearance)
 
       siFerry.group.position.copy(siFerry.basePos);
       siFerry.group.position.y = siFerry.basePos.y + surgeRise + stormHeave;
@@ -4343,10 +4653,10 @@ export function buildNewYorkScene(group, river, terrain) {
 
       // 2. NYC Fast Catamaran dynamic storm reaction
       const catStormPhase = t * 22.0;
-      const catHeave = Math.sin(catStormPhase + 1.2) * 0.38 * surgeLocal;
-      const catPitch = Math.cos(catStormPhase * 0.85) * 0.095 * surgeLocal;
-      const catRoll = Math.sin(catStormPhase * 0.95) * 0.15 * surgeLocal;
-      const catSway = Math.cos(catStormPhase * 0.75) * 0.42 * surgeLocal;
+      const catHeave = Math.sin(catStormPhase + 1.2) * 0.26 * surgeLocal;
+      const catPitch = Math.cos(catStormPhase * 0.85) * 0.05 * surgeLocal;
+      const catRoll = Math.sin(catStormPhase * 0.95) * 0.075 * surgeLocal;
+      const catSway = Math.cos(catStormPhase * 0.75) * 0.14 * surgeLocal; // Max 0.14m sway (within 0.8m clearance)
 
       catamaran.group.position.copy(catamaran.basePos);
       catamaran.group.position.y = catamaran.basePos.y + surgeRise + catHeave;
@@ -4377,12 +4687,26 @@ export function buildNewYorkScene(group, river, terrain) {
         tankerBarge.group.rotation.x += pitchAngle;
       }
 
-      // 4. Loading aprons ride up with ferry deck
+      // 4. US Coast Guard RB-M Cutter in storm conditions
+      if (uscgCutter) {
+        uscgCutter.group.position.copy(uscgCutter.basePos);
+        uscgCutter.group.position.y = uscgCutter.basePos.y + surgeRise * 0.9 + Math.sin(t * 14.0) * 0.22;
+        uscgCutter.group.rotation.copy(uscgCutter.baseRot);
+        uscgCutter.group.rotation.z = uscgCutter.baseRot.z + Math.cos(t * 12.0) * 0.06;
+        uscgCutter.group.rotation.x = uscgCutter.baseRot.x + Math.sin(t * 11.0) * 0.04;
+        if (uscgCutter.strobeLight) {
+          uscgCutter.strobeLight.intensity = (Math.sin(t * 28.0) > -0.2) ? 3.0 : 0.2;
+        }
+      }
+
+      // 5. Loading aprons ride up with ferry deck
       if (slipAprons && slipAprons.apron1) {
-        slipAprons.apron1.position.y = slipAprons.baseApron1Y + surgeRise * 0.8;
+        slipAprons.apron1.position.y = slipAprons.baseApron1Y + surgeRise * 0.82;
+        slipAprons.apron1.rotation.x = 0.12 - surgeLocal * 0.20;
       }
       if (slipAprons && slipAprons.apron2) {
-        slipAprons.apron2.position.y = slipAprons.baseApron2Y + surgeRise * 0.8;
+        slipAprons.apron2.position.y = slipAprons.baseApron2Y + surgeRise * 0.82;
+        slipAprons.apron2.rotation.x = 0.14 - surgeLocal * 0.20;
       }
     }
   }
