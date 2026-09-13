@@ -93,7 +93,7 @@ export class FloodSimulation {
     this.initNewYorkGenesis();
 
     // Procedural New York landmarks, bridges, skyscrapers, and countermeasures
-    const { wipeableItems, arcLight, arcMesh, updateTubes, updateFloatingItems, updateBridgeTraffic, updateFerryTerminalVessels, setTwinMode } = buildNewYorkScene(this.group, this.river, this.terrain);
+    const { wipeableItems, arcLight, arcMesh, updateTubes, updateFloatingItems, updateBridgeTraffic, updateFerryTerminalVessels } = buildNewYorkScene(this.group, this.river, this.terrain);
     this.wipeableItems = wipeableItems;
     this.nyArcLight = arcLight;
     this.nyArcMesh = arcMesh;
@@ -101,16 +101,9 @@ export class FloodSimulation {
     this.nyUpdateFloating = updateFloatingItems;
     this.nyUpdateBridgeTraffic = updateBridgeTraffic;
     this.nyUpdateFerryVessels = updateFerryTerminalVessels;
-    this.nySetTwinMode = setTwinMode;
 
     // New York landmark badges
     this.initNewYorkLandmarkBadges();
-  }
-
-  setTwinMode(mode) {
-    if (this.nySetTwinMode) {
-      this.nySetTwinMode(mode);
-    }
   }
 
   initNewYorkLandmarkBadges() {

@@ -3,8 +3,7 @@ import {
   getModernGlassFacadeTexture,
   getStoneMasonryFacadeTexture,
   getHistoricBrickFacadeTexture,
-  get1WTCFacadeTexture,
-  getDigitalTwinBuildingTexture
+  get1WTCFacadeTexture
 } from './newyork_textures.js';
 
 /**
@@ -28,7 +27,6 @@ export function buildNewYorkScene(group, river, terrain) {
   const wipeableItems = [];
   const dynamicWaterItems = [];
   const tubesList = [];
-  let metroStation = null;
   let vesselsObj = null;
 
   // Helper to place objects on river tangents & bank normals
@@ -2271,146 +2269,7 @@ export function buildNewYorkScene(group, river, terrain) {
     };
   }
 
-  /**
-   * Subterranean Cutaway Metro Station Vault (South Ferry / 1 Train)
-   * Featuring white glazed subway tiles, blue mosaic trim, elevated passenger platforms,
-   * turnstiles, docked 2-car subway train, descending stairwell with cascading floodwater,
-   * and rising internal station inundation that submerges the tracks and platform.
-   */
-  function buildSubsurfaceMetroStationCutaway(fSub) {
-    const stationGroup = new THREE.Group();
-    const pos = fSub.pt.clone().addScaledVector(fSub.side, 19.5).addScaledVector(fSub.tangent, -4.5);
-    stationGroup.position.set(pos.x, -1.2, pos.z);
-    stationGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fSub.tangent);
 
-    const sLen = 22.0;
-    const sWid = 13.0;
-    const sH = 5.6;
-
-    const tileMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.25, metalness: 0.2 });
-    const mosaicBlueMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.4 });
-    const yellowEdgeMat = new THREE.MeshBasicMaterial({ color: 0xeab308 });
-
-    const floor = new THREE.Mesh(new THREE.BoxGeometry(sWid, 0.4, sLen), concreteMat);
-    floor.position.y = -sH * 0.5;
-    stationGroup.add(floor);
-
-    const backWall = new THREE.Mesh(new THREE.BoxGeometry(0.5, sH, sLen), tileMat);
-    backWall.position.set(-sWid * 0.5, 0, 0);
-    stationGroup.add(backWall);
-
-    const mosaicTrim = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.6, sLen * 0.92), mosaicBlueMat);
-    mosaicTrim.position.set(-sWid * 0.5, 1.2, 0);
-    stationGroup.add(mosaicTrim);
-
-    const endWall1 = new THREE.Mesh(new THREE.BoxGeometry(sWid, sH, 0.5), tileMat);
-    endWall1.position.set(0, 0, -sLen * 0.5);
-    stationGroup.add(endWall1);
-
-    const endWall2 = new THREE.Mesh(new THREE.BoxGeometry(sWid, sH, 0.5), tileMat);
-    endWall2.position.set(0, 0, sLen * 0.5);
-    stationGroup.add(endWall2);
-
-    const platH = 1.3;
-    const platW = 4.8;
-    const platform = new THREE.Mesh(new THREE.BoxGeometry(platW, platH, sLen * 0.88), concreteMat);
-    platform.position.set(0, -sH * 0.5 + platH * 0.5, 0);
-    stationGroup.add(platform);
-
-    [-platW * 0.5 + 0.1, platW * 0.5 - 0.1].forEach((px) => {
-      const edgeStrip = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.05, sLen * 0.88), yellowEdgeMat);
-      edgeStrip.position.set(px, -sH * 0.5 + platH + 0.03, 0);
-      stationGroup.add(edgeStrip);
-    });
-
-    [-3.8, 3.8].forEach((tx) => {
-      [-0.7, 0.7].forEach((rx) => {
-        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.16, sLen * 0.95), steelCableMat);
-        rail.position.set(tx + rx, -sH * 0.5 + 0.2, 0);
-        stationGroup.add(rail);
-      });
-      const tr = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.2, sLen * 0.95), thirdRailCoverMat);
-      tr.position.set(tx + (tx > 0 ? 1.0 : -1.0), -sH * 0.5 + 0.25, 0);
-      stationGroup.add(tr);
-    });
-
-    const columnMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.5, metalness: 0.6 });
-    for (let cz = -sLen * 0.35; cz <= sLen * 0.35; cz += 3.2) {
-      [-platW * 0.38, platW * 0.38].forEach((cx) => {
-        const col = new THREE.Mesh(new THREE.BoxGeometry(0.25, sH, 0.25), columnMat);
-        col.position.set(cx, 0, cz);
-        stationGroup.add(col);
-      });
-    }
-
-    for (let tn = 0; tn < 4; tn++) {
-      const tst = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.9, 0.8), subwaySteelMat);
-      tst.position.set(-1.2 + tn * 0.8, -sH * 0.5 + platH + 0.45, -sLen * 0.32);
-      stationGroup.add(tst);
-    }
-
-    const trainGroup = new THREE.Group();
-    trainGroup.position.set(3.8, -sH * 0.5 + 1.25, 0);
-    const car1 = new THREE.Mesh(new THREE.BoxGeometry(2.3, 1.8, 8.5), subwaySteelMat);
-    trainGroup.add(car1);
-    const win1 = new THREE.Mesh(new THREE.BoxGeometry(2.34, 0.6, 7.2), new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.85 }));
-    win1.position.y = 0.15;
-    trainGroup.add(win1);
-    const stripe1 = new THREE.Mesh(new THREE.BoxGeometry(2.35, 0.15, 8.2), new THREE.MeshBasicMaterial({ color: 0xdc2626 }));
-    stripe1.position.y = -0.3;
-    trainGroup.add(stripe1);
-    stationGroup.add(trainGroup);
-
-    const stairGroup = new THREE.Group();
-    stairGroup.position.set(0, -sH * 0.5 + platH + 0.8, sLen * 0.38);
-    const stairGeo = new THREE.BoxGeometry(2.6, 2.2, 4.2);
-    const stairRamp = new THREE.Mesh(stairGeo, concreteMat);
-    stairRamp.rotation.x = -0.42;
-    stairGroup.add(stairRamp);
-    stationGroup.add(stairGroup);
-
-    const cascadeGeo = new THREE.PlaneGeometry(2.5, 4.4, 8, 8);
-    const cascadeMat = new THREE.MeshBasicMaterial({
-      color: 0x93c5fd,
-      transparent: true,
-      opacity: 0.85,
-      side: THREE.DoubleSide
-    });
-    const stairCascade = new THREE.Mesh(cascadeGeo, cascadeMat);
-    stairCascade.position.set(0, -sH * 0.5 + platH + 1.2, sLen * 0.38);
-    stairCascade.rotation.x = Math.PI * 0.5 - 0.42;
-    stairCascade.visible = false;
-    stationGroup.add(stairCascade);
-
-    const waterGeo = new THREE.BoxGeometry(sWid * 0.98, 3.4, sLen * 0.98);
-    const stationWaterMat = new THREE.MeshStandardMaterial({
-      color: 0x0284c7,
-      roughness: 0.12,
-      metalness: 0.3,
-      transparent: true,
-      opacity: 0.88,
-      depthWrite: false
-    });
-    const stationWaterMesh = new THREE.Mesh(waterGeo, stationWaterMat);
-    stationWaterMesh.position.set(0, -sH * 0.5 + 0.1, 0);
-    stationWaterMesh.scale.set(1.0, 0.001, 1.0);
-    stationWaterMesh.visible = false;
-    stationGroup.add(stationWaterMesh);
-
-    const alarmLight = new THREE.PointLight(0xef4444, 0.0, 25);
-    alarmLight.position.set(0, sH * 0.4, 0);
-    stationGroup.add(alarmLight);
-
-    group.add(stationGroup);
-
-    return {
-      stationGroup,
-      sH,
-      waterMesh: stationWaterMesh,
-      stairCascade,
-      alarmLight
-    };
-  }
 
   // -------------------------------------------------------------------------
   // 1. THE NARROWS & VERRAZZANO-NARROWS SUSPENSION BRIDGE (u = 0.10)
@@ -2846,7 +2705,7 @@ export function buildNewYorkScene(group, river, terrain) {
   // 1. Wall Street Neoclassical Bank / Stock Exchange Facade (u = 0.49)
   {
     const bank = createWallStreetBank();
-    const bankPos = fMan.pt.clone().addScaledVector(fMan.side, 15.2).addScaledVector(fMan.tangent, 5.0);
+    const bankPos = fMan.pt.clone().addScaledVector(fMan.side, 48.0).addScaledVector(fMan.tangent, -10.0);
     bankPos.y = getGroundY(bankPos.x, bankPos.z, 2.8);
     bank.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
     bank.group.rotation.y += 0.12;
@@ -2866,7 +2725,7 @@ export function buildNewYorkScene(group, river, terrain) {
   // 2. Historic Wall Street & Broad Street Corner Signpost (u = 0.50)
   {
     const signpost = createWallStreetSignpost();
-    const signPos = fMan.pt.clone().addScaledVector(fMan.side, 14.5).addScaledVector(fMan.tangent, 1.8);
+    const signPos = fMan.pt.clone().addScaledVector(fMan.side, 42.0).addScaledVector(fMan.tangent, 4.0);
     signPos.y = getGroundY(signPos.x, signPos.z, 2.8);
     signpost.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
 
@@ -2881,7 +2740,7 @@ export function buildNewYorkScene(group, river, terrain) {
   // 3. Bowling Green Charging Bull Bronze Monument (u = 0.50)
   {
     const bull = createChargingBullMonument();
-    const bullPos = fMan.pt.clone().addScaledVector(fMan.side, 16.5).addScaledVector(fMan.tangent, -2.5);
+    const bullPos = fMan.pt.clone().addScaledVector(fMan.side, 40.0).addScaledVector(fMan.tangent, -4.0);
     bullPos.y = getGroundY(bullPos.x, bullPos.z, 2.8);
     bull.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
 
@@ -2898,7 +2757,7 @@ export function buildNewYorkScene(group, river, terrain) {
   // 4. Financial District Modern Reflective Glass High-Rise / Trading Pavilion (u = 0.51)
   {
     const glassPav = createFinancialGlassPavilion();
-    const pavPos = fMan.pt.clone().addScaledVector(fMan.side, 17.5).addScaledVector(fMan.tangent, 15.0);
+    const pavPos = fMan.pt.clone().addScaledVector(fMan.side, 52.0).addScaledVector(fMan.tangent, 18.0);
     pavPos.y = getGroundY(pavPos.x, pavPos.z, 2.8);
     glassPav.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
 
@@ -2917,7 +2776,7 @@ export function buildNewYorkScene(group, river, terrain) {
   // 5. Bowling Green Historic Beaux-Arts Subway Station Control House (4/5 Trains) (u = 0.50)
   {
     const bgKiosk = createBowlingGreenSubwayKiosk();
-    const bgPos = fMan.pt.clone().addScaledVector(fMan.side, 20.0).addScaledVector(fMan.tangent, -5.5);
+    const bgPos = fMan.pt.clone().addScaledVector(fMan.side, 42.0).addScaledVector(fMan.tangent, -12.0);
     bgPos.y = getGroundY(bgPos.x, bgPos.z, 2.8);
     bgKiosk.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
 
@@ -2933,7 +2792,7 @@ export function buildNewYorkScene(group, river, terrain) {
 
     // Bowling Green Sidewalk Subway Ventilation Grate
     const bgGrate = createSidewalkSubwayGrate(2.4, 5.2);
-    const bgGratePos = fMan.pt.clone().addScaledVector(fMan.side, 18.0).addScaledVector(fMan.tangent, -8.5);
+    const bgGratePos = fMan.pt.clone().addScaledVector(fMan.side, 40.0).addScaledVector(fMan.tangent, -15.0);
     bgGratePos.y = getGroundY(bgGratePos.x, bgGratePos.z, 2.8);
     bgGrate.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
 
@@ -2948,7 +2807,7 @@ export function buildNewYorkScene(group, river, terrain) {
   // 6. Wall Street & Broad Street Subway Entrance Portal (2/3/4/5 Trains) (u = 0.51)
   {
     const wsSubway = createNYCSubwayEntrance();
-    const wsSubPos = fMan.pt.clone().addScaledVector(fMan.side, 14.8).addScaledVector(fMan.tangent, 9.5);
+    const wsSubPos = fMan.pt.clone().addScaledVector(fMan.side, 44.0).addScaledVector(fMan.tangent, 12.0);
     wsSubPos.y = getGroundY(wsSubPos.x, wsSubPos.z, 2.8);
     wsSubway.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
 
@@ -2964,7 +2823,7 @@ export function buildNewYorkScene(group, river, terrain) {
 
     // Wall Street Sidewalk Subway Ventilation Grate
     const wsGrate = createSidewalkSubwayGrate(2.2, 4.6);
-    const wsGratePos = fMan.pt.clone().addScaledVector(fMan.side, 13.2).addScaledVector(fMan.tangent, 12.5);
+    const wsGratePos = fMan.pt.clone().addScaledVector(fMan.side, 42.0).addScaledVector(fMan.tangent, 14.5);
     wsGratePos.y = getGroundY(wsGratePos.x, wsGratePos.z, 2.8);
     wsGrate.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
 
@@ -2978,9 +2837,9 @@ export function buildNewYorkScene(group, river, terrain) {
 
   // 7. Paved Coastal Boulevard & Avenue Grid (State Street / Battery Place)
   {
-    // State Street Coastal Boulevard (Inland behind Battery Park at bank offset 24.0m)
+    // State Street Coastal Boulevard (Inland behind Battery Park at bank offset 34.0m)
     const road1 = createPavedRoadGrid(9.5, 46.0, true);
-    const r1Pos = fMan.pt.clone().addScaledVector(fMan.side, 24.0);
+    const r1Pos = fMan.pt.clone().addScaledVector(fMan.side, 34.0);
     r1Pos.y = getGroundY(r1Pos.x, r1Pos.z, 2.75) + 0.05;
     road1.group.position.copy(r1Pos);
     road1.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
@@ -2988,7 +2847,7 @@ export function buildNewYorkScene(group, river, terrain) {
 
     // Broad Street Avenue connecting into Financial District
     const road2 = createPavedRoadGrid(8.5, 28.0, false);
-    const r2Pos = fMan.pt.clone().addScaledVector(fMan.side, 30.0).addScaledVector(fMan.tangent, 8.0);
+    const r2Pos = fMan.pt.clone().addScaledVector(fMan.side, 48.0).addScaledVector(fMan.tangent, 8.0);
     r2Pos.y = getGroundY(r2Pos.x, r2Pos.z, 2.75) + 0.05;
     road2.group.position.copy(r2Pos);
     road2.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.side);
@@ -2997,40 +2856,40 @@ export function buildNewYorkScene(group, river, terrain) {
 
   // 8. Municipal Infrastructure: NYC Streetlamps, Traffic Signals, Hydrants & Benches
   {
-    // Classic Cast-Iron NYC Streetlamps along the waterfront promenade (offset 16.5m)
+    // Classic Cast-Iron NYC Streetlamps along the waterfront promenade (offset 18.0m)
     [-18.0, -6.0, 6.0, 18.0].forEach((lampZ) => {
       const lamp = createNYCStreetLamp();
-      const lPos = fMan.pt.clone().addScaledVector(fMan.side, 16.5).addScaledVector(fMan.tangent, lampZ);
+      const lPos = fMan.pt.clone().addScaledVector(fMan.side, 18.0).addScaledVector(fMan.tangent, lampZ);
       lPos.y = getGroundY(lPos.x, lPos.z, 2.8);
       lamp.group.position.copy(lPos);
       lamp.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
       group.add(lamp.group);
     });
 
-    // Traffic Signals at State St & Broad St intersection
+    // Traffic Signals at State St & Broad St intersection (offset 38.0m)
     [-12.0, 12.0].forEach((sigZ) => {
       const signal = createTrafficSignal();
-      const sPos = fMan.pt.clone().addScaledVector(fMan.side, 28.5).addScaledVector(fMan.tangent, sigZ);
+      const sPos = fMan.pt.clone().addScaledVector(fMan.side, 38.0).addScaledVector(fMan.tangent, sigZ);
       sPos.y = getGroundY(sPos.x, sPos.z, 2.8);
       signal.group.position.copy(sPos);
       signal.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
       group.add(signal.group);
     });
 
-    // Classic Fire Hydrants along sidewalk curbs
+    // Classic Fire Hydrants along sidewalk curbs (offset 30.0m)
     [-10.0, 10.0].forEach((hydZ) => {
       const hyd = createNYCFireHydrant();
-      const hPos = fMan.pt.clone().addScaledVector(fMan.side, 20.0).addScaledVector(fMan.tangent, hydZ);
+      const hPos = fMan.pt.clone().addScaledVector(fMan.side, 30.0).addScaledVector(fMan.tangent, hydZ);
       hPos.y = getGroundY(hPos.x, hPos.z, 2.8);
       hyd.group.position.copy(hPos);
       hyd.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
       group.add(hyd.group);
     });
 
-    // World's Fair Park Benches along Battery Park esplanade
+    // World's Fair Park Benches along Battery Park esplanade (offset 18.5m)
     [-14.0, -4.0, 4.0, 14.0].forEach((benchZ) => {
       const bench = createParkBench();
-      const bPos = fMan.pt.clone().addScaledVector(fMan.side, 15.0).addScaledVector(fMan.tangent, benchZ);
+      const bPos = fMan.pt.clone().addScaledVector(fMan.side, 18.5).addScaledVector(fMan.tangent, benchZ);
       bPos.y = getGroundY(bPos.x, bPos.z, 2.4);
       bench.group.position.copy(bPos);
       bench.group.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), fMan.side);
@@ -3038,23 +2897,23 @@ export function buildNewYorkScene(group, river, terrain) {
     });
   }
 
-  // LOWER MANHATTAN SKYSCRAPER SKYLINE (Accurately offset along bank normal)
+  // LOWER MANHATTAN SKYSCRAPER SKYLINE (Accurately offset deep inland along bank normal)
   // Featuring One World Trade Center, Art Deco classic towers & modern glass high-rises
   const towerDefs = [
     // ONE WORLD TRADE CENTER (Freedom Tower): 68m tall soaring faceted glass spire
-    { offSide: 28.0, offTan: -6.0, w: 11, d: 11, h: 68, mat: oneWtcMat, is1WTC: true },
+    { offSide: 66.0, offTan: -18.0, w: 12, d: 12, h: 68, mat: oneWtcMat, is1WTC: true },
     // 3 World Trade Center: Modern reflective tower
-    { offSide: 38.0, offTan: -12.0, w: 9, d: 9, h: 48, mat: glassTowerMat2, spire: true },
+    { offSide: 80.0, offTan: -24.0, w: 9, d: 9, h: 48, mat: glassTowerMat2, spire: true },
     // 40 Wall Street: Classic Art Deco limestone bank tower with green copper pyramidal roof
-    { offSide: 26.0, offTan: 8.0,  w: 9, d: 9, h: 42, mat: stoneTowerMat, isArtDeco: true },
+    { offSide: 58.0, offTan: 6.0,  w: 9, d: 9, h: 42, mat: stoneTowerMat, isArtDeco: true },
     // 28 Liberty / Chase Manhattan Plaza: Stainless steel & glass skyscraper
-    { offSide: 36.0, offTan: 6.0,  w: 10, d: 10, h: 44, mat: glassTowerMat1, spire: false },
+    { offSide: 74.0, offTan: 8.0,  w: 10, d: 10, h: 44, mat: glassTowerMat1, spire: false },
     // Woolworth Building style gothic setback tower
-    { offSide: 44.0, offTan: 2.0,  w: 8, d: 8, h: 38, mat: stoneTowerMat, isArtDeco: true },
+    { offSide: 72.0, offTan: 24.0,  w: 8, d: 8, h: 38, mat: stoneTowerMat, isArtDeco: true },
     // Standard Oil / Broadway classic stone tower
-    { offSide: 26.0, offTan: 18.0, w: 8, d: 8, h: 32, mat: stoneTowerMat, isArtDeco: false },
+    { offSide: 58.0, offTan: 22.0, w: 8, d: 8, h: 32, mat: stoneTowerMat, isArtDeco: false },
     // 7 World Trade Center modern glass slab
-    { offSide: 46.0, offTan: -20.0, w: 10, d: 8, h: 40, mat: glassTowerMat2, spire: true }
+    { offSide: 86.0, offTan: -10.0, w: 10, d: 8, h: 40, mat: glassTowerMat2, spire: true }
   ];
 
   towerDefs.forEach((t) => {
@@ -3159,10 +3018,10 @@ export function buildNewYorkScene(group, river, terrain) {
     });
   }
 
-  // Yellow Cabs on West Street & Battery Place
-  [-8, 2, 12].forEach((cz, idx) => {
+  // Yellow Cabs on State Street Coastal Boulevard (offset 34.0m)
+  [-8, 2, 10].forEach((cz, idx) => {
     const cab = createYellowCab();
-    const pos = fMan.pt.clone().addScaledVector(fMan.side, 21.0).addScaledVector(fMan.tangent, cz);
+    const pos = fMan.pt.clone().addScaledVector(fMan.side, 34.0).addScaledVector(fMan.tangent, cz);
     pos.y = getGroundY(pos.x, pos.z, 2.8);
     cab.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
     cab.group.rotation.y += (idx % 2 === 0 ? 0.3 : -0.2);
@@ -3176,10 +3035,10 @@ export function buildNewYorkScene(group, river, terrain) {
     });
   });
 
-  // NYPD Cruiser drifting near Bowling Green
+  // NYPD Cruiser parked along State Street near Bowling Green (offset 34.0m)
   {
     const copCar = createNYPDCruiser();
-    const pos = fMan.pt.clone().addScaledVector(fMan.side, 23.5).addScaledVector(fMan.tangent, 5.0);
+    const pos = fMan.pt.clone().addScaledVector(fMan.side, 34.0).addScaledVector(fMan.tangent, -2.0);
     pos.y = getGroundY(pos.x, pos.z, 2.8);
     copCar.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
     copCar.group.rotation.y = -0.5;
@@ -3202,7 +3061,7 @@ export function buildNewYorkScene(group, river, terrain) {
   // station sign, descending tiled stairs, and cascading flood torrent.
   {
     const subPortal = createNYCSubwayEntrance();
-    const pos = fSub.pt.clone().addScaledVector(fSub.side, 13.5).addScaledVector(fSub.tangent, -3.5);
+    const pos = fSub.pt.clone().addScaledVector(fSub.side, 22.0).addScaledVector(fSub.tangent, -3.5);
     pos.y = getGroundY(pos.x, pos.z, 2.7);
     subPortal.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fSub.tangent);
     subPortal.group.rotation.y += 0.2;
@@ -3222,7 +3081,7 @@ export function buildNewYorkScene(group, river, terrain) {
   // South Ferry Sidewalk Subway Ventilation Grate
   {
     const sfGrate = createSidewalkSubwayGrate(2.4, 4.8);
-    const sfGratePos = fSub.pt.clone().addScaledVector(fSub.side, 15.5).addScaledVector(fSub.tangent, -6.5);
+    const sfGratePos = fSub.pt.clone().addScaledVector(fSub.side, 20.0).addScaledVector(fSub.tangent, -6.5);
     sfGratePos.y = getGroundY(sfGratePos.x, sfGratePos.z, 2.7);
     sfGrate.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fSub.tangent);
 
@@ -3237,7 +3096,7 @@ export function buildNewYorkScene(group, river, terrain) {
   // Sandbag protective ring blowing out under hydrostatic head
   for (let s = 0; s < 4; s++) {
     const bund = createSubwaySandbagBund(3.8);
-    const pos = fSub.pt.clone().addScaledVector(fSub.side, 12.8 + (s % 2) * 1.8).addScaledVector(fSub.tangent, -5.5 + s * 1.5);
+    const pos = fSub.pt.clone().addScaledVector(fSub.side, 19.5 + (s % 2) * 1.5).addScaledVector(fSub.tangent, -5.5 + s * 1.2);
     pos.y = getGroundY(pos.x, pos.z, 2.7);
     bund.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fSub.tangent);
 
@@ -3254,7 +3113,7 @@ export function buildNewYorkScene(group, river, terrain) {
   // Delivery van caught in morning rush hour
   {
     const van = createDeliveryVan(0x0284c7);
-    const pos = fSub.pt.clone().addScaledVector(fSub.side, 18.5).addScaledVector(fSub.tangent, 1.5);
+    const pos = fSub.pt.clone().addScaledVector(fSub.side, 34.0).addScaledVector(fSub.tangent, 1.5);
     pos.y = getGroundY(pos.x, pos.z, 2.8);
     van.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fSub.tangent);
 
@@ -3269,9 +3128,6 @@ export function buildNewYorkScene(group, river, terrain) {
   // -------------------------------------------------------------------------
   // SUBTERRANEAN METRO STATION & 7 UNDER-RIVER TRANSIT TUBES
   // -------------------------------------------------------------------------
-  // Subsurface Cutaway Metro Station Vault relocated to open Battery Park lawn near Castle Clinton (u = 0.47)
-  const fSubVault = getRiverFrame(0.47);
-  metroStation = buildSubsurfaceMetroStationCutaway(fSubVault);
 
   // The 7 Historical Under-River Transit Tubes Crossing Upper NY Bay & East River (evenly spaced, non-overlapping)
   const tubeConfigs = [
@@ -3378,7 +3234,7 @@ export function buildNewYorkScene(group, river, terrain) {
       7.0 + (b % 2) * 0.5,
       brickColors[b % brickColors.length]
     );
-    const pos = fBldg.pt.clone().addScaledVector(fBldg.side, 16.0 + (b % 2) * 2.5);
+    const pos = fBldg.pt.clone().addScaledVector(fBldg.side, 26.0 + (b % 2) * 2.5);
     pos.y = getGroundY(pos.x, pos.z, 2.6);
     bldg.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fBldg.tangent);
     bldg.group.rotation.y += (b * 0.3);
@@ -4404,25 +4260,7 @@ export function buildNewYorkScene(group, river, terrain) {
       }
     }
 
-    // 2. Update Battery Park Subsurface Metro Station Cutaway (u = 0.47)
-    if (metroStation) {
-      if (uWave < 0.47) {
-        metroStation.waterMesh.visible = false;
-        metroStation.waterMesh.scale.y = 0.001;
-        metroStation.waterMesh.position.y = -metroStation.sH * 0.5 + 0.1;
-        metroStation.stairCascade.visible = false;
-        metroStation.alarmLight.intensity = 0.0;
-      } else {
-        const stProg = Math.min(1.0, (uWave - 0.47) / 0.045);
-        metroStation.waterMesh.visible = true;
-        metroStation.waterMesh.scale.y = 0.05 + stProg * 0.95;
-        metroStation.waterMesh.position.y = -metroStation.sH * 0.5 + 0.1 + stProg * (metroStation.sH * 0.55);
-        metroStation.stairCascade.visible = true;
-        metroStation.stairCascade.material.opacity = 0.75 + Math.sin(Date.now() * 0.03) * 0.15;
-        const alarmPulse = Math.sin(Date.now() * 0.05) > 0.0 ? 1.0 : 0.0;
-        metroStation.alarmLight.intensity = alarmPulse * 5.0;
-      }
-    }
+
   }
 
   // -------------------------------------------------------------------------
@@ -4574,35 +4412,6 @@ export function buildNewYorkScene(group, river, terrain) {
     }
   }
 
-  const twinBuildingTex = getDigitalTwinBuildingTexture();
-
-  function setTwinMode(mode) {
-    const isTwin = (mode === 'digital_twin');
-    if (isTwin && twinBuildingTex) {
-      glassTowerMat1.map = twinBuildingTex;
-      glassTowerMat2.map = twinBuildingTex;
-      stoneTowerMat.map = twinBuildingTex;
-      oneWtcMat.map = twinBuildingTex;
-      glassTowerMat1.color.setHex(0x0ea5e9);
-      glassTowerMat2.color.setHex(0x0ea5e9);
-      stoneTowerMat.color.setHex(0x0284c7);
-      oneWtcMat.color.setHex(0x38bdf8);
-    } else {
-      glassTowerMat1.map = glassTex1;
-      glassTowerMat2.map = glassTex2;
-      stoneTowerMat.map = stoneTex;
-      oneWtcMat.map = wtcTex;
-      glassTowerMat1.color.setHex(0xffffff);
-      glassTowerMat2.color.setHex(0xffffff);
-      stoneTowerMat.color.setHex(0xffffff);
-      oneWtcMat.color.setHex(0xffffff);
-    }
-    glassTowerMat1.needsUpdate = true;
-    glassTowerMat2.needsUpdate = true;
-    stoneTowerMat.needsUpdate = true;
-    oneWtcMat.needsUpdate = true;
-  }
-
   return {
     wipeableItems,
     dynamicWaterItems,
@@ -4611,7 +4420,6 @@ export function buildNewYorkScene(group, river, terrain) {
     updateTubes,
     updateFloatingItems,
     updateBridgeTraffic,
-    updateFerryTerminalVessels,
-    setTwinMode
+    updateFerryTerminalVessels
   };
 }

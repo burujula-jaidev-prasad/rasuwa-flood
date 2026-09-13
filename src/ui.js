@@ -12,8 +12,6 @@ export class UIManager {
     this.isSidebarOpen = true;
     this.activeTab = 'impact'; // 'impact' | 'countermeasures'
     this.currentScenario = getScenario();
-    this.twinMode = 'digital_twin';
-    this.isTwinSplit = false;
 
     this.initDOMElements();
     this.attachEventListeners();
@@ -69,29 +67,6 @@ export class UIManager {
     this.elGuidedBtn = document.getElementById('guided-btn');
     this.elRainBtn = document.getElementById('rain-btn');
     this.elSpeedBtn = document.getElementById('speed-btn');
-
-    // Real 3D Map & Digital Twin controls & modal elements
-    this.elMapModeContainer = document.getElementById('map-mode-container');
-    this.elMapModeToggle = document.getElementById('map-mode-toggle');
-    this.elMapModeBadge = document.getElementById('map-mode-badge');
-    this.elMapKeyBtn = document.getElementById('map-key-btn');
-    this.elGoogleKeyModal = document.getElementById('google-key-modal');
-    this.elKeyModalClose = document.getElementById('key-modal-close');
-    this.elGoogleKeyInput = document.getElementById('google-api-key-input');
-    this.elKeyBtnSave = document.getElementById('key-btn-save');
-    this.elKeyBtnFallback = document.getElementById('key-btn-fallback');
-    this.elTwinSplitToggle = document.getElementById('twin-split-toggle');
-    this.elDigitalTwinHud = document.getElementById('digital-twin-hud');
-    this.elTwinGaugeVal = document.getElementById('twin-gauge-val');
-    this.elTwinGaugeSub = document.getElementById('twin-gauge-sub');
-    this.elTwinSubwayVal = document.getElementById('twin-subway-val');
-    this.elTwinSubwaySub = document.getElementById('twin-subway-sub');
-    this.elTwinSeawallVal = document.getElementById('twin-seawall-val');
-    this.elTwinSeawallSub = document.getElementById('twin-seawall-sub');
-    this.elTwinFlowVal = document.getElementById('twin-flow-val');
-    this.elTwinFlowSub = document.getElementById('twin-flow-sub');
-    this.elTwinModeIcon = document.getElementById('twin-mode-icon');
-    this.elTwinModeText = document.getElementById('twin-mode-text');
   }
 
   renderWaypointNav() {
@@ -201,56 +176,6 @@ export class UIManager {
         }
       });
     });
-
-    // Real 3D Map, Digital Twin & Google API Key modal event listeners
-    if (this.elMapModeToggle) {
-      this.elMapModeToggle.addEventListener('click', () => {
-        if (this.options.onToggleTwinMode) {
-          this.options.onToggleTwinMode();
-        } else if (this.options.onToggleGoogle3D) {
-          this.options.onToggleGoogle3D();
-        }
-      });
-    }
-
-    if (this.elTwinSplitToggle) {
-      this.elTwinSplitToggle.addEventListener('click', () => {
-        if (this.options.onToggleTwinSplit) {
-          this.options.onToggleTwinSplit();
-        }
-      });
-    }
-
-    if (this.elMapKeyBtn) {
-      this.elMapKeyBtn.addEventListener('click', () => {
-        this.showGoogleKeyModal();
-      });
-    }
-
-    if (this.elKeyModalClose) {
-      this.elKeyModalClose.addEventListener('click', () => {
-        this.hideGoogleKeyModal();
-      });
-    }
-
-    if (this.elKeyBtnFallback) {
-      this.elKeyBtnFallback.addEventListener('click', () => {
-        this.hideGoogleKeyModal();
-        if (this.options.onFallbackLocal) {
-          this.options.onFallbackLocal();
-        }
-      });
-    }
-
-    if (this.elKeyBtnSave) {
-      this.elKeyBtnSave.addEventListener('click', () => {
-        const key = this.elGoogleKeyInput ? this.elGoogleKeyInput.value.trim() : '';
-        if (this.options.onSaveGoogleKey) {
-          this.options.onSaveGoogleKey(key);
-        }
-        this.hideGoogleKeyModal();
-      });
-    }
   }
 
   updatePlayBtnState() {
@@ -461,11 +386,6 @@ export class UIManager {
     // 4. Captions
     const caption = getCurrentNarration(t);
     this.elCaptionText.textContent = caption;
-
-    // 5. Digital Twin Live Telemetry update (for NYC)
-    if (isNewYork) {
-      this.updateDigitalTwinTelemetry(t);
-    }
   }
 
   updateWaypointNavHighlight(id) {
@@ -679,180 +599,6 @@ export class UIManager {
     scenarioBtns.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.id === id);
     });
-
-    this.updateMapModeVisibility(id);
-  }
-
-  showGoogleKeyModal() {
-    if (this.elGoogleKeyModal) {
-      this.elGoogleKeyModal.style.display = 'flex';
-      if (this.elGoogleKeyInput) {
-        const currentKey = (typeof localStorage !== 'undefined') ? (localStorage.getItem('google_3d_tiles_api_key') || '') : '';
-        this.elGoogleKeyInput.value = currentKey;
-        this.elGoogleKeyInput.focus();
-      }
-    }
-  }
-
-  hideGoogleKeyModal() {
-    if (this.elGoogleKeyModal) {
-      this.elGoogleKeyModal.style.display = 'none';
-    }
-  }
-
-  setGoogle3DActive(isActive) {
-    if (this.elMapModeToggle) {
-      this.elMapModeToggle.classList.toggle('active', isActive);
-    }
-    if (this.elMapModeBadge) {
-      this.elMapModeBadge.textContent = isActive ? 'GOOGLE 3D' : 'SATELLITE';
-      this.elMapModeBadge.classList.toggle('satellite', !isActive);
-    }
-  }
-
-  setTwinMode(mode) {
-    this.twinMode = mode;
-    const isTwin = (mode === 'digital_twin');
-    if (this.elMapModeToggle) {
-      this.elMapModeToggle.classList.toggle('active', isTwin);
-    }
-    if (this.elMapModeBadge) {
-      this.elMapModeBadge.textContent = isTwin ? 'GIS TWIN' : 'SATELLITE';
-      this.elMapModeBadge.classList.toggle('satellite', !isTwin);
-    }
-    if (this.elTwinModeIcon) {
-      this.elTwinModeIcon.textContent = isTwin ? '🌐' : '🛰️';
-    }
-    if (this.elTwinModeText) {
-      this.elTwinModeText.textContent = isTwin ? 'DIGITAL TWIN' : 'SATELLITE 3D';
-    }
-    if (this.elDigitalTwinHud) {
-      const isNY = this.currentScenario?.config?.id === 'newyork';
-      this.elDigitalTwinHud.style.display = (isNY && isTwin) ? 'block' : 'none';
-    }
-  }
-
-  setTwinSplitActive(isActive) {
-    this.isTwinSplit = isActive;
-    if (this.elTwinSplitToggle) {
-      this.elTwinSplitToggle.classList.toggle('active', isActive);
-    }
-  }
-
-  updateDigitalTwinTelemetry(t) {
-    if (!this.elDigitalTwinHud) return;
-
-    // Tide Gauge (USGS #01374019 at The Battery)
-    let gaugeFt = 4.2;
-    let gaugeSub = 'Tide stage: High astro tide (pre-storm)';
-    if (t < 0.20) {
-      gaugeFt = 4.2 + t * 4.0;
-      gaugeSub = 'Pre-surge astronomical high tide';
-    } else if (t < 0.52) {
-      const p = (t - 0.20) / (0.52 - 0.20);
-      gaugeFt = 5.0 + Math.pow(p, 1.4) * 9.9; // hits 14.9 ft
-      gaugeSub = p > 0.8 ? 'PEAK STORM SURGE • RECORD FLOOD LEVEL' : 'Surge advancing rapidly up harbor';
-    } else if (t < 0.75) {
-      const p = (t - 0.52) / (0.75 - 0.52);
-      gaugeFt = 14.9 - p * 6.2;
-      gaugeSub = 'Storm eye departing • Surge crest receding';
-    } else {
-      const p = (t - 0.75) / 0.25;
-      gaugeFt = 8.7 - p * 3.5;
-      gaugeSub = 'Post-surge drainage • Low tide transition';
-    }
-
-    // Subway System Inundation
-    let subwayGal = 0.0;
-    let subwaySub = '7 river tubes dry & monitored';
-    if (t < 0.35) {
-      subwayGal = 0.0;
-      subwaySub = '7 river tubes operational';
-    } else if (t < 0.55) {
-      const p = (t - 0.35) / 0.20;
-      subwayGal = Math.pow(p, 1.6) * 86.4;
-      subwaySub = p > 0.7 ? '7/7 Under-river tubes inundated' : 'Seawall breach • Seawater entering portals';
-    } else if (t < 0.78) {
-      subwayGal = 86.4;
-      subwaySub = '86M gal trapped • Power grid offline';
-    } else {
-      const p = (t - 0.78) / 0.22;
-      subwayGal = 86.4 - p * 54.0; // pumping down
-      subwaySub = 'USACE Armada dewatering (380k GPM)';
-    }
-
-    // Seawall Hydrostatic Load
-    let seawallPct = 12;
-    let seawallStatus = 'NOMINAL';
-    let seawallSub = 'Battery Park Bulkhead';
-    if (t < 0.25) {
-      seawallPct = Math.round(12 + t * 40);
-      seawallStatus = 'NOMINAL';
-    } else if (t < 0.45) {
-      const p = (t - 0.25) / 0.20;
-      seawallPct = Math.round(22 + p * 65);
-      seawallStatus = seawallPct > 70 ? 'CRITICAL' : 'HIGH';
-      seawallSub = 'Wave impact & hydrodynamic loading';
-    } else if (t < 0.70) {
-      seawallPct = 100;
-      seawallStatus = 'OVERTOPPED';
-      seawallSub = 'Seawall overtopped • Flooding Battery Park';
-    } else {
-      const p = (t - 0.70) / 0.30;
-      seawallPct = Math.round(100 - p * 65);
-      seawallStatus = 'RECEDING';
-      seawallSub = 'Water level dropped below coping';
-    }
-
-    // Surge Discharge Rate
-    let flowRate = 120;
-    let flowSub = 'The Narrows throat';
-    if (t < 0.20) {
-      flowRate = Math.round(120 + t * 800);
-    } else if (t < 0.50) {
-      const p = (t - 0.20) / 0.30;
-      flowRate = Math.round(280 + Math.pow(p, 1.2) * 4570);
-      flowSub = p > 0.7 ? 'Funnel peak velocity • 3.2 m/s' : 'Surge rush through The Narrows';
-    } else {
-      const p = (t - 0.50) / 0.50;
-      flowRate = Math.max(210, Math.round(4850 - p * 4500));
-      flowSub = 'Ebb tide discharge & harbor drainage';
-    }
-
-    if (this.elTwinGaugeVal) {
-      this.elTwinGaugeVal.innerHTML = `+${gaugeFt.toFixed(1)} ft <small>NAVD88</small>`;
-    }
-    if (this.elTwinGaugeSub) {
-      this.elTwinGaugeSub.textContent = gaugeSub;
-    }
-    if (this.elTwinSubwayVal) {
-      this.elTwinSubwayVal.innerHTML = `${subwayGal.toFixed(1)} M <small>GAL</small>`;
-    }
-    if (this.elTwinSubwaySub) {
-      this.elTwinSubwaySub.textContent = subwaySub;
-    }
-    if (this.elTwinSeawallVal) {
-      this.elTwinSeawallVal.innerHTML = `${seawallPct}% <small>${seawallStatus}</small>`;
-    }
-    if (this.elTwinSeawallSub) {
-      this.elTwinSeawallSub.textContent = seawallSub;
-    }
-    if (this.elTwinFlowVal) {
-      this.elTwinFlowVal.innerHTML = `${flowRate.toLocaleString()} <small>m³/s</small>`;
-    }
-    if (this.elTwinFlowSub) {
-      this.elTwinFlowSub.textContent = flowSub;
-    }
-  }
-
-  updateMapModeVisibility(scenarioId) {
-    const isNY = (scenarioId === 'newyork');
-    if (this.elMapModeContainer) {
-      this.elMapModeContainer.style.display = isNY ? 'flex' : 'none';
-    }
-    if (this.elDigitalTwinHud) {
-      this.elDigitalTwinHud.style.display = (isNY && this.twinMode === 'digital_twin') ? 'block' : 'none';
-    }
   }
 
   getAgencyTagsHtml() {

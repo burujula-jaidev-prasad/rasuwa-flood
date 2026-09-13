@@ -85,7 +85,7 @@ export class RiverSystem {
     const isBeijing = (this.scenarioId === 'beijing');
     const isTokyo = (this.scenarioId === 'tokyo');
     const isLondon = (this.scenarioId === 'london');
-    const width = isLondon ? 17.5 : (isNewYork ? 19.5 : (isTokyo ? 15.5 : (isBeijing ? 12.5 : (isDelhi ? 11.5 : 5.2))));
+    const width = isLondon ? 17.5 : (isNewYork ? 28.0 : (isTokyo ? 15.5 : (isBeijing ? 12.5 : (isDelhi ? 11.5 : 5.2))));
     const geometry = new THREE.BufferGeometry();
     const vertices = [];
     const uvs = [];

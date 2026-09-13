@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { PEAKS, getScenario } from './data.js';
-import { getNYCAerialSatelliteTexture, getNYCDigitalTwinTexture } from './scenarios/newyork_textures.js';
+import { getNYCAerialSatelliteTexture } from './scenarios/newyork_textures.js';
 
 // Deterministic 2D noise generator
 function hash2D(x, z) {
@@ -259,7 +259,6 @@ export function createTerrain(riverSystem, scenarioId = null) {
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
     const satelliteTex = getNYCAerialSatelliteTexture();
-    const digitalTwinTex = getNYCDigitalTwinTexture();
 
     const material = satelliteTex ? new THREE.MeshStandardMaterial({
       map: satelliteTex,
@@ -278,31 +277,12 @@ export function createTerrain(riverSystem, scenarioId = null) {
     terrainMesh.receiveShadow = true;
     terrainMesh.castShadow = true;
 
-    function setTwinMode(mode) {
-      if (activeScenarioId !== 'newyork') return;
-      if (mode === 'digital_twin') {
-        if (digitalTwinTex) {
-          material.map = digitalTwinTex;
-          material.roughness = 0.45;
-          material.metalness = 0.35;
-          material.needsUpdate = true;
-        }
-      } else {
-        if (satelliteTex) {
-          material.map = satelliteTex;
-          material.roughness = 0.68;
-          material.metalness = 0.12;
-          material.needsUpdate = true;
-        }
-      }
-    }
-
     function getTerrainHeight(x, z) {
       const riverInfo = riverSystem.getClosestRiverInfo(x, z);
       const riverDist = riverInfo.distance;
-      const bedWidth = 18.0;
-      const bankWidth = 28.0;
-      let h = 2.4 + valueNoise(x * 0.04, z * 0.04) * 1.2;
+      const bedWidth = 14.0;
+      const bankWidth = 18.0;
+      let h = 2.6 + valueNoise(x * 0.04, z * 0.04) * 0.6;
       if (x < -50 && z < -30) {
         const hillDist = Math.sqrt((x + 80) * (x + 80) + (z + 60) * (z + 60));
         if (hillDist < 50) h += (1.0 - hillDist / 50) * 9.5;
@@ -312,13 +292,13 @@ export function createTerrain(riverSystem, scenarioId = null) {
       } else if (riverDist < bankWidth) {
         const t = (riverDist - bedWidth) / (bankWidth - bedWidth);
         const bedFloor = riverInfo.riverY - 1.4;
-        const bankTop = riverInfo.riverY + 1.2;
+        const bankTop = riverInfo.riverY + 0.4;
         h = bedFloor + (bankTop - bedFloor) * Math.sin(t * Math.PI * 0.5);
       }
       return h;
     }
 
-    return { mesh: terrainMesh, geometry, getTerrainHeight, setTwinMode };
+    return { mesh: terrainMesh, geometry, getTerrainHeight };
   }
 
   const isBeijing = (activeScenarioId === 'beijing');
