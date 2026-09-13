@@ -13,8 +13,8 @@
     }
   }
   </script>
-  <script type="module" crossorigin src="./assets/index-zbzii5T9.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-ZbYc-WRR.css">
+  <script type="module" crossorigin src="./assets/index-BueWV8Ux.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-BtZ9h76C.css">
 </head>
 <body>
   <!-- 3D WebGL Canvas Container -->
@@ -59,53 +59,7 @@
       </button>
     </nav>
 
-    <!-- Digital Twin Mapping & 3D Reality Modes -->
-    <div class="map-mode-container" id="map-mode-container">
-      <button class="map-mode-btn" id="map-mode-toggle" title="Digital Twin Mapping: Toggle between Satellite 3D Twin and GIS Cyber Twin">
-        <span class="map-mode-icon" id="twin-mode-icon">🌐</span>
-        <span class="map-mode-text" id="twin-mode-text">DIGITAL TWIN</span>
-        <span class="map-mode-badge satellite" id="map-mode-badge">GIS TWIN</span>
-      </button>
-      <button class="twin-split-btn" id="twin-split-toggle" title="Twin Split Comparison: Pre-Disaster Reality vs Digital Twin Simulation">
-        <span>🔀</span>
-        <span class="twin-split-text">TWIN SPLIT</span>
-      </button>
-      <button class="map-key-btn" id="map-key-btn" title="Google Cloud 3D Tiles Settings (Optional)">
-        <span>🔑</span>
-      </button>
-    </div>
   </header>
-
-  <!-- Digital Twin Telemetry & Inundation Sensor HUD -->
-  <div class="digital-twin-hud" id="digital-twin-hud" style="display: none;">
-    <div class="twin-hud-header">
-      <div class="twin-pulse-dot"></div>
-      <span class="twin-hud-title">NYC DIGITAL TWIN TELEMETRY</span>
-      <span class="twin-badge-live">LIVE SENSOR FEED</span>
-    </div>
-    <div class="twin-sensor-grid">
-      <div class="twin-sensor-cell">
-        <div class="twin-s-label">USGS #01374019 TIDE GAUGE</div>
-        <div class="twin-s-val" id="twin-gauge-val">+4.2 ft <small>NAVD88</small></div>
-        <div class="twin-s-sub" id="twin-gauge-sub">Tide stage: High astro tide</div>
-      </div>
-      <div class="twin-sensor-cell">
-        <div class="twin-s-label">SUBWAY SYSTEM INUNDATION</div>
-        <div class="twin-s-val" id="twin-subway-val">0.0 M <small>GAL</small></div>
-        <div class="twin-s-sub" id="twin-subway-sub">7 river tubes monitored</div>
-      </div>
-      <div class="twin-sensor-cell">
-        <div class="twin-s-label">SEAWALL HYDROSTATIC LOAD</div>
-        <div class="twin-s-val" id="twin-seawall-val">12% <small>NOMINAL</small></div>
-        <div class="twin-s-sub" id="twin-seawall-sub">Battery Park Bulkhead</div>
-      </div>
-      <div class="twin-sensor-cell">
-        <div class="twin-s-label">SURGE DISCHARGE RATE</div>
-        <div class="twin-s-val" id="twin-flow-val">120 <small>m³/s</small></div>
-        <div class="twin-s-sub" id="twin-flow-sub">The Narrows throat</div>
-      </div>
-    </div>
-  </div>
 
   <!-- KPI Disaster Command Dashboard -->
   <div class="tally-container">
@@ -284,29 +238,6 @@
       </div>
       <div class="intro-actions">
         <button class="intro-btn" id="intro-skip-btn">Explore 3D New York Simulation</button>
-  <!-- Google 3D Tiles API Key Configuration Modal -->
-  <div class="google-key-modal-overlay" id="google-key-modal" style="display: none;">
-    <div class="google-key-modal">
-      <div class="key-modal-header">
-        <div class="key-badge">Google Maps Platform</div>
-        <button class="key-modal-close" id="key-modal-close" title="Close">&times;</button>
-      </div>
-      <h3 class="key-modal-title">Real 3D Imaging Map</h3>
-      <p class="key-modal-desc">
-        ✨ <strong>Built-in 3D Satellite & Architectural Imaging Map is ACTIVE</strong> (High-res 2048px aerial orthophoto, authentic NYC skyscraper facades, 60 FPS, zero API key required).
-        <br><br>
-        <strong>Optional:</strong> If you have a Google Cloud API Key with the <strong>Map Tiles API</strong> enabled, you can enter it below to stream Google Photogrammetry 3D Tiles.
-      </p>
-      <div class="key-input-group">
-        <label for="google-api-key-input">Google Cloud API Key (Optional):</label>
-        <input type="password" id="google-api-key-input" placeholder="AIzaSy... (Leave empty for Built-in 3D Satellite Map)" autocomplete="off">
-      </div>
-      <div class="key-modal-footer">
-        <button class="key-btn key-btn-secondary" id="key-btn-fallback">Use 3D Satellite Map</button>
-        <button class="key-btn key-btn-primary" id="key-btn-save">Stream Google 3D Tiles</button>
-      </div>
-      <div class="key-modal-hint">
-        <span>🔒</span> Stored locally in your browser. Never sent to any external server.
       </div>
     </div>
   </div>
