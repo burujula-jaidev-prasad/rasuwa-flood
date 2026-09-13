@@ -94,9 +94,22 @@ export class RiverSystem {
     for (let i = 0; i <= this.sampleCount; i++) {
       const pt = this.points[i];
       const side = this.sides[i];
+      const vU = i / this.sampleCount;
 
-      const left = new THREE.Vector3().copy(pt).addScaledVector(side, -width * 0.5);
-      const right = new THREE.Vector3().copy(pt).addScaledVector(side, width * 0.5);
+      let leftW = width * 0.5;
+      let rightW = width * 0.5;
+
+      if (isNewYork && vU < 0.46) {
+        // Expand Upper New York Bay into a wide natural harbor surrounding Liberty Island
+        const bayFactor = vU < 0.36
+          ? Math.sin(Math.min(1, vU / 0.18) * Math.PI * 0.5)
+          : Math.cos(((vU - 0.36) / (0.46 - 0.36)) * Math.PI * 0.5);
+        leftW = 14.0 + bayFactor * 16.0; // reaches out to -30m (west of Liberty Island)
+        rightW = 14.0 + bayFactor * 8.0;  // reaches out to +22m (east of shipping channel)
+      }
+
+      const left = new THREE.Vector3().copy(pt).addScaledVector(side, -leftW);
+      const right = new THREE.Vector3().copy(pt).addScaledVector(side, rightW);
 
       // Elevated slightly above floor
       left.y += 0.2;
@@ -105,7 +118,6 @@ export class RiverSystem {
       vertices.push(left.x, left.y, left.z);
       vertices.push(right.x, right.y, right.z);
 
-      const vU = i / this.sampleCount;
       uvs.push(0, vU);
       uvs.push(1, vU);
 
@@ -228,13 +240,26 @@ export class RiverSystem {
       const w = isFront ? baseWidth * 1.15 : baseWidth;
       const h = isFront ? pt.y + surgeStage + 0.6 : pt.y + surgeStage;
 
-      const lx = pt.x - side.x * (w * 0.5);
-      const ly = h;
-      const lz = pt.z - side.z * (w * 0.5);
+      let leftW = w * 0.5;
+      let rightW = w * 0.5;
+      if (isNewYork) {
+        const u = i / this.sampleCount;
+        if (u < 0.46) {
+          const bayFactor = u < 0.36
+            ? Math.sin(Math.min(1, u / 0.18) * Math.PI * 0.5)
+            : Math.cos(((u - 0.36) / (0.46 - 0.36)) * Math.PI * 0.5);
+          leftW = (w * 0.5) + bayFactor * 14.0;
+          rightW = (w * 0.5) + bayFactor * 8.0;
+        }
+      }
 
-      const rx = pt.x + side.x * (w * 0.5);
+      const lx = pt.x - side.x * leftW;
+      const ly = h;
+      const lz = pt.z - side.z * leftW;
+
+      const rx = pt.x + side.x * rightW;
       const ry = h;
-      const rz = pt.z + side.z * (w * 0.5);
+      const rz = pt.z + side.z * rightW;
 
       const idx = i * 6;
       pos[idx + 0] = lx; pos[idx + 1] = ly; pos[idx + 2] = lz;

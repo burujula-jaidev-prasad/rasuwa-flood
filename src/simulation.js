@@ -110,7 +110,7 @@ export class FloodSimulation {
     this.landmarkBadges = [];
     const landmarks = [
       { name: "Verrazzano Narrows", sub: "Morning Surge Funnel • 4.8m", u: 0.10, offset: new THREE.Vector3(0, 24, 0) },
-      { name: "Statue of Liberty", sub: "Liberty Island • Fort Wood 1886", u: 0.34, offset: new THREE.Vector3(13, 26, -23) },
+      { name: "Statue of Liberty", sub: "Liberty Island • Fort Wood 1886", u: 0.32, offset: new THREE.Vector3(6.5, 26, -11.3) },
       { name: "Wall St Financial District", sub: "14.9 ft Surge Peak • Seawall Breached", u: 0.49, offset: new THREE.Vector3(-26, 32, 8) },
       { name: "South Ferry & Battery Park", sub: "7 Under-River Tubes Inundated", u: 0.52, offset: new THREE.Vector3(-14, 15, -8) },
       { name: "FDR Drive & ESCR", sub: "16.5-ft Roller Floodgates", u: 0.63, offset: new THREE.Vector3(-20, 16, 14) },

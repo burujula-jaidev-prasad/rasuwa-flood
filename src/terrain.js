@@ -197,8 +197,15 @@ export function createTerrain(riverSystem, scenarioId = null) {
 
       const riverInfo = riverSystem.getClosestRiverInfo(x, z);
       const riverDist = riverInfo.distance;
-      const bedWidth = 18.0; // Wide Upper NY Bay & East River fairway
-      const bankWidth = 28.0;
+      let bedWidth = 18.0; // Wide Upper NY Bay & East River fairway
+      let bankWidth = 28.0;
+      if (riverInfo.u < 0.46) {
+        const bayFactor = riverInfo.u < 0.36
+          ? Math.sin(Math.min(1, riverInfo.u / 0.18) * Math.PI * 0.5)
+          : Math.cos(((riverInfo.u - 0.36) / (0.46 - 0.36)) * Math.PI * 0.5);
+        bedWidth = 18.0 + bayFactor * 12.0; // Up to 30.0m harbor bed width in Upper Bay
+        bankWidth = bedWidth + 8.0;
+      }
 
       // Base urban coastal topography
       let h = 2.4 + valueNoise(x * 0.04, z * 0.04) * 1.2;
@@ -232,15 +239,24 @@ export function createTerrain(riverSystem, scenarioId = null) {
       const z = posAttr.getZ(i);
       const riverInfo = riverSystem.getClosestRiverInfo(x, z);
       const d = riverInfo.distance;
+      let bedW = 18.0;
+      let bankW = 28.0;
+      if (riverInfo.u < 0.46) {
+        const bayFactor = riverInfo.u < 0.36
+          ? Math.sin(Math.min(1, riverInfo.u / 0.18) * Math.PI * 0.5)
+          : Math.cos(((riverInfo.u - 0.36) / (0.46 - 0.36)) * Math.PI * 0.5);
+        bedW = 18.0 + bayFactor * 12.0;
+        bankW = bedW + 8.0;
+      }
 
       const vertexCol = new THREE.Color();
-      if (d < 18.0) {
+      if (d < bedW) {
         vertexCol.copy(colHarborMud);
-      } else if (d < 28.0) {
-        const t = (d - 18.0) / 10.0;
+      } else if (d < bankW) {
+        const t = (d - bedW) / (bankW - bedW);
         vertexCol.copy(colHarborMud).lerp(colSeawall, t);
-      } else if (d < 38.0) {
-        const t = (d - 28.0) / 10.0;
+      } else if (d < bankW + 10.0) {
+        const t = (d - bankW) / 10.0;
         // Battery Park and waterfront parks greenery
         if (z > -25 && z < 25 && x > 0) {
           vertexCol.copy(colSeawall).lerp(colParkLawn, t * 0.85);
@@ -280,9 +296,16 @@ export function createTerrain(riverSystem, scenarioId = null) {
     function getTerrainHeight(x, z) {
       const riverInfo = riverSystem.getClosestRiverInfo(x, z);
       const riverDist = riverInfo.distance;
-      const bedWidth = 14.0;
-      const bankWidth = 18.0;
-      let h = 2.6 + valueNoise(x * 0.04, z * 0.04) * 0.6;
+      let bedWidth = 18.0;
+      let bankWidth = 28.0;
+      if (riverInfo.u < 0.46) {
+        const bayFactor = riverInfo.u < 0.36
+          ? Math.sin(Math.min(1, riverInfo.u / 0.18) * Math.PI * 0.5)
+          : Math.cos(((riverInfo.u - 0.36) / (0.46 - 0.36)) * Math.PI * 0.5);
+        bedWidth = 18.0 + bayFactor * 12.0;
+        bankWidth = bedWidth + 8.0;
+      }
+      let h = 2.4 + valueNoise(x * 0.04, z * 0.04) * 1.2;
       if (x < -50 && z < -30) {
         const hillDist = Math.sqrt((x + 80) * (x + 80) + (z + 60) * (z + 60));
         if (hillDist < 50) h += (1.0 - hillDist / 50) * 9.5;
@@ -292,7 +315,7 @@ export function createTerrain(riverSystem, scenarioId = null) {
       } else if (riverDist < bankWidth) {
         const t = (riverDist - bedWidth) / (bankWidth - bedWidth);
         const bedFloor = riverInfo.riverY - 1.4;
-        const bankTop = riverInfo.riverY + 0.4;
+        const bankTop = riverInfo.riverY + 1.2;
         h = bedFloor + (bankTop - bedFloor) * Math.sin(t * Math.PI * 0.5);
       }
       return h;

@@ -1791,16 +1791,39 @@ export function buildNewYorkScene(group, river, terrain) {
     const copperDarkMat = new THREE.MeshStandardMaterial({ color: 0x0f766e, roughness: 0.5, metalness: 0.3 });
     const goldTorchMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
     const tabletMat = new THREE.MeshStandardMaterial({ color: 0x14b8a6, roughness: 0.4 });
-    materials.push(graniteFortMat, pedestalStoneMat, pedestalTrimMat, copperPatinaMat, copperDarkMat, goldTorchMat, tabletMat);
+    const harborWaterMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.22, metalness: 0.25, transparent: true, opacity: 0.94, side: THREE.DoubleSide });
+    const foamMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.85, side: THREE.DoubleSide });
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 });
+    const ferryHullMat = new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.4 });
+    const ferryCabinMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 });
+    const ferryStripeMat = new THREE.MeshBasicMaterial({ color: 0xdc2626 });
+    materials.push(graniteFortMat, pedestalStoneMat, pedestalTrimMat, copperPatinaMat, copperDarkMat, goldTorchMat, tabletMat, harborWaterMat, foamMat, woodMat, ferryHullMat, ferryCabinMat, ferryStripeMat);
 
-    // 1. Liberty Island Circular Granite Seawall Bulkhead & Promenade
-    const islandBase = new THREE.Mesh(new THREE.CylinderGeometry(20.0, 21.0, 2.2, 24), graniteFortMat);
-    islandBase.position.y = 1.1;
+    // 0. Ambient Glistening Water Skirt & Shoreline Foam (surrounding Liberty Island 360°)
+    const waterSkirt = new THREE.Mesh(new THREE.RingGeometry(12.4, 28.0, 36), harborWaterMat);
+    waterSkirt.rotation.x = -Math.PI * 0.5;
+    waterSkirt.position.y = 0.01;
+    libertyGroup.add(waterSkirt);
+
+    const shoreFoam = new THREE.Mesh(new THREE.RingGeometry(12.2, 13.0, 36), foamMat);
+    shoreFoam.rotation.x = -Math.PI * 0.5;
+    shoreFoam.position.y = 0.02;
+    libertyGroup.add(shoreFoam);
+
+    // 1. Liberty Island Circular Granite Seawall Bulkhead (submerged in harbor bed, rising 1.0m above water)
+    const islandBase = new THREE.Mesh(new THREE.CylinderGeometry(12.2, 13.5, 3.4, 32), graniteFortMat);
+    islandBase.position.y = -0.5; // Bottom at -2.2m (deep underwater), top at +1.2m
     islandBase.receiveShadow = true;
     libertyGroup.add(islandBase);
 
-    const islandLawn = new THREE.Mesh(new THREE.CylinderGeometry(19.2, 19.2, 0.3, 24), new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.85 }));
-    islandLawn.position.y = 2.25;
+    // Granite coping stone rim
+    const coping = new THREE.Mesh(new THREE.CylinderGeometry(12.5, 12.5, 0.28, 32, 1, true), graniteFortMat);
+    coping.position.y = 1.15;
+    libertyGroup.add(coping);
+
+    // Lush Island Park Lawn
+    const islandLawn = new THREE.Mesh(new THREE.CylinderGeometry(11.8, 11.8, 0.2, 32), new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.85 }));
+    islandLawn.position.y = 1.25;
     islandLawn.receiveShadow = true;
     libertyGroup.add(islandLawn);
 
@@ -1808,118 +1831,154 @@ export function buildNewYorkScene(group, river, terrain) {
     const numPoints = 11;
     for (let p = 0; p < numPoints; p++) {
       const angle = (p / numPoints) * Math.PI * 2;
-      const bastion = new THREE.Mesh(new THREE.BoxGeometry(4.8, 3.2, 7.5), graniteFortMat);
-      bastion.position.set(Math.cos(angle) * 11.5, 3.2, Math.sin(angle) * 11.5);
+      const bastion = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.2, 5.4), graniteFortMat);
+      bastion.position.set(Math.cos(angle) * 7.5, 2.4, Math.sin(angle) * 7.5);
       bastion.rotation.y = -angle;
       bastion.castShadow = true;
       libertyGroup.add(bastion);
     }
-    const starCore = new THREE.Mesh(new THREE.CylinderGeometry(10.5, 11.0, 3.2, 22), graniteFortMat);
-    starCore.position.y = 3.2;
+    const starCore = new THREE.Mesh(new THREE.CylinderGeometry(7.0, 7.4, 2.2, 22), graniteFortMat);
+    starCore.position.y = 2.4;
     starCore.receiveShadow = true;
     libertyGroup.add(starCore);
 
     // 3. Classical Granite Pedestal (Richard Morris Hunt design)
-    const pedBase = new THREE.Mesh(new THREE.BoxGeometry(11.0, 2.0, 11.0), pedestalTrimMat);
-    pedBase.position.y = 5.8;
+    const pedBase = new THREE.Mesh(new THREE.BoxGeometry(7.6, 1.5, 7.6), pedestalTrimMat);
+    pedBase.position.y = 4.25;
     pedBase.castShadow = true;
     libertyGroup.add(pedBase);
 
-    const pedBody = new THREE.Mesh(new THREE.BoxGeometry(8.2, 8.5, 8.2), pedestalStoneMat);
-    pedBody.position.y = 11.05;
+    const pedBody = new THREE.Mesh(new THREE.BoxGeometry(5.8, 6.2, 5.8), pedestalStoneMat);
+    pedBody.position.y = 8.1;
     pedBody.castShadow = true;
     libertyGroup.add(pedBody);
 
-    [[-3.8, -3.8], [3.8, -3.8], [-3.8, 3.8], [3.8, 3.8]].forEach(([px, pz]) => {
-      const col = new THREE.Mesh(new THREE.BoxGeometry(1.4, 8.5, 1.4), pedestalTrimMat);
-      col.position.set(px, 11.05, pz);
+    [[-2.6, -2.6], [2.6, -2.6], [-2.6, 2.6], [2.6, 2.6]].forEach(([px, pz]) => {
+      const col = new THREE.Mesh(new THREE.BoxGeometry(1.0, 6.2, 1.0), pedestalTrimMat);
+      col.position.set(px, 8.1, pz);
       libertyGroup.add(col);
     });
 
-    const pedCornice = new THREE.Mesh(new THREE.BoxGeometry(9.2, 1.2, 9.2), pedestalTrimMat);
-    pedCornice.position.y = 15.9;
+    const pedCornice = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.9, 6.6), pedestalTrimMat);
+    pedCornice.position.y = 11.65;
     libertyGroup.add(pedCornice);
 
-    const loggiaBalcony = new THREE.Mesh(new THREE.BoxGeometry(7.6, 0.8, 7.6), copperDarkMat);
-    loggiaBalcony.position.y = 16.9;
+    const loggiaBalcony = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.6, 5.4), copperDarkMat);
+    loggiaBalcony.position.y = 12.4;
     libertyGroup.add(loggiaBalcony);
 
     // 4. The Colossus (Lady Liberty)
-    const statueBaseY = 17.3;
+    const statueBaseY = 12.7;
 
-    const plinth = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.8, 4.4), copperDarkMat);
-    plinth.position.y = statueBaseY + 0.4;
+    const plinth = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.6, 3.2), copperDarkMat);
+    plinth.position.y = statueBaseY + 0.3;
     libertyGroup.add(plinth);
 
-    const robes = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.2, 8.4, 12), copperPatinaMat);
-    robes.position.y = statueBaseY + 4.8;
+    const robes = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.6, 6.5, 12), copperPatinaMat);
+    robes.position.y = statueBaseY + 3.8;
     robes.castShadow = true;
     libertyGroup.add(robes);
 
-    const torso = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.6, 3.4, 10), copperPatinaMat);
-    torso.position.y = statueBaseY + 9.5;
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.25, 2.8, 10), copperPatinaMat);
+    torso.position.y = statueBaseY + 7.6;
     torso.castShadow = true;
     libertyGroup.add(torso);
 
-    const head = new THREE.Mesh(new THREE.SphereGeometry(1.0, 10, 10), copperPatinaMat);
-    head.position.y = statueBaseY + 11.7;
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.8, 10, 10), copperPatinaMat);
+    head.position.y = statueBaseY + 9.4;
     head.scale.set(0.9, 1.15, 0.95);
     libertyGroup.add(head);
 
-    const crownBand = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.98, 0.5, 14), copperDarkMat);
-    crownBand.position.y = statueBaseY + 12.2;
+    const crownBand = new THREE.Mesh(new THREE.CylinderGeometry(0.76, 0.80, 0.4, 14), copperDarkMat);
+    crownBand.position.y = statueBaseY + 9.8;
     libertyGroup.add(crownBand);
 
     for (let r = 0; r < 7; r++) {
       const rayAngle = -0.9 + (r / 6) * 1.8;
-      const ray = new THREE.Mesh(new THREE.ConeGeometry(0.12, 1.4, 5), copperPatinaMat);
-      ray.position.set(Math.sin(rayAngle) * 1.1, statueBaseY + 12.8, Math.cos(rayAngle) * 0.9);
+      const ray = new THREE.Mesh(new THREE.ConeGeometry(0.10, 1.2, 5), copperPatinaMat);
+      ray.position.set(Math.sin(rayAngle) * 0.9, statueBaseY + 10.3, Math.cos(rayAngle) * 0.7);
       ray.rotation.z = -rayAngle * 0.75;
       ray.rotation.x = 0.2;
       libertyGroup.add(ray);
     }
 
-    const leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 3.2, 8), copperPatinaMat);
-    leftArm.position.set(-1.4, statueBaseY + 9.2, 0.3);
+    const leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 2.6, 8), copperPatinaMat);
+    leftArm.position.set(-1.1, statueBaseY + 7.4, 0.25);
     leftArm.rotation.z = 0.45;
     leftArm.rotation.x = -0.3;
     libertyGroup.add(leftArm);
 
-    const tablet = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.8, 1.2), tabletMat);
-    tablet.position.set(-1.9, statueBaseY + 9.6, 0.6);
+    const tablet = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.5, 1.0), tabletMat);
+    tablet.position.set(-1.5, statueBaseY + 7.8, 0.5);
     tablet.rotation.z = 0.2;
     tablet.rotation.y = 0.3;
     libertyGroup.add(tablet);
 
-    const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 4.2, 8), copperPatinaMat);
-    rightArm.position.set(1.4, statueBaseY + 12.6, 0.2);
+    const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 3.4, 8), copperPatinaMat);
+    rightArm.position.set(1.1, statueBaseY + 10.1, 0.15);
     rightArm.rotation.z = -0.15;
     rightArm.rotation.x = 0.15;
     libertyGroup.add(rightArm);
 
-    const torchHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 1.8, 8), copperDarkMat);
-    torchHandle.position.set(1.7, statueBaseY + 14.8, 0.3);
+    const torchHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.12, 1.5, 8), copperDarkMat);
+    torchHandle.position.set(1.35, statueBaseY + 11.9, 0.25);
     libertyGroup.add(torchHandle);
 
-    const torchBalcony = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.4, 0.5, 10), goldTorchMat);
-    torchBalcony.position.set(1.7, statueBaseY + 15.8, 0.3);
+    const torchBalcony = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.32, 0.4, 10), goldTorchMat);
+    torchBalcony.position.set(1.35, statueBaseY + 12.7, 0.25);
     libertyGroup.add(torchBalcony);
 
-    const torchFlame = new THREE.Mesh(new THREE.ConeGeometry(0.48, 1.4, 8), goldTorchMat);
-    torchFlame.position.set(1.7, statueBaseY + 16.7, 0.3);
+    const torchFlame = new THREE.Mesh(new THREE.ConeGeometry(0.38, 1.1, 8), goldTorchMat);
+    torchFlame.position.set(1.35, statueBaseY + 13.4, 0.25);
     libertyGroup.add(torchFlame);
 
     const torchLight = new THREE.PointLight(0xfde047, 8.0, 60);
-    torchLight.position.set(1.7, statueBaseY + 16.7, 0.3);
+    torchLight.position.set(1.35, statueBaseY + 13.4, 0.25);
     libertyGroup.add(torchLight);
 
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 10.0, 8), graniteFortMat);
-    pole.position.set(0, 6.0, 14.0);
+    // Flagpole with Stars & Stripes
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, 7.5, 8), graniteFortMat);
+    pole.position.set(0, 5.0, 9.5);
     libertyGroup.add(pole);
 
-    const flag = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.4, 0.05), new THREE.MeshStandardMaterial({ color: 0xdc2626 }));
-    flag.position.set(1.2, 9.5, 14.0);
+    const flag = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.1, 0.04), new THREE.MeshStandardMaterial({ color: 0xdc2626 }));
+    flag.position.set(0.9, 7.8, 9.5);
     libertyGroup.add(flag);
+
+    // 5. Liberty Island Ferry Dock / Mooring Pier (extending east directly into the water)
+    const pierDeck = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.35, 4.4), woodMat);
+    pierDeck.position.set(15.0, 0.5, 0); // Hovering 0.5m above water
+    pierDeck.receiveShadow = true;
+    libertyGroup.add(pierDeck);
+
+    // Timber dock pilings extending down into the harbor floor
+    [[-3.0, -1.8], [-3.0, 1.8], [0, -1.8], [0, 1.8], [3.0, -1.8], [3.0, 1.8]].forEach(([dx, dz]) => {
+      const pile = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 2.6, 8), woodMat);
+      pile.position.set(15.0 + dx, -0.6, dz);
+      libertyGroup.add(pile);
+    });
+
+    // 6. "Miss Liberty" Statue Cruises Ferry Boat (floating in the water alongside the pier)
+    const ferryGroup = new THREE.Group();
+    ferryGroup.position.set(19.8, 0.15, 0); // Waterline at y=0, hull sits immersed in water
+
+    const fHull = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.2, 8.5), ferryHullMat);
+    fHull.position.y = 0.3;
+    ferryGroup.add(fHull);
+
+    const fStripe = new THREE.Mesh(new THREE.BoxGeometry(2.85, 0.18, 8.55), ferryStripeMat);
+    fStripe.position.y = 0.7;
+    ferryGroup.add(fStripe);
+
+    const fCabin = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.1, 6.0), ferryCabinMat);
+    fCabin.position.y = 1.35;
+    ferryGroup.add(fCabin);
+
+    const fMast = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 1.8, 8), graniteFortMat);
+    fMast.position.set(0, 2.4, 1.5);
+    ferryGroup.add(fMast);
+
+    libertyGroup.add(ferryGroup);
 
     return { group: libertyGroup, materials, primaryMat: copperPatinaMat };
   }
@@ -2638,16 +2697,18 @@ export function buildNewYorkScene(group, river, terrain) {
   }
 
   // -------------------------------------------------------------------------
-  // STATUE OF LIBERTY NATIONAL MONUMENT & LIBERTY ISLAND (Upper New York Bay at u = 0.34)
+  // STATUE OF LIBERTY NATIONAL MONUMENT & LIBERTY ISLAND (Upper New York Bay at u = 0.32)
+  // Placed directly in the open water of Upper New York Bay, completely surrounded by harbor water
   // -------------------------------------------------------------------------
   {
     const ladyLiberty = createStatueOfLiberty();
-    const fLib = getRiverFrame(0.34);
-    const libPos = fLib.pt.clone().addScaledVector(fLib.side, -26.0);
-    libPos.y = getGroundY(libPos.x, libPos.z, 2.8);
+    const fLib = getRiverFrame(0.32);
+    // Placed at side = -13.0m in the western waters of Upper New York Bay
+    const libPos = fLib.pt.clone().addScaledVector(fLib.side, -13.0);
+    libPos.y = fLib.pt.y + 0.2; // Perfectly flush with the harbor water surface
     ladyLiberty.group.position.copy(libPos);
     ladyLiberty.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fLib.tangent);
-    ladyLiberty.group.rotation.y += 0.35; // oriented northeast toward Lower Manhattan and harbor entrance
+    ladyLiberty.group.rotation.y += 0.30; // oriented northeast toward Lower Manhattan skyline and harbor entrance
     group.add(ladyLiberty.group);
   }
 
