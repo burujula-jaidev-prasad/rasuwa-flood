@@ -1774,6 +1774,157 @@ export function buildNewYorkScene(group, river, terrain) {
   }
 
   /**
+   * STATUE OF LIBERTY (Liberty Enlightening the World)
+   * Featuring Fort Wood 11-pointed star stone fortress base, Richard Morris Hunt
+   * classical granite pedestal with loggia observation gallery, and Frédéric-Auguste Bartholdi's
+   * 151-ft Colossus in weathered verdigris copper patina holding the Tabula Ansata
+   * and the raised golden Torch of Freedom with an active radiant beacon light.
+   */
+  function createStatueOfLiberty() {
+    const libertyGroup = new THREE.Group();
+    const materials = [];
+
+    const graniteFortMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.85 });
+    const pedestalStoneMat = new THREE.MeshStandardMaterial({ color: 0xd6d3d1, roughness: 0.75 });
+    const pedestalTrimMat = new THREE.MeshStandardMaterial({ color: 0xa8a29e, roughness: 0.7 });
+    const copperPatinaMat = new THREE.MeshStandardMaterial({ color: 0x2dd4bf, roughness: 0.45, metalness: 0.25 });
+    const copperDarkMat = new THREE.MeshStandardMaterial({ color: 0x0f766e, roughness: 0.5, metalness: 0.3 });
+    const goldTorchMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+    const tabletMat = new THREE.MeshStandardMaterial({ color: 0x14b8a6, roughness: 0.4 });
+    materials.push(graniteFortMat, pedestalStoneMat, pedestalTrimMat, copperPatinaMat, copperDarkMat, goldTorchMat, tabletMat);
+
+    // 1. Liberty Island Circular Granite Seawall Bulkhead & Promenade
+    const islandBase = new THREE.Mesh(new THREE.CylinderGeometry(20.0, 21.0, 2.2, 24), graniteFortMat);
+    islandBase.position.y = 1.1;
+    islandBase.receiveShadow = true;
+    libertyGroup.add(islandBase);
+
+    const islandLawn = new THREE.Mesh(new THREE.CylinderGeometry(19.2, 19.2, 0.3, 24), new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.85 }));
+    islandLawn.position.y = 2.25;
+    islandLawn.receiveShadow = true;
+    libertyGroup.add(islandLawn);
+
+    // 2. Fort Wood 11-Pointed Star Fortress Walls
+    const numPoints = 11;
+    for (let p = 0; p < numPoints; p++) {
+      const angle = (p / numPoints) * Math.PI * 2;
+      const bastion = new THREE.Mesh(new THREE.BoxGeometry(4.8, 3.2, 7.5), graniteFortMat);
+      bastion.position.set(Math.cos(angle) * 11.5, 3.2, Math.sin(angle) * 11.5);
+      bastion.rotation.y = -angle;
+      bastion.castShadow = true;
+      libertyGroup.add(bastion);
+    }
+    const starCore = new THREE.Mesh(new THREE.CylinderGeometry(10.5, 11.0, 3.2, 22), graniteFortMat);
+    starCore.position.y = 3.2;
+    starCore.receiveShadow = true;
+    libertyGroup.add(starCore);
+
+    // 3. Classical Granite Pedestal (Richard Morris Hunt design)
+    const pedBase = new THREE.Mesh(new THREE.BoxGeometry(11.0, 2.0, 11.0), pedestalTrimMat);
+    pedBase.position.y = 5.8;
+    pedBase.castShadow = true;
+    libertyGroup.add(pedBase);
+
+    const pedBody = new THREE.Mesh(new THREE.BoxGeometry(8.2, 8.5, 8.2), pedestalStoneMat);
+    pedBody.position.y = 11.05;
+    pedBody.castShadow = true;
+    libertyGroup.add(pedBody);
+
+    [[-3.8, -3.8], [3.8, -3.8], [-3.8, 3.8], [3.8, 3.8]].forEach(([px, pz]) => {
+      const col = new THREE.Mesh(new THREE.BoxGeometry(1.4, 8.5, 1.4), pedestalTrimMat);
+      col.position.set(px, 11.05, pz);
+      libertyGroup.add(col);
+    });
+
+    const pedCornice = new THREE.Mesh(new THREE.BoxGeometry(9.2, 1.2, 9.2), pedestalTrimMat);
+    pedCornice.position.y = 15.9;
+    libertyGroup.add(pedCornice);
+
+    const loggiaBalcony = new THREE.Mesh(new THREE.BoxGeometry(7.6, 0.8, 7.6), copperDarkMat);
+    loggiaBalcony.position.y = 16.9;
+    libertyGroup.add(loggiaBalcony);
+
+    // 4. The Colossus (Lady Liberty)
+    const statueBaseY = 17.3;
+
+    const plinth = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.8, 4.4), copperDarkMat);
+    plinth.position.y = statueBaseY + 0.4;
+    libertyGroup.add(plinth);
+
+    const robes = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 2.2, 8.4, 12), copperPatinaMat);
+    robes.position.y = statueBaseY + 4.8;
+    robes.castShadow = true;
+    libertyGroup.add(robes);
+
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.6, 3.4, 10), copperPatinaMat);
+    torso.position.y = statueBaseY + 9.5;
+    torso.castShadow = true;
+    libertyGroup.add(torso);
+
+    const head = new THREE.Mesh(new THREE.SphereGeometry(1.0, 10, 10), copperPatinaMat);
+    head.position.y = statueBaseY + 11.7;
+    head.scale.set(0.9, 1.15, 0.95);
+    libertyGroup.add(head);
+
+    const crownBand = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.98, 0.5, 14), copperDarkMat);
+    crownBand.position.y = statueBaseY + 12.2;
+    libertyGroup.add(crownBand);
+
+    for (let r = 0; r < 7; r++) {
+      const rayAngle = -0.9 + (r / 6) * 1.8;
+      const ray = new THREE.Mesh(new THREE.ConeGeometry(0.12, 1.4, 5), copperPatinaMat);
+      ray.position.set(Math.sin(rayAngle) * 1.1, statueBaseY + 12.8, Math.cos(rayAngle) * 0.9);
+      ray.rotation.z = -rayAngle * 0.75;
+      ray.rotation.x = 0.2;
+      libertyGroup.add(ray);
+    }
+
+    const leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 3.2, 8), copperPatinaMat);
+    leftArm.position.set(-1.4, statueBaseY + 9.2, 0.3);
+    leftArm.rotation.z = 0.45;
+    leftArm.rotation.x = -0.3;
+    libertyGroup.add(leftArm);
+
+    const tablet = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.8, 1.2), tabletMat);
+    tablet.position.set(-1.9, statueBaseY + 9.6, 0.6);
+    tablet.rotation.z = 0.2;
+    tablet.rotation.y = 0.3;
+    libertyGroup.add(tablet);
+
+    const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 4.2, 8), copperPatinaMat);
+    rightArm.position.set(1.4, statueBaseY + 12.6, 0.2);
+    rightArm.rotation.z = -0.15;
+    rightArm.rotation.x = 0.15;
+    libertyGroup.add(rightArm);
+
+    const torchHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 1.8, 8), copperDarkMat);
+    torchHandle.position.set(1.7, statueBaseY + 14.8, 0.3);
+    libertyGroup.add(torchHandle);
+
+    const torchBalcony = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.4, 0.5, 10), goldTorchMat);
+    torchBalcony.position.set(1.7, statueBaseY + 15.8, 0.3);
+    libertyGroup.add(torchBalcony);
+
+    const torchFlame = new THREE.Mesh(new THREE.ConeGeometry(0.48, 1.4, 8), goldTorchMat);
+    torchFlame.position.set(1.7, statueBaseY + 16.7, 0.3);
+    libertyGroup.add(torchFlame);
+
+    const torchLight = new THREE.PointLight(0xfde047, 8.0, 60);
+    torchLight.position.set(1.7, statueBaseY + 16.7, 0.3);
+    libertyGroup.add(torchLight);
+
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 10.0, 8), graniteFortMat);
+    pole.position.set(0, 6.0, 14.0);
+    libertyGroup.add(pole);
+
+    const flag = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.4, 0.05), new THREE.MeshStandardMaterial({ color: 0xdc2626 }));
+    flag.position.set(1.2, 9.5, 14.0);
+    libertyGroup.add(flag);
+
+    return { group: libertyGroup, materials, primaryMat: copperPatinaMat };
+  }
+
+  /**
    * Financial District Modern Reflective Glass High-Rise / Trading Pavilion
    * Blue curtain wall, dark steel spaceframe cross-bracing, ground-floor atrium.
    */
@@ -2113,19 +2264,6 @@ export function buildNewYorkScene(group, river, terrain) {
 
         tubeGroup.add(subTube);
       });
-
-      // Stalled vehicles inside the tubes
-      const cab = createYellowCab();
-      cab.group.position.set(-2.5, -r * 0.55 + 0.14, -4.0);
-      tubeGroup.add(cab.group);
-
-      const van = createDeliveryVan(0x0284c7);
-      van.group.position.set(2.5, -r * 0.55 + 0.14, 3.0);
-      tubeGroup.add(van.group);
-
-      const cab2 = createYellowCab();
-      cab2.group.position.set(-2.5, -r * 0.55 + 0.14, 9.0);
-      tubeGroup.add(cab2.group);
 
     } else {
       // Subway tube with tracks, ties, third rail, and stalled MTA train
@@ -2497,6 +2635,20 @@ export function buildNewYorkScene(group, river, terrain) {
       collapseTilt: 0.6,
       sinkScale: 0.25
     });
+  }
+
+  // -------------------------------------------------------------------------
+  // STATUE OF LIBERTY NATIONAL MONUMENT & LIBERTY ISLAND (Upper New York Bay at u = 0.34)
+  // -------------------------------------------------------------------------
+  {
+    const ladyLiberty = createStatueOfLiberty();
+    const fLib = getRiverFrame(0.34);
+    const libPos = fLib.pt.clone().addScaledVector(fLib.side, -26.0);
+    libPos.y = getGroundY(libPos.x, libPos.z, 2.8);
+    ladyLiberty.group.position.copy(libPos);
+    ladyLiberty.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fLib.tangent);
+    ladyLiberty.group.rotation.y += 0.35; // oriented northeast toward Lower Manhattan and harbor entrance
+    group.add(ladyLiberty.group);
   }
 
   // -------------------------------------------------------------------------
@@ -2894,6 +3046,41 @@ export function buildNewYorkScene(group, river, terrain) {
       bench.group.position.copy(bPos);
       bench.group.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), fMan.side);
       group.add(bench.group);
+    });
+
+    // Battery Park Promenade Oak & Elm Trees along the lush lawns (offset 25.0m)
+    [-16.0, -8.0, 0.0, 8.0, 16.0].forEach(tZ => {
+      const treeGroup = new THREE.Group();
+      const treePos = fMan.pt.clone().addScaledVector(fMan.side, 25.0).addScaledVector(fMan.tangent, tZ);
+      treePos.y = getGroundY(treePos.x, treePos.z, 2.8);
+      treeGroup.position.copy(treePos);
+
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.35, 3.5, 8), new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.9 }));
+      trunk.position.y = 1.75;
+      treeGroup.add(trunk);
+
+      const foliage = new THREE.Mesh(new THREE.SphereGeometry(2.2, 8, 8), new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.8 }));
+      foliage.position.y = 4.2;
+      foliage.scale.set(1.1, 1.2, 1.1);
+      foliage.castShadow = true;
+      treeGroup.add(foliage);
+
+      group.add(treeGroup);
+    });
+
+    // Lower Manhattan Mid-Rise Historic Stone Blocks along Broadway canyon (offset 50.0m)
+    [-14.0, 16.0].forEach(mZ => {
+      const midRise = new THREE.Mesh(
+        new THREE.BoxGeometry(10.0, 22.0, 12.0),
+        new THREE.MeshStandardMaterial({ color: 0x78716c, roughness: 0.75 })
+      );
+      const mPos = fMan.pt.clone().addScaledVector(fMan.side, 50.0).addScaledVector(fMan.tangent, mZ);
+      mPos.y = getGroundY(mPos.x, mPos.z, 2.8) + 11.0;
+      midRise.position.copy(mPos);
+      midRise.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fMan.tangent);
+      midRise.castShadow = true;
+      midRise.receiveShadow = true;
+      group.add(midRise);
     });
   }
 
@@ -3701,55 +3888,94 @@ export function buildNewYorkScene(group, river, terrain) {
   // -------------------------------------------------------------------------
   const fConEd = getRiverFrame(0.86);
   const conEdGroup = new THREE.Group();
-  conEdGroup.position.copy(fConEd.pt);
 
-  // Brick Powerhouse Building
-  const powerhouse = new THREE.Mesh(new THREE.BoxGeometry(14.0, 16.0, 22.0), new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.85 }));
-  powerhouse.position.set(fConEd.side.x * 24.0, 8.0, 0);
+  // Raised Concrete Switchyard Foundation Slab (Dry industrial apron at side 16m - 42m)
+  const slabPos = fConEd.pt.clone().addScaledVector(fConEd.side, 29.0);
+  slabPos.y = getGroundY(slabPos.x, slabPos.z, 2.9) + 0.25;
+  const yardSlab = new THREE.Mesh(new THREE.BoxGeometry(34.0, 0.5, 26.0), concreteMat);
+  yardSlab.position.copy(slabPos);
+  yardSlab.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fConEd.tangent);
+  yardSlab.receiveShadow = true;
+  conEdGroup.add(yardSlab);
+
+  // Brick Powerhouse Generating Building (Inland behind switchyard at side = 37.0m)
+  const phPos = fConEd.pt.clone().addScaledVector(fConEd.side, 37.0);
+  phPos.y = getGroundY(phPos.x, phPos.z, 2.8) + 9.0;
+  const powerhouse = new THREE.Mesh(
+    new THREE.BoxGeometry(26.0, 18.0, 15.0),
+    new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.85 })
+  );
+  powerhouse.position.copy(phPos);
+  powerhouse.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fConEd.tangent);
   powerhouse.castShadow = true;
   conEdGroup.add(powerhouse);
 
-  // Twin Industrial Smokestacks
-  [-5.0, 5.0].forEach(sZ => {
-    const stack = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.6, 26.0, 12), concreteMat);
-    stack.position.set(fConEd.side.x * 24.0, 21.0, sZ);
+  // Twin Industrial Smokestacks (atop generating station)
+  [-6.0, 6.0].forEach(sX => {
+    const stack = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.7, 28.0, 12), concreteMat);
+    const stackPos = phPos.clone().addScaledVector(fConEd.tangent, sX);
+    stackPos.y = phPos.y + 9.0 + 14.0;
+    stack.position.copy(stackPos);
     stack.castShadow = true;
     conEdGroup.add(stack);
   });
 
-  // Outdoor 345 kV High-Voltage Transformer Banks
-  for (let tr = 0; tr < 3; tr++) {
+  // Outdoor 345 kV High-Voltage Transformer Banks (Firmly in dry switchyard at side = 25.0m)
+  const steelGantryMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.7, roughness: 0.4 });
+  [-7.5, 0.0, 7.5].forEach((trOffset) => {
     const trGroup = new THREE.Group();
-    const core = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4.0, 5.0), transformerMat);
-    core.position.y = 2.0;
+    const trPos = fConEd.pt.clone().addScaledVector(fConEd.side, 25.0).addScaledVector(fConEd.tangent, trOffset);
+    trPos.y = getGroundY(trPos.x, trPos.z, 2.95) + 0.4;
+    trGroup.position.copy(trPos);
+    trGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fConEd.tangent);
+
+    // Concrete Pedestal
+    const ped = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.6, 5.2), concreteMat);
+    ped.position.y = 0.3;
+    trGroup.add(ped);
+
+    // Transformer Core
+    const core = new THREE.Mesh(new THREE.BoxGeometry(3.4, 3.8, 4.6), transformerMat);
+    core.position.y = 2.5;
+    core.castShadow = true;
     trGroup.add(core);
 
+    // Flanking Radiator Coolers
+    [-1.9, 1.9].forEach(rx => {
+      const rad = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.0, 4.0), steelGantryMat);
+      rad.position.set(rx, 2.5, 0);
+      trGroup.add(rad);
+    });
+
+    // High-Voltage Ceramic Bushings
     [-1.2, 0, 1.2].forEach(bZ => {
       const bushing = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.32, 2.2, 8), ceramicMat);
-      bushing.position.set(0, 4.8, bZ);
+      bushing.position.set(0, 5.5, bZ);
       trGroup.add(bushing);
     });
 
-    trGroup.position.set(fConEd.side.x * 16.0, 1.0, -8.0 + tr * 8.0);
     conEdGroup.add(trGroup);
-  }
+  });
 
-  const arcLight = new THREE.PointLight(0x60a5fa, 0.0, 70);
-  arcLight.position.set(fConEd.side.x * 16.0, 7.0, 0);
+  // Electric Arc Flash Light & Mesh (Centered directly over 345 kV switchyard)
+  const arcLight = new THREE.PointLight(0x60a5fa, 0.0, 75);
+  const arcPos = fConEd.pt.clone().addScaledVector(fConEd.side, 25.0);
+  arcPos.y = getGroundY(arcPos.x, arcPos.z, 2.95) + 6.5;
+  arcLight.position.copy(arcPos);
   conEdGroup.add(arcLight);
 
-  const arcGeo = new THREE.SphereGeometry(3.0, 12, 12);
+  const arcGeo = new THREE.SphereGeometry(3.2, 14, 14);
   const arcMat = new THREE.MeshBasicMaterial({ color: 0x93c5fd, transparent: true, opacity: 0.0 });
   const arcMesh = new THREE.Mesh(arcGeo, arcMat);
-  arcMesh.position.copy(arcLight.position);
+  arcMesh.position.copy(arcPos);
   conEdGroup.add(arcMesh);
   group.add(conEdGroup);
 
-  // Substation perimeter blast barriers that fail under surge
+  // Substation perimeter blast barriers that fail under surge (Along dry bank at side = 19.5m)
   for (let sb = 0; sb < 3; sb++) {
     const panel = new THREE.Mesh(new THREE.BoxGeometry(0.8, 3.4, 5.0), concreteMat);
-    const pos = fConEd.pt.clone().addScaledVector(fConEd.side, 10.5).addScaledVector(fConEd.tangent, (sb - 1) * 5.2);
-    pos.y = getGroundY(pos.x, pos.z, 2.4);
+    const pos = fConEd.pt.clone().addScaledVector(fConEd.side, 19.5).addScaledVector(fConEd.tangent, (sb - 1) * 5.2);
+    pos.y = getGroundY(pos.x, pos.z, 2.95);
     panel.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fConEd.tangent);
 
     registerWipeable(panel, 0.86 + sb * 0.015, pos, fConEd.tangent, fConEd.side, {
@@ -3790,23 +4016,11 @@ export function buildNewYorkScene(group, river, terrain) {
   // Note: South Ferry transit is authentically subterranean (underground cutaways and river tubes)
 
   // -------------------------------------------------------------------------
-  // 9. ACTIVE BUOYANT FLOATING CARS & MARITIME DEBRIS FLOTILLA
+  // 9. ACTIVE MARITIME DEBRIS FLOTILLA (Swept into harbor during surge)
   // -------------------------------------------------------------------------
   const floatingFlotilla = [];
 
   const flotillaSpecs = [
-    // 10 Buoyant Vehicles (Yellow Cabs, NYPD Patrol Cruisers, Sedans, Delivery Vans)
-    { kind: 'vehicle', sub: 'cab',    u: 0.22, side:  6.5, rotY:  0.35, drift: 0.52, bAmp: 0.32, bFreq: 3.2, pFreq: 2.1, rFreq: 1.8 },
-    { kind: 'vehicle', sub: 'cop',    u: 0.28, side: -8.0, rotY: -0.25, drift: 0.58, bAmp: 0.35, bFreq: 3.5, pFreq: 2.3, rFreq: 2.0 },
-    { kind: 'vehicle', sub: 'van',    u: 0.34, side:  7.5, rotY:  0.45, drift: 0.48, bAmp: 0.28, bFreq: 2.8, pFreq: 1.9, rFreq: 1.6, hex: 0x0284c7 },
-    { kind: 'vehicle', sub: 'sedan',  u: 0.42, side: -9.0, rotY: -0.60, drift: 0.55, bAmp: 0.30, bFreq: 3.1, pFreq: 2.2, rFreq: 1.9, hex: 0x94a3b8 },
-    { kind: 'vehicle', sub: 'cab',    u: 0.47, side: -6.5, rotY:  0.20, drift: 0.50, bAmp: 0.34, bFreq: 3.4, pFreq: 2.4, rFreq: 1.7 },
-    { kind: 'vehicle', sub: 'cop',    u: 0.53, side: -8.5, rotY:  0.75, drift: 0.60, bAmp: 0.36, bFreq: 3.6, pFreq: 2.5, rFreq: 2.1 },
-    { kind: 'vehicle', sub: 'van',    u: 0.58, side: -7.0, rotY: -0.40, drift: 0.46, bAmp: 0.26, bFreq: 2.7, pFreq: 1.8, rFreq: 1.5, hex: 0x15803d },
-    { kind: 'vehicle', sub: 'sedan',  u: 0.64, side:  8.5, rotY:  0.55, drift: 0.54, bAmp: 0.32, bFreq: 3.3, pFreq: 2.2, rFreq: 1.8, hex: 0xb91c1c },
-    { kind: 'vehicle', sub: 'cab',    u: 0.70, side: -6.5, rotY: -0.30, drift: 0.52, bAmp: 0.33, bFreq: 3.2, pFreq: 2.1, rFreq: 1.9 },
-    { kind: 'vehicle', sub: 'sedan',  u: 0.78, side:  7.0, rotY:  0.40, drift: 0.56, bAmp: 0.30, bFreq: 3.0, pFreq: 2.0, rFreq: 1.7, hex: 0x1e3a8a },
-
     // 14 Floating Maritime & Urban Debris (Shipping Containers, Pallets, Steel Drums, Logs)
     { kind: 'debris', sub: 'container', u: 0.18, side: -5.0, rotY:  0.50, drift: 0.62, bAmp: 0.25, bFreq: 2.4, pFreq: 1.6, rFreq: 1.4, hex: 0x0284c7 },
     { kind: 'debris', sub: 'pallet',    u: 0.24, side:  4.0, rotY: -0.80, drift: 0.68, bAmp: 0.42, bFreq: 4.2, pFreq: 2.8, rFreq: 2.5 },
@@ -3826,31 +4040,15 @@ export function buildNewYorkScene(group, river, terrain) {
 
   flotillaSpecs.forEach((spec, sIdx) => {
     let itemObj = null;
-    let isCop = false;
-    let lightbarMesh = null;
 
-    if (spec.kind === 'vehicle') {
-      if (spec.sub === 'cab') {
-        itemObj = createYellowCab();
-      } else if (spec.sub === 'cop') {
-        itemObj = createNYPDCruiser();
-        isCop = true;
-        lightbarMesh = itemObj.lightbar;
-      } else if (spec.sub === 'van') {
-        itemObj = createDeliveryVan(spec.hex || 0x2563eb);
-      } else if (spec.sub === 'sedan') {
-        itemObj = createSedanCar(spec.hex || 0x94a3b8);
-      }
-    } else {
-      if (spec.sub === 'container') {
-        itemObj = createShippingContainer(spec.hex || 0x0284c7);
-      } else if (spec.sub === 'pallet') {
-        itemObj = createTimberPallet();
-      } else if (spec.sub === 'drums') {
-        itemObj = createSteelDrumCluster();
-      } else if (spec.sub === 'log') {
-        itemObj = createDriftwoodBeam();
-      }
+    if (spec.sub === 'container') {
+      itemObj = createShippingContainer(spec.hex || 0x0284c7);
+    } else if (spec.sub === 'pallet') {
+      itemObj = createTimberPallet();
+    } else if (spec.sub === 'drums') {
+      itemObj = createSteelDrumCluster();
+    } else if (spec.sub === 'log') {
+      itemObj = createDriftwoodBeam();
     }
 
     if (!itemObj) return;
@@ -3862,6 +4060,7 @@ export function buildNewYorkScene(group, river, terrain) {
     itemObj.group.position.copy(startPos);
     itemObj.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fInit.tangent);
     itemObj.group.rotateY(spec.rotY);
+    itemObj.group.visible = false; // Clean water before surge
 
     group.add(itemObj.group);
 
@@ -3879,8 +4078,6 @@ export function buildNewYorkScene(group, river, terrain) {
       rollAmp: 0.14,
       yawRate: 1.2,
       phase: sIdx * 1.37,
-      isCop,
-      lightbarMesh,
       pristinePos: startPos.clone(),
       pristineQuat: itemObj.group.quaternion.clone()
     });
@@ -3892,14 +4089,13 @@ export function buildNewYorkScene(group, river, terrain) {
     for (let i = 0; i < floatingFlotilla.length; i++) {
       const item = floatingFlotilla[i];
       if (uWave <= item.uTrigger) {
-        // Pristine resting coordinates & orientation
+        // Pristine resting state before surge reaches this sector (hidden, water is clean)
+        item.mesh.visible = false;
         item.mesh.position.copy(item.pristinePos);
         item.mesh.quaternion.copy(item.pristineQuat);
-        if (item.isCop && item.lightbarMesh) {
-          item.lightbarMesh.material.color.setHex(0xef4444);
-        }
       } else {
-        // Surge arrival! Dynamic hydrodynamic drift & wave bobbing
+        // Surge arrival! Debris is swept into the turbulent flood current
+        item.mesh.visible = true;
         const surgeProg = Math.min(1.0, (uWave - item.uTrigger) / (1.0 - item.uTrigger + 0.001));
         const currU = Math.min(0.97, item.uTrigger + surgeProg * item.driftRate * (1.0 - item.uTrigger));
         const f = getRiverFrame(currU);
@@ -3925,12 +4121,6 @@ export function buildNewYorkScene(group, river, terrain) {
         item.mesh.rotateY(yaw);
         item.mesh.rotateX(pitch);
         item.mesh.rotateZ(roll);
-
-        // Emergency flashing lightbar for police cruiser
-        if (item.isCop && item.lightbarMesh) {
-          const strobe = Math.sin(timeSec * 16.0 + item.phase) > 0;
-          item.lightbarMesh.material.color.setHex(strobe ? 0xef4444 : 0x3b82f6);
-        }
       }
     }
   }
