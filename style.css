@@ -167,6 +167,41 @@ html, body {
   letter-spacing: 0.04em;
 }
 
+.incident-flyer-btn {
+  background: rgba(245, 158, 11, 0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  border-radius: 20px;
+  padding: 5px 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: #fef08a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: all 0.2s ease;
+  user-select: none;
+  pointer-events: auto;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+  margin-left: 4px;
+}
+
+.incident-flyer-btn:hover {
+  background: rgba(245, 158, 11, 0.32);
+  border-color: #f59e0b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  color: #ffffff;
+}
+
+.flyer-btn-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
 /* Dual-Tab View in Analytics Panel */
 .panel-tabs {
   display: flex;
@@ -995,21 +1030,21 @@ html, body {
   font-weight: 600;
 }
 
-/* Climate Intro Card (§3) */
+/* Incident Briefing Flyer Modal (§3) */
 .intro-card-overlay {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(6, 14, 22, 0.82);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(4, 10, 18, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
-  transition: opacity 0.5s ease, visibility 0.5s ease;
+  z-index: 9999;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
 }
 
 .intro-card-overlay.hidden {
@@ -1018,81 +1053,337 @@ html, body {
   pointer-events: none;
 }
 
-.intro-modal {
-  max-width: 580px;
-  width: 90%;
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
-  border-radius: 16px;
-  padding: 36px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+.incident-flyer {
+  max-width: 740px;
+  width: 92%;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: linear-gradient(175deg, rgba(12, 24, 38, 0.98) 0%, rgba(6, 14, 22, 0.98) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 20px;
+  padding: 30px 34px;
+  box-shadow: 0 0 60px rgba(245, 158, 11, 0.15), 0 30px 80px rgba(0, 0, 0, 0.85);
   display: flex;
   flex-direction: column;
   gap: 16px;
+  position: relative;
 }
 
-.intro-badge {
+.flyer-close-btn {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.flyer-close-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+.flyer-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 14px;
+  padding-right: 36px;
+}
+
+.flyer-badge-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.flyer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 4px;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--teal);
 }
 
-.intro-title {
-  font-size: 26px;
+.flyer-badge.alert-red {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.45);
+}
+
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+  animation: pulse-glow 1.5s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
+.flyer-tag {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 4px;
   font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.flyer-id {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #64748b;
+  margin-left: auto;
+}
+
+.flyer-title {
+  font-size: 24px;
+  font-weight: 800;
   letter-spacing: -0.02em;
+  color: #ffffff;
+  margin: 6px 0 2px 0;
   line-height: 1.25;
 }
 
-.intro-p {
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--sub);
+.flyer-subtitle {
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.45;
 }
 
-.intro-p strong {
-  color: var(--ink);
+/* Key Metrics Grid */
+.flyer-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
 }
 
-.intro-alert {
-  background: rgba(232, 149, 47, 0.1);
-  border: 1px solid rgba(232, 149, 47, 0.35);
-  border-radius: 8px;
-  padding: 12px 16px;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--ink);
+@media (max-width: 680px) {
+  .flyer-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.intro-actions {
+.flyer-metric-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fmc-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.fmc-val {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.fmc-val small {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.fmc-val.amber { color: #f59e0b; }
+.fmc-val.cyan { color: #38bdf8; }
+.fmc-val.red { color: #f87171; }
+.fmc-val.yellow { color: #fde047; }
+
+.fmc-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: #64748b;
+}
+
+/* Incident Chronology Section */
+.flyer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.flyer-section-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #f59e0b;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-top: 8px;
+  gap: 6px;
+  text-transform: uppercase;
 }
 
-.intro-timer-tag {
+.flyer-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.flyer-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.flyer-step:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.fstep-num {
   font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--sub);
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 4px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
-.intro-btn {
-  background: var(--amber);
-  color: #060e16;
+.fstep-content {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+.fstep-content strong {
+  color: #ffffff;
   font-weight: 700;
-  font-size: 13px;
+  margin-right: 4px;
+}
+
+.fstep-time {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-right: 6px;
+}
+
+/* Operational Advisory Box */
+.flyer-alert {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #e2e8f0;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.fa-icon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.fa-text strong {
+  color: #f59e0b;
+}
+
+/* Action Buttons */
+.flyer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.flyer-btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.flyer-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.flyer-btn-primary {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #060e16;
   border: none;
   border-radius: 8px;
-  padding: 10px 22px;
+  padding: 11px 24px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.35);
+  transition: all 0.2s ease;
 }
 
-.intro-btn:hover {
-  background: #f7a845;
+.flyer-btn-primary:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
+}
+
+.play-arrow {
+  font-size: 11px;
 }
 
 /* Custom Scrollbars */

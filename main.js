@@ -256,6 +256,9 @@ class ExplainerApp {
       },
       onFallbackLocal: () => {
         this.disableGoogle3D();
+      },
+      onStartSimulation: () => {
+        this.dismissIntro(true);
       }
     });
 
@@ -271,9 +274,11 @@ class ExplainerApp {
       this.ui.elIntroTimer.style.display = 'none';
     }
 
-    this.ui.elIntroSkip.addEventListener('click', () => {
-      this.dismissIntro();
-    });
+    if (this.ui.elIntroSkip) {
+      this.ui.elIntroSkip.addEventListener('click', () => {
+        this.dismissIntro(true);
+      });
+    }
   }
 
   switchScenario(scenarioId) {
@@ -378,13 +383,14 @@ class ExplainerApp {
     }
   }
 
-  dismissIntro() {
-    if (this.introDismissed) return;
+  dismissIntro(startPlayback = true) {
     this.introDismissed = true;
     this.ui.hideIntroCard();
-    this.isPlaying = false;
-    this.ui.isPlaying = false;
-    this.ui.updatePlayBtnState();
+    if (startPlayback) {
+      this.isPlaying = true;
+      this.ui.isPlaying = true;
+      this.ui.updatePlayBtnState();
+    }
   }
 
   updateSimulationState(deltaSec) {

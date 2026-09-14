@@ -16,12 +16,23 @@ export class UIManager {
     this.initDOMElements();
     this.attachEventListeners();
     this.renderWaypointNav();
+    this.renderIntroFlyer(this.currentScenario?.config?.id || 'newyork');
   }
 
   initDOMElements() {
     this.elIntroCard = document.getElementById('intro-card');
     this.elIntroSkip = document.getElementById('intro-skip-btn');
-    this.elIntroTimer = document.getElementById('intro-timer');
+    this.elIntroOrbitBtn = document.getElementById('intro-orbit-btn');
+    this.elFlyerCloseBtn = document.getElementById('flyer-close-btn');
+    this.elOpenFlyerBtn = document.getElementById('open-flyer-btn');
+
+    this.elFlyerTag = document.getElementById('flyer-tag');
+    this.elFlyerDocId = document.getElementById('flyer-doc-id');
+    this.elFlyerTitle = document.getElementById('flyer-title');
+    this.elFlyerSubtitle = document.getElementById('flyer-subtitle');
+    this.elFlyerMetricsGrid = document.getElementById('flyer-metrics-grid');
+    this.elFlyerTimeline = document.getElementById('flyer-timeline');
+    this.elFlyerAlertText = document.getElementById('flyer-alert-text');
 
     this.elBrandBadge = document.getElementById('brand-badge');
     this.elBrandTitle = document.getElementById('brand-title');
@@ -96,9 +107,36 @@ export class UIManager {
   }
 
   attachEventListeners() {
-    this.elIntroSkip.addEventListener('click', () => {
-      this.hideIntroCard();
-    });
+    if (this.elIntroSkip) {
+      this.elIntroSkip.addEventListener('click', () => {
+        this.hideIntroCard();
+        if (this.options.onStartSimulation) {
+          this.options.onStartSimulation();
+        }
+      });
+    }
+
+    if (this.elIntroOrbitBtn) {
+      this.elIntroOrbitBtn.addEventListener('click', () => {
+        this.hideIntroCard();
+        this.setViewMode('free');
+        if (this.options.onSelectViewMode) {
+          this.options.onSelectViewMode('free');
+        }
+      });
+    }
+
+    if (this.elFlyerCloseBtn) {
+      this.elFlyerCloseBtn.addEventListener('click', () => {
+        this.hideIntroCard();
+      });
+    }
+
+    if (this.elOpenFlyerBtn) {
+      this.elOpenFlyerBtn.addEventListener('click', () => {
+        this.showIntroCard();
+      });
+    }
 
     this.elPlayBtn.addEventListener('click', () => {
       this.isPlaying = !this.isPlaying;
@@ -237,8 +275,327 @@ export class UIManager {
     });
   }
 
+  showIntroCard() {
+    if (this.elIntroCard) {
+      this.elIntroCard.classList.remove('hidden');
+    }
+  }
+
   hideIntroCard() {
-    this.elIntroCard.classList.add('hidden');
+    if (this.elIntroCard) {
+      this.elIntroCard.classList.add('hidden');
+    }
+  }
+
+  renderIntroFlyer(scenarioId) {
+    if (!this.elFlyerTitle) return;
+
+    const flyerData = {
+      newyork: {
+        tag: 'NOAA / NHC SLOSH SIMULATION',
+        docId: 'DOC-ID: NY-SANDY2-2026',
+        title: 'New York: Category-4 Hurricane Surge & Harbor Deluge',
+        subtitle: 'Compound Astronomical High Tide, Atlantic Funneling & Lower Manhattan Inundation',
+        metrics: [
+          { label: 'Peak Surge Crest', val: '4.82 m <small>(15.8 ft)</small>', sub: 'NAVD88 High Watermark', color: 'amber' },
+          { label: 'Peak Forward Speed', val: '13.2 m/s <small>(47.5 km/h)</small>', sub: 'Upper Bay Fairway', color: 'cyan' },
+          { label: 'Transit Impact', val: '7 Transit Tubes', sub: '14.5M gal Brine Influx', color: 'red' },
+          { label: 'Power Grid Failure', val: '345 kV Arc-Blast', sub: 'ConEd 14th St Substation', color: 'yellow' }
+        ],
+        steps: [
+          {
+            num: '01',
+            time: '06:30 AM',
+            title: 'Atlantic Surge Funneling & Liberty Island',
+            desc: 'A 15.8-foot storm surge funnels through The Narrows into Upper New York Bay at 48 km/h, sweeping past Liberty Island and battering the harbor piers.'
+          },
+          {
+            num: '02',
+            time: '07:15 AM',
+            title: 'South Ferry & Vessels Torn Adrift',
+            desc: 'Mooring hawsers snap under extreme hydrodynamic surge; the Staten Island Ferry and NYC Fast Catamaran break free from Whitehall slips, listing violently (44°–53°) as seawater inundates vehicle decks, radar masts snap, smokestacks dislodge, and passenger boarding aprons crash into the bay.'
+          },
+          {
+            num: '03',
+            time: '07:45 AM',
+            title: 'The Battery & Financial District Seawall Breach',
+            desc: 'A 14.9-ft surge crest overtops the Lower Manhattan perimeter granite seawall, inundating Battery Park promenade, Bowling Green, and Wall Street financial basements.'
+          },
+          {
+            num: '04',
+            time: '08:15 AM',
+            title: 'Subterranean Transit Paralysis',
+            desc: 'Seawater cascades down sidewalk ventilation grates and station entrances, completely submerging the South Ferry terminal and drowning 7 under-river subway tubes.'
+          },
+          {
+            num: '05',
+            time: '09:00 AM',
+            title: 'ConEd 14th St Grid Explosion & Blackout',
+            desc: 'East River floodwaters inundate the ConEd 14th St Substation, generating an explosive 345 kV transformer arc-flash and plunging Lower Manhattan into a total electrical blackout.'
+          }
+        ],
+        alert: '<strong>Core Scientific Finding:</strong> Upper New York Bay bathymetry and the East River strait funneling create severe hydrodynamic amplification. Unprotected perimeter seawalls allow seawater to rapidly overwhelm subterranean infrastructure within 90 minutes of the seawall breach.'
+      },
+      delhi: {
+        tag: 'CWC / DJB MONSOON MODEL',
+        docId: 'DOC-ID: DL-YAMUNA-2023',
+        title: 'Delhi: Yamuna River Record Monsoon Inundation',
+        subtitle: 'Hathnikund Barrage Discharge, Floodplain Encroachment & ITO Barrage Siltation',
+        metrics: [
+          { label: 'Peak River Stage', val: '208.66 m', sub: 'Record Watermark (+3.33m Danger)', color: 'amber' },
+          { label: 'Peak Discharge', val: '359,000 cusecs', sub: 'Hathnikund Release', color: 'cyan' },
+          { label: 'Water Plants Offline', val: '3 Mega Works', sub: '234 MGD (25% Capital Supply)', color: 'red' },
+          { label: 'Displaced Population', val: '27,000+ Evacuated', sub: 'Yamuna Floodplain Relief Camps', color: 'yellow' }
+        ],
+        steps: [
+          {
+            num: '01',
+            time: 'Day 1 09:00',
+            title: 'Hathnikund Barrage Discharge Surge',
+            desc: 'Upper catchment cloudbursts in Himachal trigger 3.59 lakh cusecs emergency release down the Yamuna riverbed.'
+          },
+          {
+            num: '02',
+            time: 'Day 2 13:00',
+            title: 'Old Railway Bridge Danger Mark Exceeded',
+            desc: 'River crosses the 205.33m danger mark, halting railway transit and submerging low-lying agricultural floodplains.'
+          },
+          {
+            num: '03',
+            time: 'Day 3 07:00',
+            title: 'Wazirabad & Chandrawal Water Works Flooded',
+            desc: 'Submerged raw water pump houses force shutdown of key water treatment plants, cutting drinking water to Central Delhi.'
+          },
+          {
+            num: '04',
+            time: 'Day 3 16:30',
+            title: 'ITO Barrage Silted Gates & Regulator Breach',
+            desc: 'Jammed barrage gates back up floodwaters into Drain 12, inundating the Vikas Marg arterial corridor and Supreme Court.'
+          },
+          {
+            num: '05',
+            time: 'Day 4 10:00',
+            title: 'Red Fort & Ring Road Submergence',
+            desc: 'Floodwaters breach historical bastions around Red Fort and completely shut down Delhi’s Ring Road.'
+          }
+        ],
+        alert: '<strong>Core Scientific Finding:</strong> Decades of heavy siltation and narrowed floodplain development reduced the Yamuna’s discharge cross-section by 42%, causing flash ponding at much lower discharge rates than 1978.'
+      },
+      rasuwa: {
+        tag: 'DHM / ICIMOD GLOF MODEL',
+        docId: 'DOC-ID: NP-BHOTEKOSHI-2026',
+        title: 'Rasuwa: Langtang Avalanche & Dam-Burst',
+        subtitle: 'Glacial Hanging Serac Calving, Transient Damming & Supercritical Debris Surge',
+        metrics: [
+          { label: 'Peak Wave Velocity', val: '28.5 m/s <small>(102 km/h)</small>', sub: 'Supercritical Chasm Flow', color: 'amber' },
+          { label: 'Peak Discharge', val: '4,200 m³/s', sub: 'Trishuli Gorge Outburst', color: 'cyan' },
+          { label: 'Hydro Capacity Lost', val: '111 MW Offline', sub: 'Trishuli & Chilime Cascades', color: 'red' },
+          { label: 'Human Toll', val: '175 Dead / Missing', sub: 'Settlements & Trade Route Swept', color: 'yellow' }
+        ],
+        steps: [
+          {
+            num: '01',
+            time: '08:37 AM',
+            title: 'Glacial Hanging Serac Avalanche',
+            desc: 'A massive 4.2M m³ ice and rock avalanche shears off Langtang Lirung, slamming into the upper river gorge.'
+          },
+          {
+            num: '02',
+            time: '08:44 AM',
+            title: 'Transient Debris Dam Failure',
+            desc: 'Landslide dam blocks the Bhotekoshi River for 7 minutes before bursting in an explosive debris wave.'
+          },
+          {
+            num: '03',
+            time: '08:50 AM',
+            title: 'Supercritical Debris Torrent',
+            desc: 'A 14-meter sediment-choked slurry wave roars down the steep canyon at over 100 km/h.'
+          },
+          {
+            num: '04',
+            time: '09:05 AM',
+            title: 'Hydropower Headworks Destruction',
+            desc: 'The surge completely obliterates diversion weirs, intake portals, and steel suspension bridges.'
+          },
+          {
+            num: '05',
+            time: '09:20 AM',
+            title: 'Syabrubesi Settlement & Highway Swept',
+            desc: 'The trade corridor to the China border is severed as riverside homes and piers are wiped away.'
+          }
+        ],
+        alert: '<strong>Core Scientific Finding:</strong> Steep Himalayan gradients and high sediment load multiply dynamic impact pressures by 400%, pulverizing reinforced concrete structures in seconds.'
+      },
+      beijing: {
+        tag: 'MEM / BEIJING WATER AUTHORITY',
+        docId: 'DOC-ID: BJ-DOKSURI-2023',
+        title: 'Beijing: Mentougou Mountain Flash Deluge & Yongding Flood',
+        subtitle: 'Typhoon Doksuri Orographic Convergence & Western Mountain Ravine Flooding',
+        metrics: [
+          { label: 'Record Precipitation', val: '744.8 mm', sub: 'Wangjiayuan 40-hr Peak', color: 'amber' },
+          { label: 'Mountain Surge Speed', val: '14.5 m/s <small>(52 km/h)</small>', sub: 'Mentougou Ravine Inflow', color: 'cyan' },
+          { label: 'Bridges Severed', val: '12 Highway Spans', sub: 'National Highway G109 Cut', color: 'red' },
+          { label: 'Evacuated Population', val: '127,000 People', sub: 'Western Mountain Outskirts', color: 'yellow' }
+        ],
+        steps: [
+          {
+            num: '01',
+            time: 'Day 1 04:00',
+            title: 'Orographic Convergence Cloudburst',
+            desc: 'Moist Pacific airflow collides with the Taihang Mountains, dropping 140mm/hr rainfall across Mentougou.'
+          },
+          {
+            num: '02',
+            time: 'Day 1 10:30',
+            title: 'Mentougou Mountain Ravines Flash Deluge',
+            desc: 'Water rushes down dry ravines, sweeping away parked vehicles, communication towers, and riverside homes.'
+          },
+          {
+            num: '03',
+            time: 'Day 1 15:00',
+            title: 'National Highway 109 & Rail Links Cut',
+            desc: 'Mudslides and flash torrents sever key logistical lifelines into western mountain districts.'
+          },
+          {
+            num: '04',
+            time: 'Day 2 08:00',
+            title: 'Yongding River Flood Detention Inundation',
+            desc: 'Emergency diversion gates open into the Lugou Bridge detention basin to protect central Beijing.'
+          },
+          {
+            num: '05',
+            time: 'Day 2 18:00',
+            title: 'Downstream Industrial Basin Inundation',
+            desc: 'Surplus waters inundate farmland and industrial parks in Fangshan and Zhuozhou downstream.'
+          }
+        ],
+        alert: '<strong>Core Scientific Finding:</strong> Steep mountain-to-plain transition zones concentrate cloudburst runoff into violent debris torrents with less than 45 minutes of hydrological warning time.'
+      },
+      tokyo: {
+        tag: 'MLIT / TOKYO METRO DISASTER',
+        docId: 'DOC-ID: TK-ARAKAWA-2026',
+        title: 'Tokyo: Arakawa River Deluge & G-CANS Subterranean Defense',
+        subtitle: 'Super Typhoon Inflow, Zero-Meter Lowland Shielding & Subterranean Diversion',
+        metrics: [
+          { label: '72-hr Typhoon Runoff', val: '1,200 mm', sub: 'Kanto Basin Precipitation', color: 'amber' },
+          { label: 'G-CANS Diversion Rate', val: '200 m³/s', sub: 'Gas Turbine Pumping into Edo', color: 'cyan' },
+          { label: 'Zero-Meter Shielding', val: '1.5M Residents', sub: 'Koto 5 Wards Protected', color: 'red' },
+          { label: 'Edogawa Surge Crest', val: '5.2 m High Water', sub: 'Tokyo Bay Estuary', color: 'yellow' }
+        ],
+        steps: [
+          {
+            num: '01',
+            time: '06:00 AM',
+            title: 'Super Typhoon Landfall Over Kanto Plain',
+            desc: 'Unprecedented rainfall saturates upper river basins; Arakawa discharge rises toward historic crest.'
+          },
+          {
+            num: '02',
+            time: '08:30 AM',
+            title: 'G-CANS Underground Cathedral Activation',
+            desc: 'Massive vertical intake shafts divert overflowing tributary rivers 50 meters below ground.'
+          },
+          {
+            num: '03',
+            time: '10:00 AM',
+            title: 'Jet Pumping into Edo River Outfall',
+            desc: 'Aviation-derivative gas turbine pumps expel 200 m³/s of floodwater directly into the wider Edo River.'
+          },
+          {
+            num: '04',
+            time: '11:45 AM',
+            title: 'Super-Levees Tested Along Koto Lowlands',
+            desc: 'High-elevation reinforced super-levees prevent breaches into Tokyo’s below-sea-level urban wards.'
+          },
+          {
+            num: '05',
+            time: '02:00 PM',
+            title: 'Tokyo Metro Subway Flood Shielding',
+            desc: 'Watertight subterranean bulkheads seal subway portals, ensuring zero inundation of the transit network.'
+          }
+        ],
+        alert: '<strong>Core Scientific Finding:</strong> Coordinated subterranean engineering (G-CANS) and super-levees prevent a 10-meter catastrophic inundation of Eastern Tokyo where 1.5 million people reside below sea level.'
+      },
+      london: {
+        tag: 'ENVIRONMENT AGENCY / TFL EMERGENCY',
+        docId: 'DOC-ID: LD-THAMES-2026',
+        title: 'London: North Sea Tidal Surge & Thames Barrier Defense',
+        subtitle: 'Funneling North Sea Surge, Astronomical High Tide & Barrier Gate Emergency Seal',
+        metrics: [
+          { label: 'Barrier Gate Defense', val: '10 Sector Gates', sub: 'Rotating Hollow Steel Spans', color: 'amber' },
+          { label: 'Protected Population', val: '1.4M People', sub: 'Central London Floodplain', color: 'cyan' },
+          { label: 'Asset Value Defended', val: '£320 Billion', sub: 'Parliament, City & Docklands', color: 'red' },
+          { label: 'Surge Watermark', val: '5.4 m Above ODN', sub: 'Silvertown Outer Estuary', color: 'yellow' }
+        ],
+        steps: [
+          {
+            num: '01',
+            time: '05:30 AM',
+            title: 'North Sea Surge Funneling into Thames Estuary',
+            desc: 'A shallow Atlantic low-pressure depression drives a 3.8-meter tidal swell into the narrowing Thames funnel.'
+          },
+          {
+            num: '02',
+            time: '07:00 AM',
+            title: 'Thames Barrier Emergency Closure Commences',
+            desc: 'Hydraulic trunnions rotate 10 massive hollow steel gates into an upright defensive posture across 520 meters.'
+          },
+          {
+            num: '03',
+            time: '08:45 AM',
+            title: 'Surge Crest Repelled at Silvertown',
+            desc: 'The barrier holds back a 5.4m surge crest, creating a 3.2m water level differential between upstream and downstream.'
+          },
+          {
+            num: '04',
+            time: '10:00 AM',
+            title: 'Central London Embankment Protection',
+            desc: 'The Houses of Parliament, Westminster, and Tower Bridge embankments remain safely dry.'
+          },
+          {
+            num: '05',
+            time: '12:30 PM',
+            title: 'Tide Ebb & Controlled Gate Recess',
+            desc: 'As astronomical tide ebbs into the North Sea, barrier gates rotate back into their submerged riverbed recesses.'
+          }
+        ],
+        alert: '<strong>Core Scientific Finding:</strong> The funnel geometry of the southern North Sea amplifies tidal surges by up to 200%. The Thames Barrier prevents overtopping of 42 London Underground stations and £320B in economic assets.'
+      }
+    };
+
+    const d = flyerData[scenarioId] || flyerData.newyork;
+
+    if (this.elFlyerTag) this.elFlyerTag.textContent = d.tag;
+    if (this.elFlyerDocId) this.elFlyerDocId.textContent = d.docId;
+    if (this.elFlyerTitle) this.elFlyerTitle.textContent = d.title;
+    if (this.elFlyerSubtitle) this.elFlyerSubtitle.textContent = d.subtitle;
+
+    if (this.elFlyerMetricsGrid) {
+      this.elFlyerMetricsGrid.innerHTML = d.metrics.map(m => `
+        <div class="flyer-metric-card">
+          <span class="fmc-label">${m.label}</span>
+          <span class="fmc-val ${m.color}">${m.val}</span>
+          <span class="fmc-sub">${m.sub}</span>
+        </div>
+      `).join('');
+    }
+
+    if (this.elFlyerTimeline) {
+      this.elFlyerTimeline.innerHTML = d.steps.map(s => `
+        <div class="flyer-step">
+          <span class="fstep-num">${s.num}</span>
+          <div class="fstep-content">
+            <span class="fstep-time">${s.time}</span>
+            <strong>${s.title}:</strong>
+            ${s.desc}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    if (this.elFlyerAlertText) {
+      this.elFlyerAlertText.innerHTML = d.alert;
+    }
   }
 
   // Zero-lag update synchronized with actual wave front position uWave!
@@ -590,6 +947,7 @@ export class UIManager {
     }
 
     this.renderWaypointNav();
+    this.renderIntroFlyer(id);
     if (this.currentScenario.waypoints && this.currentScenario.waypoints.length > 0) {
       this.renderAnalytics(this.currentScenario.waypoints[0]);
     }
