@@ -24,8 +24,12 @@ import {
   NEWYORK_RIVER_POINTS,
   NEWYORK_WAYPOINTS,
   NEWYORK_NARRATION,
-  getNewYorkTallyValues
+  getNewYorkTallyValues,
+  setNYForecastMode,
+  getNYForecastMode
 } from './newyork.js';
+
+export { setNYForecastMode, getNYForecastMode };
 
 import {
   BEIJING_CONFIG,

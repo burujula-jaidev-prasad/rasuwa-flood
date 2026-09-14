@@ -1,4 +1,4 @@
-import { WAYPOINTS, TIMELINE_CONFIG, getTallyValues, getCurrentWaypoint, getCurrentNarration, getScenario } from './data.js';
+import { WAYPOINTS, TIMELINE_CONFIG, getTallyValues, getCurrentWaypoint, getCurrentNarration, getScenario, setNYForecastMode, getNYForecastMode } from './data.js';
 
 export class UIManager {
   constructor(options) {
@@ -12,6 +12,8 @@ export class UIManager {
     this.isSidebarOpen = true;
     this.activeTab = 'impact'; // 'impact' | 'countermeasures'
     this.currentScenario = getScenario();
+    this.lastT = 0;
+    this.lastUWave = 0;
 
     this.initDOMElements();
     this.attachEventListeners();
@@ -62,6 +64,10 @@ export class UIManager {
     this.elTallyMissing = document.getElementById('tally-missing');
     this.elTallyMissingUnit = document.getElementById('tally-missing-unit');
     this.elTallyHumanRegion = document.getElementById('tally-human-region');
+
+    this.elNyModeToggle = document.getElementById('ny-mode-toggle');
+    this.elModeBtnModern = document.getElementById('mode-btn-modern');
+    this.elModeBtnFailure = document.getElementById('mode-btn-failure');
 
     this.elWaypointList = document.getElementById('waypoint-list');
     this.elRightPanel = document.getElementById('analytics-card');
@@ -214,6 +220,49 @@ export class UIManager {
         }
       });
     });
+
+    // Forecast mode toggle listeners (New York)
+    if (this.elModeBtnModern) {
+      this.elModeBtnModern.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.setNewYorkMode('modern');
+      });
+    }
+
+    if (this.elModeBtnFailure) {
+      this.elModeBtnFailure.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.setNewYorkMode('failure');
+      });
+    }
+  }
+
+  setNewYorkMode(mode) {
+    setNYForecastMode(mode);
+    if (this.elModeBtnModern) this.elModeBtnModern.classList.toggle('active', mode === 'modern');
+    if (this.elModeBtnFailure) this.elModeBtnFailure.classList.toggle('active', mode === 'failure');
+
+    const flyerBtns = document.querySelectorAll('.flyer-mode-btn');
+    flyerBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+
+    if (this.elTallyHumanLabel) {
+      this.elTallyHumanLabel.textContent = (mode === 'modern') ? 'Modern Forecast' : 'Evacuation Failure';
+    }
+    if (this.elTallyMissingUnit) {
+      this.elTallyMissingUnit.textContent = (mode === 'modern') ? 'evacuated' : 'missing';
+    }
+
+    if (this.currentScenario?.config?.id === 'newyork') {
+      this.renderIntroFlyer('newyork');
+    }
+
+    const currentT = parseFloat(this.elScrubber?.value || '0');
+    this.update(currentT, currentT * TIMELINE_CONFIG.DUR, this.lastUWave || 0);
+
+    const { waypoint } = getCurrentWaypoint(currentT, this.lastUWave || 0);
+    this.renderAnalytics(waypoint);
   }
 
   updatePlayBtnState() {
@@ -290,24 +339,26 @@ export class UIManager {
   renderIntroFlyer(scenarioId) {
     if (!this.elFlyerTitle) return;
 
+    const nyMode = getNYForecastMode();
+
     const flyerData = {
-      newyork: {
-        tag: 'NOAA / NHC SLOSH SIMULATION',
-        docId: 'DOC-ID: NY-SANDY2-2026',
+      newyork: (nyMode === 'modern') ? {
+        tag: 'NOAA / NHC SLOSH FORECAST (SANDY 2.0)',
+        docId: 'DOC-ID: NY-SANDY-MODERN-2026',
         title: 'New York: Category-4 Hurricane Surge & Harbor Deluge',
-        subtitle: 'Compound Astronomical High Tide, Atlantic Funneling & Lower Manhattan Inundation',
+        subtitle: 'Modern Forecast Benchmark: 48-Hour Advance Warning & Timely Evacuation',
         metrics: [
-          { label: 'Sudden Casualty Toll', val: '1,480 Fatalities', sub: '3,850 Missing / Trapped', color: 'red' },
-          { label: 'Peak Surge Crest', val: '4.82 m <small>(15.8 ft)</small>', sub: 'NAVD88 High Watermark', color: 'amber' },
-          { label: 'Peak Forward Speed', val: '13.2 m/s <small>(47.5 km/h)</small>', sub: 'Upper Bay Fairway', color: 'cyan' },
-          { label: 'Transit Paralysis', val: '7 Transit Tubes', sub: '14.5M gal Brine Influx', color: 'yellow' }
+          { label: 'Direct Fatalities', val: '44 Deaths', sub: 'Verified CDC Ground Truth', color: 'cyan' },
+          { label: 'Zone A Evacuees', val: '385,000 Safe', sub: 'Pre-Emptive Evacuation', color: 'amber' },
+          { label: 'Peak Surge Crest', val: '4.82 m <small>(15.8 ft)</small>', sub: 'NAVD88 High Watermark', color: 'yellow' },
+          { label: 'Total Economic Loss', val: '$42.5 Billion', sub: 'SIRR Disaster Benchmark', color: 'red' }
         ],
         steps: [
           {
             num: '01',
             time: '06:30 AM',
             title: 'Atlantic Surge Funneling & Liberty Island',
-            desc: 'A 15.8-foot storm surge funnels through The Narrows into Upper New York Bay at 48 km/h, sweeping past Liberty Island and battering the harbor piers.'
+            desc: 'A 15.8-foot storm surge funnels through The Narrows into Upper New York Bay at 48 km/h, sweeping past Liberty Island and battering harbor piers.'
           },
           {
             num: '02',
@@ -324,8 +375,8 @@ export class UIManager {
           {
             num: '04',
             time: '08:15 AM',
-            title: 'Subterranean Transit Paralysis',
-            desc: 'Seawater cascades down sidewalk ventilation grates and station entrances, completely submerging the South Ferry terminal and drowning 7 under-river subway tubes.'
+            title: 'Transit Tubes Flooded (Pre-Emptively Evacuated)',
+            desc: 'Seawater cascades down station entrances into 7 under-river subway tunnels. Because transit was shut down 24 hours in advance, zero train passengers are trapped.'
           },
           {
             num: '05',
@@ -334,7 +385,51 @@ export class UIManager {
             desc: 'East River floodwaters inundate the ConEd 14th St Substation, generating an explosive 345 kV transformer arc-flash and plunging Lower Manhattan into a total electrical blackout.'
           }
         ],
-        alert: '<strong>Core Scientific Finding:</strong> A sudden rapid-onset surge during morning rush hour without 48-hour advance transit shutdown creates an unevacuated subterranean entrapment disaster. Inundating 7 subway tubes and low-lying coastal basements causes sudden catastrophic mass casualties (1,480 dead, 3,850 missing), comparable to the violent flash deluges of mountain outburst floods.'
+        alert: '<strong>Predictive Forecasting Success:</strong> 48-hour advance NOAA SLOSH & HURREVAC modeling allowed NYC OEM and MTA to execute a mandatory 24-hour advance transit shutdown and Zone A evacuation, preventing catastrophic subway drowning deaths and keeping direct storm fatalities strictly to 44.'
+      } : {
+        tag: 'NOAA / NHC RAPID-ONSET WORST-CASE',
+        docId: 'DOC-ID: NY-EVAC-FAILURE-2026',
+        title: 'New York: Category-4 Hurricane Surge (Evacuation Failure)',
+        subtitle: 'Sudden Fast-Mover Breach: Rush-Hour Deluge Without Advance Shutdown',
+        metrics: [
+          { label: 'Sudden Fatalities', val: '1,480 Deaths', sub: 'Rush-Hour Subway Deluge', color: 'red' },
+          { label: 'Missing / Trapped', val: '3,850 Commuters', sub: 'Subterranean Entrapment', color: 'amber' },
+          { label: 'Peak Surge Crest', val: '4.82 m <small>(15.8 ft)</small>', sub: 'NAVD88 High Watermark', color: 'yellow' },
+          { label: 'Total Economic Loss', val: '$42.5 Billion', sub: 'SIRR Disaster Benchmark', color: 'cyan' }
+        ],
+        steps: [
+          {
+            num: '01',
+            time: '06:30 AM',
+            title: 'Atlantic Surge Funneling & Liberty Island',
+            desc: 'A 15.8-foot storm surge funnels through The Narrows into Upper New York Bay at 48 km/h, sweeping past Liberty Island and battering harbor piers.'
+          },
+          {
+            num: '02',
+            time: '07:15 AM',
+            title: 'South Ferry & Vessels Torn Adrift',
+            desc: 'Mooring hawsers snap under extreme hydrodynamic surge; the Staten Island Ferry and NYC Fast Catamaran break free from Whitehall slips, listing violently (44°–53°) as seawater inundates vehicle decks, radar masts snap, smokestacks dislodge, and passenger boarding aprons crash into the bay.'
+          },
+          {
+            num: '03',
+            time: '07:45 AM',
+            title: 'The Battery & Financial District Seawall Breach',
+            desc: 'A 14.9-ft surge crest overtops the Lower Manhattan perimeter granite seawall, inundating Battery Park promenade, Bowling Green, and Wall Street financial basements.'
+          },
+          {
+            num: '04',
+            time: '08:15 AM',
+            title: 'Subterranean Transit Paralysis (Rush-Hour Ingress)',
+            desc: 'Seawater cascades down sidewalk ventilation grates and station entrances, completely submerging the South Ferry terminal and drowning 7 under-river subway tubes with active commuter transit.'
+          },
+          {
+            num: '05',
+            time: '09:00 AM',
+            title: 'ConEd 14th St Grid Explosion & Blackout',
+            desc: 'East River floodwaters inundate the ConEd 14th St Substation, generating an explosive 345 kV transformer arc-flash and plunging Lower Manhattan into a total electrical blackout.'
+          }
+        ],
+        alert: '<strong>Sudden Evacuation Failure Model:</strong> A fast-moving Category-4 hurricane arriving during morning rush hour before the 24-hour evacuation clearance time can be executed. Subways remain open with active commuters, causing catastrophic flash-flood casualties (1,480 dead, 3,850 missing) comparable to the violent mountain deluges of Nepal.'
       },
       delhi: {
         tag: 'CWC / DJB MONSOON MODEL',
@@ -571,13 +666,35 @@ export class UIManager {
     if (this.elFlyerSubtitle) this.elFlyerSubtitle.textContent = d.subtitle;
 
     if (this.elFlyerMetricsGrid) {
-      this.elFlyerMetricsGrid.innerHTML = d.metrics.map(m => `
+      const isNY = (scenarioId === 'newyork');
+      const nyMode = getNYForecastMode();
+      const modeBarHtml = isNY ? `
+        <div class="flyer-mode-bar" style="grid-column: 1 / -1;">
+          <span class="flyer-mode-label">Select Simulation Forecast Model:</span>
+          <div class="flyer-mode-pills">
+            <button type="button" class="flyer-mode-btn ${nyMode === 'modern' ? 'active' : ''}" data-mode="modern">🛰️ Modern Forecast (Sandy: 44 Deaths)</button>
+            <button type="button" class="flyer-mode-btn ${nyMode === 'failure' ? 'active' : ''}" data-mode="failure">⚠️ Sudden Evacuation Failure (1,480 Deaths)</button>
+          </div>
+        </div>
+      ` : '';
+
+      this.elFlyerMetricsGrid.innerHTML = modeBarHtml + d.metrics.map(m => `
         <div class="flyer-metric-card">
           <span class="fmc-label">${m.label}</span>
           <span class="fmc-val ${m.color}">${m.val}</span>
           <span class="fmc-sub">${m.sub}</span>
         </div>
       `).join('');
+
+      if (isNY) {
+        const btns = this.elFlyerMetricsGrid.querySelectorAll('.flyer-mode-btn');
+        btns.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.setNewYorkMode(btn.dataset.mode);
+          });
+        });
+      }
     }
 
     if (this.elFlyerTimeline) {
@@ -600,6 +717,9 @@ export class UIManager {
 
   // Zero-lag update synchronized with actual wave front position uWave!
   update(t, elapsedSec, uWave = 0) {
+    this.lastT = t;
+    this.lastUWave = uWave;
+
     // 1. Scrubber & Time
     this.elScrubber.value = t.toFixed(4);
     const sceneSeconds = (t * TIMELINE_CONFIG.DUR).toFixed(1);
@@ -678,7 +798,8 @@ export class UIManager {
         }
       } else {
         if (isNewYork) {
-          this.elTallyHumanRegion.textContent = 'NYC Coastal Losses';
+          const mode = getNYForecastMode();
+          this.elTallyHumanRegion.textContent = (mode === 'modern') ? 'Forecasting Success' : 'Evacuation Breach';
         } else if (isLondon) {
           this.elTallyHumanRegion.textContent = 'Thames Basin';
         } else if (isTokyo) {
@@ -953,10 +1074,11 @@ export class UIManager {
       if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = 'evacuated';
       if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'Mentougou & Basin';
     } else if (id === 'newyork') {
+      const mode = getNYForecastMode();
       if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Subways Flooded';
-      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Sudden Deluge Toll';
+      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = (mode === 'modern') ? 'Modern Forecast' : 'Evacuation Failure';
       if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = 'fatalities';
-      if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = 'missing';
+      if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = (mode === 'modern') ? 'evacuated' : 'missing';
       if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'NYC Metro & Harbor';
     } else if (id === 'delhi') {
       if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Works Offline';
@@ -970,6 +1092,15 @@ export class UIManager {
       if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = 'dead';
       if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = 'missing';
       if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'Trishuli Corridor';
+    }
+
+    if (this.elNyModeToggle) {
+      this.elNyModeToggle.style.display = (id === 'newyork') ? 'flex' : 'none';
+      if (id === 'newyork') {
+        const mode = getNYForecastMode();
+        if (this.elModeBtnModern) this.elModeBtnModern.classList.toggle('active', mode === 'modern');
+        if (this.elModeBtnFailure) this.elModeBtnFailure.classList.toggle('active', mode === 'failure');
+      }
     }
 
     this.renderWaypointNav();

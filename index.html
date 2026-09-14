@@ -110,13 +110,19 @@
     </div>
 
     <div class="tally-card tally-dead" title="Estimated Human Impact & Evacuation">
-      <span class="tally-label" id="tally-human-label">Sudden Deluge Toll</span>
+      <div class="tally-header-row">
+        <span class="tally-label" id="tally-human-label">Forecasting Mode</span>
+        <div class="forecast-mode-toggle" id="ny-mode-toggle" title="Toggle between Modern Forecast (Sandy: 44 Deaths) and Sudden Evacuation Failure (1,480 Deaths)">
+          <button type="button" class="mode-pill-btn active" data-mode="modern" id="mode-btn-modern">🛰️ Sandy (44)</button>
+          <button type="button" class="mode-pill-btn" data-mode="failure" id="mode-btn-failure">⚠️ Sudden (1,480)</button>
+        </div>
+      </div>
       <div class="tally-value-row">
         <span class="tally-number red-num" id="tally-dead">0</span>
         <span class="tally-sub" id="tally-dead-unit">fatalities</span>
         <span class="divider">/</span>
         <span class="tally-number amber-num" id="tally-missing">0</span>
-        <span class="tally-sub" id="tally-missing-unit">missing</span>
+        <span class="tally-sub" id="tally-missing-unit">evacuated</span>
       </div>
       <div class="kpi-tag-row">
         <span class="kpi-badge badge-human" id="tally-human-region">Pre-Disaster (0 Deaths)</span>

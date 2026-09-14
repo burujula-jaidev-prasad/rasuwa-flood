@@ -5,6 +5,19 @@
 //            Crest 4.82m (15.8 ft NAVD88) with 180M m³ Atlantic Surge Funneling
 // ---------------------------------------------------------------------------
 
+let currentNYMode = 'modern'; // Default: 'modern' (Sandy: 44 deaths) | 'failure' (Sudden rush hour: 1,480 deaths)
+
+export function setNYForecastMode(mode) {
+  if (mode === 'failure' || mode === 'modern') {
+    currentNYMode = mode;
+  }
+  return currentNYMode;
+}
+
+export function getNYForecastMode() {
+  return currentNYMode;
+}
+
 export const NEWYORK_CONFIG = {
   id: 'newyork',
   name: 'New York, USA',
@@ -251,18 +264,37 @@ export const NEWYORK_WAYPOINTS = [
     subtitle: 'NYC Metro Coastal Disaster & $42.5 Billion Toll',
     coords: '40.71° N, 74.00° W (Citywide)',
     badge: 'Stage 8 • Full Loss Metric • $42.5B Loss',
-    headline: 'NYC Sudden Surge Toll: 1,480 Fatalities, $42.5B Loss & 385,000 Displaced',
-    stats: [
-      { label: 'Confirmed Sudden Fatalities', value: '1,480 deaths (rush-hour subway & coastal deluge)' },
-      { label: 'Missing / Subterranean Trapped', value: '3,850 commuters & basement dwellers' },
-      { label: 'Total Economic Destruction', value: '$42.5 Billion USD' },
-      { label: 'Total Displaced Residents', value: '385,000 coastal residents' },
-      { label: 'Subway System Offline', value: '7 under-river tunnels inundated for 6 days' },
-      { label: 'Peak Recorded Surge', value: '4.82 m (15.8 ft NAVD88) at The Narrows' },
-      { label: 'Total Water Pumped Out', value: '1.2 Billion gallons of seawater' }
-    ],
-    scientificNote: 'Sudden rapid-onset surge model: Unlike Sandy where 48-hour advance transit shutdowns kept NYC deaths to 44, a sudden unevacuated morning rush-hour deluge causes catastrophic flash-flood casualties (1,480 dead, 3,850 missing), mirroring the sudden flood catastrophe of the Nepal deluges.',
-    warningGap: 'Extreme vulnerability of sudden compound surges arriving without 48-hour advance transit shutdown; subway tunnel portals act as giant siphon conduits.',
+    get headline() {
+      return currentNYMode === 'modern'
+        ? 'NYC Sandy Benchmark: 44 Fatalities, $42.5B Loss & 385,000 Evacuated'
+        : 'NYC Sudden Surge Toll: 1,480 Fatalities, $42.5B Loss & 3,850 Missing';
+    },
+    get stats() {
+      return currentNYMode === 'modern'
+        ? [
+            { label: 'Direct Storm Fatalities', value: '44 deaths (verified CDC / Medical Examiner)' },
+            { label: 'Zone A Mandatory Evacuees', value: '385,000 residents safely evacuated' },
+            { label: 'Subway System Offline', value: '7 under-river tunnels flooded (halted in advance)' },
+            { label: 'Total Economic Destruction', value: '$42.5 Billion USD' },
+            { label: 'Peak Recorded Surge', value: '4.82 m (15.8 ft NAVD88) at The Narrows' },
+            { label: 'Total Water Pumped Out', value: '1.2 Billion gallons of seawater' }
+          ]
+        : [
+            { label: 'Confirmed Sudden Fatalities', value: '1,480 deaths (rush-hour subway & coastal deluge)' },
+            { label: 'Missing / Subterranean Trapped', value: '3,850 commuters & basement dwellers' },
+            { label: 'Total Displaced Residents', value: '385,000 coastal residents' },
+            { label: 'Subway System Offline', value: '7 under-river tunnels inundated with active transit' },
+            { label: 'Total Economic Destruction', value: '$42.5 Billion USD' },
+            { label: 'Peak Recorded Surge', value: '4.82 m (15.8 ft NAVD88) at The Narrows' },
+            { label: 'Total Water Pumped Out', value: '1.2 Billion gallons of seawater' }
+          ];
+    },
+    get scientificNote() {
+      return currentNYMode === 'modern'
+        ? 'Predictive Forecasting Success: 48-hour advance NOAA SLOSH & HURREVAC modeling allowed NYC OEM and MTA to execute a 24-hour advance transit shutdown and Zone A evacuation, keeping direct storm fatalities to 44.'
+        : 'Sudden rapid-onset surge model: Unlike Sandy where 48-hour advance transit shutdowns kept NYC deaths to 44, a sudden unevacuated morning rush-hour deluge causes catastrophic flash-flood casualties (1,480 dead, 3,850 missing), mirroring the sudden flood catastrophe of the Nepal deluges.';
+    },
+    warningGap: 'Extreme vulnerability of subterranean transit: if compound surges arrive before 24-hour evacuation clearance, tunnel portals act as giant siphon conduits.',
     countermeasure: {
       status: 'Long-Term Resiliency Activated',
       action: '$52 Billion USACE NYNJHAT outer-harbor storm surge barrier plan expedited through federal approval.',
@@ -279,10 +311,18 @@ export const NEWYORK_NARRATION = [
   { tStart: 0.52, tEnd: 0.66, text: "Along the East River, 16.5-foot steel roller floodgates seal FDR Drive under the East Side Coastal Resiliency project, turning the highway into a defensive water barrier against the surging tide." },
   { tStart: 0.66, tEnd: 0.80, text: "The surge bottleneck chokes under the Gothic granite towers of the Brooklyn Bridge. DUMBO cobblestones, historic waterfront lofts, and timber piers are engulfed under 1.8 metres of raging brine." },
   { tStart: 0.80, tEnd: 0.92, text: "At 14th Street, a violent 345-kilovolt transformer arc flash explodes across the Con Edison substation, detonating transformer oil and plunging Lower Manhattan from 34th Street south into darkness." },
-  { tStart: 0.92, tEnd: 1.00, text: "1,480 confirmed fatalities, 3,850 missing, 385,000 displaced, and 7 subway tubes submerged in a sudden rush-hour deluge causing $42.5 billion in destruction. The USACE unwatering armada mobilizes around the clock to drain the city." }
+  {
+    tStart: 0.92,
+    tEnd: 1.00,
+    get text() {
+      return currentNYMode === 'modern'
+        ? "44 verified fatalities, 385,000 evacuated, and 7 subway tubes flooded under $42.5 billion in damage. 48-hour advance forecasting and preemptive transit shutdown prevented catastrophic mass loss of life."
+        : "1,480 confirmed fatalities, 3,850 missing, 385,000 displaced, and 7 subway tubes submerged in a sudden rush-hour deluge causing $42.5 billion in destruction. The USACE unwatering armada mobilizes around the clock to drain the city.";
+    }
+  }
 ];
 
-export function getNewYorkTallyValues(t, uWave = 0) {
+export function getNewYorkTallyValues(t, uWave = 0, mode = currentNYMode) {
   // Pre-disaster baseline: strictly zero casualties, zero damage before storm arrives
   if (t <= 0.0001 || uWave <= 0.0001) {
     return {
@@ -306,28 +346,51 @@ export function getNewYorkTallyValues(t, uWave = 0) {
     };
   }
 
-  // 1. Sudden Catastrophic Event Fatalities & Missing (0 -> 1,480 dead, 3,850 missing, comparable to Nepal deluge)
+  // 1. Data-Backed Casualties based on Selected Forecasting Model
   let dead = 0;
   let missing = 0;
-  if (uWave < 0.14) {
-    // Storm surge approaches offshore; sirens sounding; outer harbor transit warning; 0 direct coastal flood drownings
-    dead = 0;
-    missing = 0;
-  } else if (uWave < 0.35) {
-    // Outer shoreline flash breach: Staten Island & Rockaways outer seawalls suddenly overwhelmed
-    const f = (uWave - 0.14) / (0.35 - 0.14);
-    dead = Math.round(f * 380); // 0 -> 380
-    missing = Math.round(f * 950); // 0 -> 950
-  } else if (uWave < 0.60) {
-    // Seawall breach: The Battery & Financial District sudden morning rush-hour transit & basement inundation
-    const f = (uWave - 0.35) / (0.60 - 0.35);
-    dead = Math.round(380 + f * 640); // 380 -> 1,020
-    missing = Math.round(950 + f * 1750); // 950 -> 2,700
+
+  if (mode === 'modern') {
+    // Modern Forecast Model: 48-hr advance SLOSH prediction allowed 24-hr advance transit shutdown & Zone A evacuation.
+    // Official CDC / NYC Medical Examiner benchmark: exactly 44 direct storm deaths.
+    if (uWave < 0.14) {
+      dead = 0;
+      missing = 0;
+    } else if (uWave < 0.35) {
+      // Outer shoreline breach: Staten Island & Lower Bay outer seawalls overtopped
+      const f = (uWave - 0.14) / (0.35 - 0.14);
+      dead = Math.round(f * 14); // 0 -> 14
+      missing = 0;
+    } else if (uWave < 0.60) {
+      // Seawall breach: The Battery & Financial District street-level / basement inundation
+      const f = (uWave - 0.35) / (0.60 - 0.35);
+      dead = Math.round(14 + f * 18); // 14 -> 32
+      missing = 0;
+    } else {
+      // Peak inundation, subway tubes flooded (empty of passengers), ConEd 14th St explosion
+      const f = Math.min(1.0, (uWave - 0.60) / 0.40);
+      dead = Math.round(32 + f * 12); // 32 -> 44
+      missing = 0;
+    }
   } else {
-    // Peak deluge, 7 subway tunnels inundated, subterranean entrapment, ConEd 14th St explosion
-    const f = Math.min(1.0, (uWave - 0.60) / 0.40);
-    dead = Math.round(1020 + f * 460); // 1,020 -> 1,480
-    missing = Math.round(2700 + f * 1150); // 2,700 -> 3,850
+    // Evacuation Failure / Sudden Fast-Mover Model (1821 / 1938 benchmark):
+    // Storm accelerates into NY Bight during morning rush hour without 24-hr clearance time; active subway transit deluged.
+    if (uWave < 0.14) {
+      dead = 0;
+      missing = 0;
+    } else if (uWave < 0.35) {
+      const f = (uWave - 0.14) / (0.35 - 0.14);
+      dead = Math.round(f * 380); // 0 -> 380
+      missing = Math.round(f * 950); // 0 -> 950
+    } else if (uWave < 0.60) {
+      const f = (uWave - 0.35) / (0.60 - 0.35);
+      dead = Math.round(380 + f * 640); // 380 -> 1,020
+      missing = Math.round(950 + f * 1750); // 950 -> 2,700
+    } else {
+      const f = Math.min(1.0, (uWave - 0.60) / 0.40);
+      dead = Math.round(1020 + f * 460); // 1,020 -> 1,480
+      missing = Math.round(2700 + f * 1150); // 2,700 -> 3,850
+    }
   }
 
   // 2. Population Affected & Displaced (0 -> 385,000 Zone A Mandatory Evacuees)
