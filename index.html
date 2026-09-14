@@ -13,8 +13,8 @@
     }
   }
   </script>
-  <script type="module" crossorigin src="./assets/index-Dpq80a_c.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-BtZ9h76C.css">
+  <script type="module" crossorigin src="./assets/index-WfKbmOxU.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CDVTF177.css">
 </head>
 <body>
   <!-- 3D WebGL Canvas Container -->
@@ -28,7 +28,7 @@
     <div class="brand-container">
       <span class="brand-badge" id="brand-badge">Forecasting Simulator</span>
       <h1 class="brand-title" id="brand-title">New York: Hurricane Storm Surge & Inundation</h1>
-      <span class="brand-subtitle" id="brand-subtitle">Atlantic Funneling, Verrazzano Bridge Collapse & Subway Inundation</span>
+      <span class="brand-subtitle" id="brand-subtitle">Atlantic Funneling, Subway Flooding & ConEd Grid Arc-Blast</span>
     </div>
 
     <!-- Multi-City Scenario Selector Bar -->
@@ -56,6 +56,10 @@
       <button class="scenario-btn" data-id="london" title="London: North Sea Tidal Surge & Thames Barrier Emergency Closure">
         <span class="sc-flag">🇬🇧</span>
         <span class="sc-name">London</span>
+      </button>
+      <button class="incident-flyer-btn" id="open-flyer-btn" title="View Official Incident Dossier & Flyer">
+        <span class="flyer-btn-icon">📋</span>
+        <span>Incident Flyer</span>
       </button>
     </nav>
 
@@ -225,19 +229,75 @@
     <button class="transport-btn" id="speed-btn" title="Playback Speed">1.0x</button>
   </footer>
 
-  <!-- Scenario Context Intro Card -->
+  <!-- Scenario Context Incident Flyer Modal Overlay -->
   <div class="intro-card-overlay" id="intro-card">
-    <div class="intro-modal">
-      <div class="intro-badge" id="intro-badge">Disaster Scenario Forecast</div>
-      <h2 class="intro-title" id="intro-title">New York: Cat-4 Hurricane Storm Surge</h2>
-      <p class="intro-p" id="intro-p">
-        In this extreme Sandy 2.0 benchmark scenario, an astronomical high tide couples with an intense post-tropical hurricane surge, funneling a 15.8-foot storm tide into New York Harbor. The surge breaches the Atlantic seawall, shatters the Verrazzano-Narrows Bridge center suspended span, inundates 7 under-river subway tubes, knocks out the ConEd 14th St substation with a 345 kV arc blast, and collapses the Brooklyn Bridge.
-      </p>
-      <div class="intro-alert" id="intro-alert">
-        <strong>Core scientific finding:</strong> Harbor bathymetry and the Upper Bay bottleneck amplify peak surge velocity. Critical subterranean transit tunnels and power substations fail rapidly within 90 minutes of the seawall breach.
+    <div class="intro-modal incident-flyer" id="incident-flyer">
+      <button class="flyer-close-btn" id="flyer-close-btn" title="Close Incident Flyer">✕</button>
+
+      <!-- Flyer Header -->
+      <div class="flyer-header">
+        <div class="flyer-badge-row">
+          <span class="flyer-badge alert-red">
+            <span class="pulse-dot"></span>
+            OFFICIAL INCIDENT DOSSIER
+          </span>
+          <span class="flyer-tag" id="flyer-tag">NOAA / NHC SLOSH SIMULATION</span>
+          <span class="flyer-id" id="flyer-doc-id">DOC-ID: NY-SANDY2-2026</span>
+        </div>
+        <h2 class="flyer-title" id="flyer-title">New York: Category-4 Hurricane Surge & Harbor Deluge</h2>
+        <div class="flyer-subtitle" id="flyer-subtitle">Compound Astronomical High Tide, Atlantic Funneling & Lower Manhattan Inundation</div>
       </div>
-      <div class="intro-actions">
-        <button class="intro-btn" id="intro-skip-btn">Explore 3D New York Simulation</button>
+
+      <!-- Key Incident Specs Grid -->
+      <div class="flyer-metrics-grid" id="flyer-metrics-grid">
+        <div class="flyer-metric-card">
+          <span class="fmc-label">Peak Surge Crest</span>
+          <span class="fmc-val amber" id="fmc-crest">4.82 m <small>(15.8 ft)</small></span>
+          <span class="fmc-sub">NAVD88 High Watermark</span>
+        </div>
+        <div class="flyer-metric-card">
+          <span class="fmc-label">Peak Forward Speed</span>
+          <span class="fmc-val cyan" id="fmc-speed">13.2 m/s <small>(47.5 km/h)</small></span>
+          <span class="fmc-sub">Upper Bay Channel</span>
+        </div>
+        <div class="flyer-metric-card">
+          <span class="fmc-label">Transit Impact</span>
+          <span class="fmc-val red" id="fmc-transit">7 Transit Tubes</span>
+          <span class="fmc-sub">14.5M gal Brine Influx</span>
+        </div>
+        <div class="flyer-metric-card">
+          <span class="fmc-label">Power Grid Failure</span>
+          <span class="fmc-val yellow" id="fmc-grid">345 kV Arc-Blast</span>
+          <span class="fmc-sub">ConEd 14th St Substation</span>
+        </div>
+      </div>
+
+      <!-- Incident Chronology / Sequence of Destruction -->
+      <div class="flyer-section">
+        <div class="flyer-section-title">
+          <span>⚡</span>
+          <span>INCIDENT CHRONOLOGY & CRITICAL SEQUENCE</span>
+        </div>
+        <div class="flyer-timeline" id="flyer-timeline">
+          <!-- Populated dynamically by UIManager -->
+        </div>
+      </div>
+
+      <!-- Operational Advisory Notice -->
+      <div class="flyer-alert" id="flyer-alert">
+        <div class="fa-icon">⚠️</div>
+        <div class="fa-text" id="flyer-alert-text">
+          <strong>Core Scientific Finding:</strong> Upper New York Bay bathymetry and the East River strait funneling create severe hydrodynamic amplification. Unprotected perimeter seawalls allow seawater to rapidly overwhelm subterranean infrastructure within 90 minutes of the seawall breach.
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flyer-actions">
+        <button class="flyer-btn-secondary" id="intro-orbit-btn">Explore in Free Orbit</button>
+        <button class="flyer-btn-primary" id="intro-skip-btn">
+          <span class="play-arrow">▶</span>
+          <span>Start 3D Incident Simulation</span>
+        </button>
       </div>
     </div>
   </div>
