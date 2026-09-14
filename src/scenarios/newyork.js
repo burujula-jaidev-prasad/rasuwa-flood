@@ -281,16 +281,58 @@ export const NEWYORK_NARRATION = [
 ];
 
 export function getNewYorkTallyValues(t, uWave = 0) {
-  // 1. Population Affected & Displaced
-  const popFactor = Math.min(Math.max((uWave - 0.10) / 0.80, 0), 1);
+  // Pre-disaster baseline: strictly zero casualties, zero damage before storm arrives
+  if (t <= 0.0001 || uWave <= 0.0001) {
+    return {
+      dead: 0,
+      missing: 0,
+      evacuated: 0,
+      popAffectedMillions: "0.00",
+      waterOfflineMGD: 0,
+      hydro: 0,
+      stageMeters: 0.0,
+      speedMS: 0.0,
+      speedKMH: 0,
+      intensityVal: "0.0m Normal Sea",
+      intensityTag: "Pre-Surge Normal",
+      intensityClass: "low",
+      pressureKPa: 0,
+      econUSD: 0,
+      econLocal: "$0.0B",
+      econLevel: "Pre-Disaster Baseline",
+      econClass: "low"
+    };
+  }
+
+  // 1. Data-backed Dynamic Fatalities (0 -> 44 official CDC / NYC Medical Examiner benchmark)
+  let dead = 0;
+  if (uWave < 0.14) {
+    // Storm surge approaches offshore; mandatory Zone A evacuation active; 0 direct coastal flood drownings
+    dead = 0;
+  } else if (uWave < 0.35) {
+    // Outer shoreline breach: Staten Island & Rockaways outer seawalls overtopped
+    const f = (uWave - 0.14) / (0.35 - 0.14);
+    dead = Math.round(f * 14); // 0 -> 14
+  } else if (uWave < 0.60) {
+    // Seawall breach: The Battery & Financial District street-level / basement inundation
+    const f = (uWave - 0.35) / (0.60 - 0.35);
+    dead = Math.round(14 + f * 18); // 14 -> 32
+  } else {
+    // Peak inundation, subway tunnels submerged, ConEd 14th St explosion
+    const f = Math.min(1.0, (uWave - 0.60) / 0.40);
+    dead = Math.round(32 + f * 12); // 32 -> 44
+  }
+
+  // 2. Population Affected & Displaced (0 -> 385,000 Zone A Mandatory Evacuees)
+  const popFactor = Math.min(Math.max((uWave - 0.05) / 0.85, 0), 1);
   const evacuated = Math.round(385000 * popFactor);
   const popAffectedMillions = (1.85 * popFactor).toFixed(2);
 
-  // 2. Flooded Subway Tubes (0 -> 7 tubes)
+  // 3. Flooded Subway Tubes (0 -> 7 under-river transit tubes)
   const tunnelFactor = Math.min(Math.max((uWave - 0.25) / 0.45, 0), 1);
   const floodedTubes = Math.round(7 * tunnelFactor);
 
-  // 3. Water Speed & Surge Intensity
+  // 4. Water Speed & Surge Intensity (NOAA The Battery gauge & SLOSH hydrodynamic model)
   let speedMS = 3.5;
   let intensityVal = "1.2m Tide";
   let intensityClass = "low";
@@ -298,16 +340,17 @@ export function getNewYorkTallyValues(t, uWave = 0) {
   let pressureKPa = 8;
   let stageMeters = 1.6;
 
-  if (t < 0.08) {
-    speedMS = 5.2;
+  if (uWave < 0.10) {
+    const f = uWave / 0.10;
+    speedMS = +(3.5 + f * 4.7).toFixed(1); // 3.5 -> 8.2 m/s
     intensityVal = "2.4m Surge";
     intensityTag = "Lower Bay Funnel";
     intensityClass = "low";
-    pressureKPa = 14;
-    stageMeters = 2.4;
+    pressureKPa = Math.round(8 + f * 16); // 8 -> 24 kPa
+    stageMeters = +(1.6 + f * 1.2).toFixed(2); // 1.6 -> 2.8m
   } else if (uWave < 0.25) {
     // Funneling through The Narrows into Upper Bay (highest velocity)
-    const f = uWave / 0.25;
+    const f = (uWave - 0.10) / 0.15;
     speedMS = +(8.2 + f * 5.0).toFixed(1); // 8.2 -> 13.2 m/s (47.5 km/h)
     intensityVal = "4.82m Surge Crest";
     intensityTag = "Narrows Funneling";
@@ -345,9 +388,9 @@ export function getNewYorkTallyValues(t, uWave = 0) {
 
   const speedKMH = Math.round(speedMS * 3.6);
 
-  // 4. Economic Destruction in USD ($ Billion)
+  // 5. Economic Destruction in USD ($ Billion, SIRR $42.5B benchmark)
   let econUSD = 0;
-  let econLevel = "Normal";
+  let econLevel = "Normal Operations";
   let econClass = "low";
 
   if (uWave >= 0.08) {
@@ -381,7 +424,7 @@ export function getNewYorkTallyValues(t, uWave = 0) {
   const econBillionUSD = (econUSD / 1000).toFixed(1);
 
   return {
-    dead: 44, // Benchmark coastal fatalities
+    dead,
     missing: evacuated, // Displaced / evacuated count
     evacuated,
     popAffectedMillions,

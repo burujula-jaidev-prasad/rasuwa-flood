@@ -666,6 +666,29 @@ export class UIManager {
       const displayMissing = (tallies.evacuated !== undefined) ? tallies.evacuated : tallies.missing;
       this.elTallyMissing.textContent = displayMissing.toLocaleString();
     }
+    if (this.elTallyHumanRegion) {
+      if (tallies.dead === 0) {
+        if (tallies.evacuated > 0) {
+          this.elTallyHumanRegion.textContent = 'Evacuating (0 Deaths)';
+        } else {
+          this.elTallyHumanRegion.textContent = 'Pre-Disaster (0 Deaths)';
+        }
+      } else {
+        if (isNewYork) {
+          this.elTallyHumanRegion.textContent = 'NYC Coastal Losses';
+        } else if (isLondon) {
+          this.elTallyHumanRegion.textContent = 'Thames Basin';
+        } else if (isTokyo) {
+          this.elTallyHumanRegion.textContent = 'Koto 5 Wards';
+        } else if (isBeijing) {
+          this.elTallyHumanRegion.textContent = 'Mentougou & Basin';
+        } else if (isDelhi) {
+          this.elTallyHumanRegion.textContent = 'Yamuna Corridor';
+        } else {
+          this.elTallyHumanRegion.textContent = 'Trishuli Corridor';
+        }
+      }
+    }
 
     // Secondary Infrastructure (Tubes in London/NY vs Highways in Beijing vs G-CANS in Tokyo vs Water works in Delhi vs Hydropower in Rasuwa)
     if (this.elTallyHydro) {
@@ -957,6 +980,9 @@ export class UIManager {
     scenarioBtns.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.id === id);
     });
+
+    // Reset and initialize UI to pre-disaster baseline (t = 0, uWave = 0)
+    this.update(0.0, 0, 0);
   }
 
   getAgencyTagsHtml() {
