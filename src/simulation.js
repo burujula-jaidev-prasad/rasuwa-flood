@@ -3496,7 +3496,7 @@ export class FloodSimulation {
     if (this.scenarioId === 'delhi') {
       this.updateDelhiGenesis(clampedT);
       let uWave = 0;
-      if (clampedT < 0.10) {
+      if (clampedT < 0.05) {
         if (this.floodGroup) this.floodGroup.visible = false;
         if (this.trailObj) this.river.updateFloodTrail(this.trailObj, 0);
         this.uWave = 0;
@@ -3504,7 +3504,7 @@ export class FloodSimulation {
         if (this.delhiUpdateDynamic) this.delhiUpdateDynamic(clampedT, 0);
       } else {
         if (this.floodGroup) this.floodGroup.visible = true;
-        uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
+        uWave = Math.min(1.0, (clampedT - 0.04) / 0.94);
         this.uWave = uWave;
         this.updateSurgeFront(uWave);
         this.updateWipeableItems(uWave);

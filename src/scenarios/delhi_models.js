@@ -1103,30 +1103,34 @@ export function buildDelhiScene(group, river, terrain) {
   }
 
   // -------------------------------------------------------------------------
-  // 1. WAZIRABAD BARRAGE & WATER TREATMENT PLANT (u = 0.20) - SHATTERING & BLOWOUT
+  // 1. WAZIRABAD BARRAGE & VEHICULAR ROAD BRIDGE (u = 0.20) - CATASTROPHIC COLLAPSE
   // -------------------------------------------------------------------------
   const fWazir = getRiverFrame(0.20);
   const wazirGroup = new THREE.Group();
   wazirGroup.position.copy(fWazir.pt);
 
-  const barrageSpan = 26.0;
+  const barrageSpan = 32.0;
   const barragePiers = 8;
   const pierSpacing = barrageSpan / barragePiers;
 
   const wazirPiers = [];
   const wazirGates = [];
+  const wazirRoadSpans = [];
 
+  // Heavy concrete piers spanning across the river
   for (let i = 0; i <= barragePiers; i++) {
     const offset = (i - barragePiers * 0.5) * pierSpacing;
-    const pier = new THREE.Mesh(new THREE.BoxGeometry(0.85, 5.8, 3.8), concreteMat);
-    const pPos = new THREE.Vector3(fWazir.side.x * offset, 1.8, fWazir.side.z * offset);
+    const pier = new THREE.Mesh(new THREE.BoxGeometry(0.95, 6.2, 4.8), concreteMat);
+    const pPos = new THREE.Vector3(fWazir.side.x * offset, 2.1, fWazir.side.z * offset);
     pier.position.copy(pPos);
     pier.castShadow = true;
+    pier.receiveShadow = true;
     wazirGroup.add(pier);
     wazirPiers.push({ mesh: pier, basePos: pPos.clone(), index: i });
 
+    // Sluice gates between piers
     if (i < barragePiers) {
-      const gate = new THREE.Mesh(new THREE.BoxGeometry(pierSpacing * 0.88, 2.9, 0.32), darkSteel);
+      const gate = new THREE.Mesh(new THREE.BoxGeometry(pierSpacing * 0.88, 3.2, 0.35), darkSteel);
       const gateOffset = offset + pierSpacing * 0.5;
       const gPos = new THREE.Vector3(fWazir.side.x * gateOffset, 1.4, fWazir.side.z * gateOffset);
       gate.position.copy(gPos);
@@ -1138,30 +1142,111 @@ export function buildDelhiScene(group, river, terrain) {
         index: i,
         isBlowout: (i >= 2 && i <= 5) // Central gates blow out
       });
+
+      // 2-Lane Vehicular Road Bridge Deck sitting on top of the piers
+      const spanCenter = offset + pierSpacing * 0.5;
+      const deckPos = new THREE.Vector3(fWazir.side.x * spanCenter, 5.3, fWazir.side.z * spanCenter);
+
+      if (i === 3 || i === 4) {
+        // Fracturing central road spans that buckle downward into the river
+        const deckMesh = new THREE.Mesh(new THREE.BoxGeometry(pierSpacing * 0.98, 0.45, 5.2), tarmacMat);
+        deckMesh.position.copy(deckPos);
+        deckMesh.castShadow = true;
+        deckMesh.receiveShadow = true;
+        wazirGroup.add(deckMesh);
+
+        // Guardrails
+        const rail1 = new THREE.Mesh(new THREE.BoxGeometry(pierSpacing * 0.98, 0.65, 0.1), darkSteel);
+        rail1.position.set(deckPos.x, deckPos.y + 0.5, deckPos.z - 2.5);
+        wazirGroup.add(rail1);
+
+        const rail2 = new THREE.Mesh(new THREE.BoxGeometry(pierSpacing * 0.98, 0.65, 0.1), darkSteel);
+        rail2.position.set(deckPos.x, deckPos.y + 0.5, deckPos.z + 2.5);
+        wazirGroup.add(rail2);
+
+        wazirRoadSpans.push({
+          span: i,
+          isCollapsing: true,
+          deck: { mesh: deckMesh, basePos: deckPos.clone() },
+          rails: [rail1, rail2]
+        });
+      } else {
+        // Standing approach spans
+        const deckMesh = new THREE.Mesh(new THREE.BoxGeometry(pierSpacing * 0.98, 0.45, 5.2), tarmacMat);
+        deckMesh.position.copy(deckPos);
+        deckMesh.castShadow = true;
+        deckMesh.receiveShadow = true;
+        wazirGroup.add(deckMesh);
+
+        const rail1 = new THREE.Mesh(new THREE.BoxGeometry(pierSpacing * 0.98, 0.65, 0.1), darkSteel);
+        rail1.position.set(deckPos.x, deckPos.y + 0.5, deckPos.z - 2.5);
+        wazirGroup.add(rail1);
+
+        const rail2 = new THREE.Mesh(new THREE.BoxGeometry(pierSpacing * 0.98, 0.65, 0.1), darkSteel);
+        rail2.position.set(deckPos.x, deckPos.y + 0.5, deckPos.z + 2.5);
+        wazirGroup.add(rail2);
+
+        wazirRoadSpans.push({
+          span: i,
+          isCollapsing: false,
+          deck: { mesh: deckMesh, basePos: deckPos.clone() },
+          rails: [rail1, rail2]
+        });
+      }
     }
   }
 
+  // Vehicles on Wazirabad Bridge:
+  // 1. Green DTC CNG Low-Floor Bus stranded on collapsing central span
+  const wazirBusMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.35 });
+  const wazirBus = new THREE.Group();
+  const busBody = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.8, 6.5), wazirBusMat);
+  busBody.position.y = 0.9;
+  busBody.castShadow = true;
+  wazirBus.add(busBody);
+  const busGlass = new THREE.Mesh(new THREE.BoxGeometry(2.14, 0.7, 5.8), glassDark);
+  busGlass.position.y = 1.1;
+  wazirBus.add(busGlass);
+  const busBasePos = new THREE.Vector3(fWazir.side.x * -2.0, 5.6, fWazir.side.z * -2.0);
+  wazirBus.position.copy(busBasePos);
+  wazirGroup.add(wazirBus);
+
+  // 2. White Maruti Dzire Car washed off the shattered deck into the river
+  const wazirCarMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.25, metalness: 0.5 });
+  const wazirCar = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.2, 3.4), wazirCarMat);
+  const carBasePos = new THREE.Vector3(fWazir.side.x * 2.2, 5.8, fWazir.side.z * 2.2);
+  wazirCar.position.copy(carBasePos);
+  wazirCar.castShadow = true;
+  wazirGroup.add(wazirCar);
+
+  // 3. Bajaj Auto-Rickshaw spinning and tumbling
+  const wazirAutoMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.4 });
+  const wazirAuto = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.3, 2.2), wazirAutoMat);
+  const autoBasePos = new THREE.Vector3(fWazir.side.x * 5.5, 5.8, fWazir.side.z * 5.5);
+  wazirAuto.position.copy(autoBasePos);
+  wazirGroup.add(wazirAuto);
+
   // WTP Pump House on West Bank with Shattering Wall & Roof Collapse
   const pumpHouseGroup = new THREE.Group();
-  const pumpHousePos = fWazir.pt.clone().addScaledVector(fWazir.side, 22.0);
+  const pumpHousePos = fWazir.pt.clone().addScaledVector(fWazir.side, 24.0);
   pumpHousePos.y = terrain.getTerrainHeight(pumpHousePos.x, pumpHousePos.z) + 2.25;
   pumpHouseGroup.position.copy(pumpHousePos);
 
-  const pumpHouseMain = new THREE.Mesh(new THREE.BoxGeometry(10.0, 4.5, 8.0), concreteMat);
+  const pumpHouseMain = new THREE.Mesh(new THREE.BoxGeometry(11.0, 4.8, 8.5), concreteMat);
   pumpHouseMain.castShadow = true;
   pumpHouseGroup.add(pumpHouseMain);
 
   // Riverside fragile brick wall that collapses into water
   const pumpWallMat = new THREE.MeshStandardMaterial({ color: 0xb45309, map: delhiBrickTex, roughness: 0.85 });
-  const pumpFrontWall = new THREE.Mesh(new THREE.BoxGeometry(10.1, 4.4, 0.5), pumpWallMat);
-  pumpFrontWall.position.set(0, 0, 4.05);
+  const pumpFrontWall = new THREE.Mesh(new THREE.BoxGeometry(11.1, 4.6, 0.5), pumpWallMat);
+  pumpFrontWall.position.set(0, 0, 4.3);
   pumpHouseGroup.add(pumpFrontWall);
 
   // Shattered concrete rubble chunks around pump house
   const pumpRubblePieces = [];
-  for (let r = 0; r < 6; r++) {
+  for (let r = 0; r < 8; r++) {
     const rb = new THREE.Mesh(new THREE.BoxGeometry(0.8 + Math.random() * 0.6, 0.6, 0.8), concreteMat);
-    const rbPos = new THREE.Vector3((Math.random() - 0.5) * 8.0, -1.8, 4.5 + Math.random() * 3.0);
+    const rbPos = new THREE.Vector3((Math.random() - 0.5) * 9.0, -1.8, 4.8 + Math.random() * 3.5);
     rb.position.copy(rbPos);
     pumpHouseGroup.add(rb);
     pumpRubblePieces.push({ mesh: rb, basePos: rbPos.clone(), index: r });
@@ -1170,10 +1255,10 @@ export function buildDelhiScene(group, river, terrain) {
   group.add(pumpHouseGroup);
   group.add(wazirGroup);
 
-  // Register WTP pump house in wipeableItems for automated test verification
+  // Register Wazirabad Bridge & WTP pump house in wipeableItems
   wipeableItems.push({
     mesh: pumpHouseGroup,
-    uTrigger: 0.20,
+    uTrigger: 0.18,
     initialPos: pumpHousePos.clone(),
     initialRot: pumpHouseGroup.rotation.clone(),
     driftDir: fWazir.tangent.clone().multiplyScalar(16.0),
@@ -1181,6 +1266,19 @@ export function buildDelhiScene(group, river, terrain) {
     sinkScale: 0.22,
     washSpeed: 25.0,
     maxProg: 0.08,
+    material: concreteMat
+  });
+
+  wipeableItems.push({
+    mesh: wazirGroup,
+    uTrigger: 0.18,
+    initialPos: fWazir.pt.clone(),
+    initialRot: wazirGroup.rotation.clone(),
+    driftDir: fWazir.tangent.clone().multiplyScalar(22.0),
+    collapseTilt: 0.32,
+    sinkScale: 0.20,
+    washSpeed: 28.0,
+    maxProg: 0.09,
     material: concreteMat
   });
 
@@ -1996,8 +2094,8 @@ export function buildDelhiScene(group, river, terrain) {
   // -------------------------------------------------------------------------
   // REAL-TIME BRIDGE & BUILDING SHATTERING DYNAMICS
   // -------------------------------------------------------------------------
-  function updateOldIronBridgeShatter(uWave) {
-    if (uWave < 0.34) {
+  function updateOldIronBridgeShatter(effU) {
+    if (effU < 0.34) {
       // 100% pristine standing bridge before flood wave arrives
       lohaGroup.visible = true;
       lohaPierMeshes.forEach(p => {
@@ -2028,7 +2126,7 @@ export function buildDelhiScene(group, river, terrain) {
       });
     } else {
       // Catastrophic structural collapse as flood bore hits Loha Pul (u = 0.35)
-      const prog = Math.min(1.0, (uWave - 0.34) / 0.12);
+      const prog = Math.min(1.0, (effU - 0.34) / 0.12);
       const ease = Math.sin(prog * Math.PI * 0.5);
 
       // 1. Foundation scouring: Central deepwater pier tilts by 22 degrees into torrent
@@ -2112,14 +2210,30 @@ export function buildDelhiScene(group, river, terrain) {
     }
   }
 
-  function updateWazirabadShatter(uWave) {
-    if (uWave < 0.19) {
-      // Pristine barrage & WTP
+  function updateWazirabadShatter(effU) {
+    if (effU < 0.18) {
+      // 100% pristine standing road bridge & barrage
+      wazirGroup.visible = true;
+      wazirPiers.forEach(p => {
+        p.mesh.position.copy(p.basePos);
+        p.mesh.rotation.set(0, 0, 0);
+      });
       wazirGates.forEach(g => {
         g.mesh.position.copy(g.basePos);
         g.mesh.rotation.set(0, 0, 0);
       });
-      pumpFrontWall.position.set(0, 0, 4.05);
+      wazirRoadSpans.forEach(s => {
+        s.deck.mesh.position.copy(s.deck.basePos);
+        s.deck.mesh.rotation.set(0, 0, 0);
+        s.rails.forEach(r => { r.rotation.set(0, 0, 0); });
+      });
+      wazirBus.position.copy(busBasePos);
+      wazirBus.rotation.set(0, 0, 0);
+      wazirCar.position.copy(carBasePos);
+      wazirCar.rotation.set(0, 0, 0);
+      wazirAuto.position.copy(autoBasePos);
+      wazirAuto.rotation.set(0, 0, 0);
+      pumpFrontWall.position.set(0, 0, 4.3);
       pumpFrontWall.rotation.set(0, 0, 0);
       pumpHouseMain.rotation.set(0, 0, 0);
       pumpRubblePieces.forEach(r => {
@@ -2127,36 +2241,85 @@ export function buildDelhiScene(group, river, terrain) {
         r.mesh.visible = false;
       });
     } else {
-      const prog = Math.min(1.0, (uWave - 0.19) / 0.10);
+      // Catastrophic collapse as 359,000 cusecs surge strikes Wazirabad Bridge!
+      const prog = Math.min(1.0, (effU - 0.18) / 0.12);
       const ease = Math.sin(prog * Math.PI * 0.5);
 
-      // Central barrage gates blow out and wash downstream
-      wazirGates.forEach(g => {
-        if (g.isBlowout) {
-          const washDist = Math.pow(prog, 1.3) * 25.0;
-          g.mesh.position.copy(g.basePos)
-            .addScaledVector(fWazir.tangent, washDist)
-            .add(new THREE.Vector3(0, -ease * 3.5, 0));
-          g.mesh.rotation.x = ease * 1.5;
-          g.mesh.rotation.y = ease * 2.0;
+      // 1. Central Piers 3 and 4 scour and tilt 24 degrees into torrential river current
+      if (wazirPiers[3]) {
+        wazirPiers[3].mesh.rotation.z = ease * 0.40;
+        wazirPiers[3].mesh.position.y = wazirPiers[3].basePos.y - ease * 0.9;
+      }
+      if (wazirPiers[4]) {
+        wazirPiers[4].mesh.rotation.z = -ease * 0.35;
+        wazirPiers[4].mesh.position.y = wazirPiers[4].basePos.y - ease * 0.8;
+      }
+
+      // 2. Central Road Deck Spans fracture and plunge downward into the river (V-shape snap)
+      wazirRoadSpans.forEach(s => {
+        if (s.isCollapsing) {
+          const dir = (s.span === 3) ? 1 : -1;
+          s.deck.mesh.rotation.z = ease * dir * 0.75; // 43 degrees down into water!
+          s.deck.mesh.rotation.x = ease * 0.25;
+          s.deck.mesh.position.y = s.deck.basePos.y - ease * 3.8;
+          s.deck.mesh.position.x = s.deck.basePos.x + ease * fWazir.tangent.x * 2.2;
+          s.deck.mesh.position.z = s.deck.basePos.z + ease * fWazir.tangent.z * 2.2;
+          s.rails.forEach(r => {
+            r.rotation.z = ease * dir * 0.82;
+            r.rotation.y = ease * 0.3;
+          });
         }
       });
 
-      // Pump house wall cracks and collapses forward
-      pumpFrontWall.rotation.x = ease * 1.2;
-      pumpFrontWall.position.y = -ease * 1.5;
-      pumpHouseMain.rotation.z = ease * 0.18;
+      // 3. Vehicles Swept / Tipped:
+      // White car plunges off fractured deck, rolls, and washes downriver
+      const carWash = Math.pow(prog, 1.4) * 35.0;
+      wazirCar.position.copy(carBasePos)
+        .addScaledVector(fWazir.tangent, carWash)
+        .add(new THREE.Vector3(0, -Math.min(5.2, ease * 5.4), 0));
+      wazirCar.rotation.x = ease * 2.5;
+      wazirCar.rotation.y = ease * 3.2;
+      wazirCar.rotation.z = ease * 1.8;
+
+      // Green DTC bus tilts 36 degrees sideways over the broken road edge
+      wazirBus.rotation.z = ease * 0.62;
+      wazirBus.rotation.x = ease * 0.28;
+      wazirBus.position.y = busBasePos.y - ease * 1.5;
+
+      // Auto rickshaw spins off
+      wazirAuto.position.copy(autoBasePos)
+        .addScaledVector(fWazir.tangent, Math.pow(prog, 1.3) * 26.0)
+        .add(new THREE.Vector3(0, -ease * 4.2, 0));
+      wazirAuto.rotation.y = ease * 4.5;
+      wazirAuto.rotation.z = ease * 1.2;
+
+      // 4. Central barrage gates blow out and wash downstream
+      wazirGates.forEach(g => {
+        if (g.isBlowout) {
+          const washDist = Math.pow(prog, 1.3) * 28.0;
+          g.mesh.position.copy(g.basePos)
+            .addScaledVector(fWazir.tangent, washDist)
+            .add(new THREE.Vector3(0, -ease * 3.8, 0));
+          g.mesh.rotation.x = ease * 1.8;
+          g.mesh.rotation.y = ease * 2.4;
+        }
+      });
+
+      // 5. WTP Pump house wall cracks and collapses forward
+      pumpFrontWall.rotation.x = ease * 1.25;
+      pumpFrontWall.position.y = -ease * 1.6;
+      pumpHouseMain.rotation.z = ease * 0.20;
 
       // Concrete rubble chunks tumble into water
       pumpRubblePieces.forEach(r => {
-        r.mesh.visible = (prog > 0.15);
-        r.mesh.position.y = r.basePos.y - ease * 1.2;
+        r.mesh.visible = (prog > 0.12);
+        r.mesh.position.y = r.basePos.y - ease * 1.4;
       });
     }
   }
 
-  function updateITOShatter(uWave) {
-    if (uWave < 0.73) {
+  function updateITOShatter(effU) {
+    if (effU < 0.73) {
       regulatorGate.position.copy(regBasePos);
       regulatorGate.rotation.set(0, 0, 0);
       itoRubblePieces.forEach(r => {
@@ -2165,7 +2328,7 @@ export function buildDelhiScene(group, river, terrain) {
       });
     } else {
       // Explosive blowout of Regulator 12
-      const prog = Math.min(1.0, (uWave - 0.73) / 0.10);
+      const prog = Math.min(1.0, (effU - 0.73) / 0.10);
       const ease = Math.sin(prog * Math.PI * 0.5);
 
       const blowDist = Math.pow(prog, 1.2) * 18.0;
@@ -2181,10 +2344,10 @@ export function buildDelhiScene(group, river, terrain) {
     }
   }
 
-  function updateHaveliShatter(uWave) {
+  function updateHaveliShatter(effU) {
     for (let i = 0; i < shatteringHavelis.length; i++) {
       const h = shatteringHavelis[i];
-      if (uWave < h.uTrigger) {
+      if (effU < h.uTrigger) {
         // Pristine standing building
         h.group.position.copy(h.basePos);
         h.group.rotation.copy(h.baseRot);
@@ -2201,7 +2364,7 @@ export function buildDelhiScene(group, river, terrain) {
         }
       } else {
         // Dramatic building shatter, wall crumble, and roof collapse
-        const prog = Math.min(1.0, (uWave - h.uTrigger) / 0.085);
+        const prog = Math.min(1.0, (effU - h.uTrigger) / 0.085);
         const ease = Math.sin(prog * Math.PI * 0.5);
 
         // 1. Foundation scour & building tilt toward floodwaters
@@ -2251,10 +2414,12 @@ export function buildDelhiScene(group, river, terrain) {
     wipeableItems,
     dynamicWaterItems,
     updateDelhiDynamic: (clampedT, uWave) => {
-      updateOldIronBridgeShatter(uWave);
-      updateWazirabadShatter(uWave);
-      updateITOShatter(uWave);
-      updateHaveliShatter(uWave);
+      // Ensure bridge and building shattering is perfectly synchronized with simulation timeline and camera!
+      const effU = Math.max(uWave, clampedT);
+      updateWazirabadShatter(effU);
+      updateOldIronBridgeShatter(effU);
+      updateITOShatter(effU);
+      updateHaveliShatter(effU);
       updateRescueBoats(clampedT, uWave);
       updateFloatingDebris(uWave);
       updatePoliceBeacons();
