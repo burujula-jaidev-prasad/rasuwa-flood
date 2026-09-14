@@ -13,8 +13,8 @@
     }
   }
   </script>
-  <script type="module" crossorigin src="./assets/index-DPCl8TwO.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-DFhhmeA8.css">
+  <script type="module" crossorigin src="./assets/index-i-7Z1O6e.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DT2sSl0l.css">
 </head>
 <body>
   <!-- 3D WebGL Canvas Container -->
@@ -68,31 +68,34 @@
   <!-- KPI Disaster Command Dashboard -->
   <div class="tally-container">
     <div class="tally-card tally-econ" title="Estimated Total Economic Destruction (USD & Local Currency)">
-      <span class="tally-label">Economic Loss</span>
+      <span class="tally-icon">💰</span>
+      <span class="tally-label">Loss:</span>
       <div class="tally-value-row">
         <span class="tally-number" id="tally-econ-usd">$0.0B</span>
         <span class="tally-sub" id="tally-econ-npr">$0.0B</span>
       </div>
       <div class="kpi-tag-row">
-        <span class="kpi-badge badge-econ" id="tally-econ-level">Pre-Disaster Baseline</span>
+        <span class="kpi-badge badge-econ" id="tally-econ-level">Baseline</span>
       </div>
     </div>
 
     <div class="tally-card tally-speed" title="Hydrodynamic Surge Velocity">
-      <span class="tally-label">Water Speed</span>
+      <span class="tally-icon">🌊</span>
+      <span class="tally-label">Speed:</span>
       <div class="tally-value-row">
         <span class="tally-number" id="tally-speed-ms">0.0 <small>m/s</small></span>
         <span class="tally-sub" id="tally-speed-kmh">0 km/h</span>
       </div>
       <div class="kpi-tag-row">
-        <span class="kpi-badge badge-speed" id="tally-speed-tag">Pre-Surge Normal</span>
+        <span class="kpi-badge badge-speed" id="tally-speed-tag">Normal</span>
       </div>
     </div>
 
     <div class="tally-card tally-intensity" title="Peak Discharge & Kinetic Pressure">
-      <span class="tally-label">Surge Intensity</span>
+      <span class="tally-icon">⚡</span>
+      <span class="tally-label">Surge:</span>
       <div class="tally-value-row">
-        <span class="tally-number" id="tally-intensity-val">0.0m Normal Sea</span>
+        <span class="tally-number" id="tally-intensity-val">0.0m Tide</span>
         <span class="tally-sub" id="tally-pressure">0 kPa</span>
       </div>
       <div class="kpi-tag-row">
@@ -101,23 +104,24 @@
     </div>
 
     <div class="tally-card tally-hydro" title="Critical Infrastructure Offline">
-      <span class="tally-label" id="tally-hydro-label">Subways Flooded</span>
+      <span class="tally-icon">🚇</span>
+      <span class="tally-label" id="tally-hydro-label">Subways:</span>
       <div class="tally-value-row">
         <span class="tally-number" id="tally-hydro">0 <small>Tubes</small></span>
         <span class="tally-sub" id="tally-hydro-sub">/ 7 Tubes</span>
       </div>
       <div class="kpi-tag-row">
-        <span class="kpi-badge badge-hydro" id="tally-hydro-pct">0% Submerged</span>
+        <span class="kpi-badge badge-hydro" id="tally-hydro-pct">0%</span>
       </div>
     </div>
 
     <div class="tally-card tally-dead" title="Estimated Human Impact & Evacuation">
       <div class="tally-header-row">
-        <span class="tally-label" id="tally-human-label">What-If Model</span>
         <div class="forecast-mode-toggle" id="ny-mode-toggle" title="What-If Simulation Model: Compare Early Warning (44 Casualties) vs Sudden Deluge Breach (1,480 Casualties)">
-          <button type="button" class="mode-pill-btn active" data-mode="modern" id="mode-btn-modern">🛡️ What-If: Warning (44)</button>
-          <button type="button" class="mode-pill-btn" data-mode="failure" id="mode-btn-failure">⚠️ What-If: Breach (1.4k)</button>
+          <button type="button" class="mode-pill-btn active" data-mode="modern" id="mode-btn-modern">🛡️ Warning (44)</button>
+          <button type="button" class="mode-pill-btn" data-mode="failure" id="mode-btn-failure">⚠️ Breach (1.4k)</button>
         </div>
+        <span class="tally-label" id="tally-human-label" style="display:none;">What-If</span>
       </div>
       <div class="tally-value-row">
         <span class="tally-number red-num" id="tally-dead">0</span>
@@ -127,7 +131,7 @@
         <span class="tally-sub" id="tally-missing-unit">evacuated</span>
       </div>
       <div class="kpi-tag-row">
-        <span class="kpi-badge badge-human" id="tally-human-region">Pre-Disaster (0 Deaths)</span>
+        <span class="kpi-badge badge-human" id="tally-human-region">0 Deaths</span>
       </div>
     </div>
     <button type="button" class="kpi-toggle-view-btn" id="kpi-toggle-view-btn" title="Toggle KPI Dashboard View">
