@@ -248,7 +248,7 @@ export class UIManager {
     });
 
     if (this.elTallyHumanLabel) {
-      this.elTallyHumanLabel.textContent = (mode === 'modern') ? 'Modern Forecast' : 'Evacuation Failure';
+      this.elTallyHumanLabel.textContent = (mode === 'modern') ? 'What-If: Warning' : 'What-If: Breach';
     }
     if (this.elTallyMissingUnit) {
       this.elTallyMissingUnit.textContent = (mode === 'modern') ? 'evacuated' : 'missing';
@@ -343,15 +343,15 @@ export class UIManager {
 
     const flyerData = {
       newyork: (nyMode === 'modern') ? {
-        tag: 'NOAA / NHC SLOSH FORECAST (SANDY 2.0)',
-        docId: 'DOC-ID: NY-SANDY-MODERN-2026',
-        title: 'New York: Category-4 Hurricane Surge & Harbor Deluge',
-        subtitle: 'Modern Forecast Benchmark: 48-Hour Advance Warning & Timely Evacuation',
+        tag: 'NOAA / USACE WHAT-IF SIMULATION MODEL (2026-2030)',
+        docId: 'SIM-ID: NYC-WHAT-IF-2026',
+        title: 'WHAT IF: Cat-4 Hurricane Surge Inundates New York?',
+        subtitle: 'What-If Stress Test A: 48-Hr Advance Satellite Tracking & Sealed Transit',
         metrics: [
-          { label: 'Direct Fatalities', val: '44 Deaths', sub: 'Verified CDC Ground Truth', color: 'cyan' },
+          { label: 'What-If Fatalities', val: '44 Projected', sub: 'Shielded by 24h Closure', color: 'cyan' },
           { label: 'Zone A Evacuees', val: '385,000 Safe', sub: 'Pre-Emptive Evacuation', color: 'amber' },
-          { label: 'Peak Surge Crest', val: '4.82 m <small>(15.8 ft)</small>', sub: 'NAVD88 High Watermark', color: 'yellow' },
-          { label: 'Total Economic Loss', val: '$42.5 Billion', sub: 'SIRR Disaster Benchmark', color: 'red' }
+          { label: 'Peak Surge Crest', val: '4.82 m <small>(15.8 ft)</small>', sub: 'Simulated High Watermark', color: 'yellow' },
+          { label: 'Total Economic Loss', val: '$42.5 Billion', sub: 'Simulated Asset Damage', color: 'red' }
         ],
         steps: [
           {
@@ -385,17 +385,17 @@ export class UIManager {
             desc: 'East River floodwaters inundate the ConEd 14th St Substation, generating an explosive 345 kV transformer arc-flash and plunging Lower Manhattan into a total electrical blackout.'
           }
         ],
-        alert: '<strong>Predictive Forecasting Success:</strong> 48-hour advance NOAA SLOSH & HURREVAC modeling allowed NYC OEM and MTA to execute a mandatory 24-hour advance transit shutdown and Zone A evacuation, preventing catastrophic subway drowning deaths and keeping direct storm fatalities strictly to 44.'
+        alert: '<strong>What-If Simulation Model Finding A:</strong> If 48-hour advance satellite and SLOSH hydrodynamic forecasting triggers a mandatory 24-hour transit shutdown and Zone A evacuation, human lives are effectively protected (fatalities limited to 44) even as $42.5B in physical infrastructure is overwhelmed.'
       } : {
-        tag: 'NOAA / NHC RAPID-ONSET WORST-CASE',
-        docId: 'DOC-ID: NY-EVAC-FAILURE-2026',
-        title: 'New York: Category-4 Hurricane Surge (Evacuation Failure)',
-        subtitle: 'Sudden Fast-Mover Breach: Rush-Hour Deluge Without Advance Shutdown',
+        tag: 'NOAA / USACE WHAT-IF SIMULATION MODEL (2026-2030)',
+        docId: 'SIM-ID: NYC-WHAT-IF-2026',
+        title: 'WHAT IF: Cat-4 Hurricane Surge Inundates New York?',
+        subtitle: 'What-If Stress Test B: Sudden Rush-Hour Surge Without Advance Evacuation',
         metrics: [
-          { label: 'Sudden Fatalities', val: '1,480 Deaths', sub: 'Rush-Hour Subway Deluge', color: 'red' },
+          { label: 'What-If Fatalities', val: '1,480 Projected', sub: 'Rush-Hour Subway Deluge', color: 'red' },
           { label: 'Missing / Trapped', val: '3,850 Commuters', sub: 'Subterranean Entrapment', color: 'amber' },
-          { label: 'Peak Surge Crest', val: '4.82 m <small>(15.8 ft)</small>', sub: 'NAVD88 High Watermark', color: 'yellow' },
-          { label: 'Total Economic Loss', val: '$42.5 Billion', sub: 'SIRR Disaster Benchmark', color: 'cyan' }
+          { label: 'Peak Surge Crest', val: '4.82 m <small>(15.8 ft)</small>', sub: 'Simulated High Watermark', color: 'yellow' },
+          { label: 'Total Economic Loss', val: '$42.5 Billion', sub: 'Simulated Asset Damage', color: 'cyan' }
         ],
         steps: [
           {
@@ -429,7 +429,7 @@ export class UIManager {
             desc: 'East River floodwaters inundate the ConEd 14th St Substation, generating an explosive 345 kV transformer arc-flash and plunging Lower Manhattan into a total electrical blackout.'
           }
         ],
-        alert: '<strong>Sudden Evacuation Failure Model:</strong> A fast-moving Category-4 hurricane arriving during morning rush hour before the 24-hour evacuation clearance time can be executed. Subways remain open with active commuters, causing catastrophic flash-flood casualties (1,480 dead, 3,850 missing) comparable to the violent mountain deluges of Nepal.'
+        alert: '<strong>What-If Simulation Model Finding B:</strong> If a rapid-acceleration storm strikes during peak 07:30 AM rush hour before the 24-hour evacuation clearance time can be executed, subways flood with active commuters, generating a sudden deluge catastrophe (1,480 dead, 3,850 trapped) comparable to mountain flash floods.'
       },
       delhi: {
         tag: 'CWC / DJB MONSOON MODEL',
@@ -670,10 +670,10 @@ export class UIManager {
       const nyMode = getNYForecastMode();
       const modeBarHtml = isNY ? `
         <div class="flyer-mode-bar" style="grid-column: 1 / -1;">
-          <span class="flyer-mode-label">Select Simulation Forecast Model:</span>
+          <span class="flyer-mode-label">Select What-If Simulation Scenario:</span>
           <div class="flyer-mode-pills">
-            <button type="button" class="flyer-mode-btn ${nyMode === 'modern' ? 'active' : ''}" data-mode="modern">🛰️ Modern Forecast (Sandy: 44 Deaths)</button>
-            <button type="button" class="flyer-mode-btn ${nyMode === 'failure' ? 'active' : ''}" data-mode="failure">⚠️ Sudden Evacuation Failure (1,480 Deaths)</button>
+            <button type="button" class="flyer-mode-btn ${nyMode === 'modern' ? 'active' : ''}" data-mode="modern">🛡️ What-If: Early Warning Active (44 Casualties)</button>
+            <button type="button" class="flyer-mode-btn ${nyMode === 'failure' ? 'active' : ''}" data-mode="failure">⚠️ What-If: Sudden Warning Failure (1,480 Deluge Casualties)</button>
           </div>
         </div>
       ` : '';
@@ -1076,7 +1076,7 @@ export class UIManager {
     } else if (id === 'newyork') {
       const mode = getNYForecastMode();
       if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Subways Flooded';
-      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = (mode === 'modern') ? 'Modern Forecast' : 'Evacuation Failure';
+      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = (mode === 'modern') ? 'What-If: Warning' : 'What-If: Breach';
       if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = 'fatalities';
       if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = (mode === 'modern') ? 'evacuated' : 'missing';
       if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'NYC Metro & Harbor';

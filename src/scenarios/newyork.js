@@ -23,9 +23,9 @@ export const NEWYORK_CONFIG = {
   name: 'New York, USA',
   country: 'United States',
   flag: '🇺🇸',
-  hazard: 'Morning Cat-4 Hurricane Surge & Manhattan Inundation',
-  tagline: 'Atlantic Funneling, Subway Flooding & ConEd Grid Arc-Blast',
-  year: '2026 Forecast / Sandy 2.0 (Morning)',
+  hazard: 'What If: Cat-4 Hurricane Surge Inundates NYC?',
+  tagline: 'Predictive Hydrodynamic Simulation • Evacuation Stress-Test • NYC Digital Twin',
+  year: '2026-2030 What-If Simulation Model',
   currency: {
     code: 'USD',
     symbol: '$',
@@ -266,33 +266,33 @@ export const NEWYORK_WAYPOINTS = [
     badge: 'Stage 8 • Full Loss Metric • $42.5B Loss',
     get headline() {
       return currentNYMode === 'modern'
-        ? 'NYC Sandy Benchmark: 44 Fatalities, $42.5B Loss & 385,000 Evacuated'
-        : 'NYC Sudden Surge Toll: 1,480 Fatalities, $42.5B Loss & 3,850 Missing';
+        ? 'What-If Projection A (Early Warning): 44 Fatalities, $42.5B Loss & 385,000 Evacuated'
+        : 'What-If Projection B (Sudden Warning Failure): 1,480 Fatalities, $42.5B Loss & 3,850 Missing';
     },
     get stats() {
       return currentNYMode === 'modern'
         ? [
-            { label: 'Direct Storm Fatalities', value: '44 deaths (verified CDC / Medical Examiner)' },
+            { label: 'Projected Fatalities', value: '44 deaths (shielded by 24-hr advance transit closure)' },
             { label: 'Zone A Mandatory Evacuees', value: '385,000 residents safely evacuated' },
-            { label: 'Subway System Offline', value: '7 under-river tunnels flooded (halted in advance)' },
+            { label: 'Subway System Offline', value: '7 under-river tunnels flooded (cleared in advance)' },
             { label: 'Total Economic Destruction', value: '$42.5 Billion USD' },
-            { label: 'Peak Recorded Surge', value: '4.82 m (15.8 ft NAVD88) at The Narrows' },
-            { label: 'Total Water Pumped Out', value: '1.2 Billion gallons of seawater' }
+            { label: 'Peak Simulated Surge', value: '4.82 m (15.8 ft NAVD88) at The Narrows' },
+            { label: 'Seawater Inundation Volume', value: '1.2 Billion gallons' }
           ]
         : [
-            { label: 'Confirmed Sudden Fatalities', value: '1,480 deaths (rush-hour subway & coastal deluge)' },
-            { label: 'Missing / Subterranean Trapped', value: '3,850 commuters & basement dwellers' },
+            { label: 'Projected Fatalities', value: '1,480 deaths (rush-hour subway & basement flash deluge)' },
+            { label: 'Missing / Subterranean Trapped', value: '3,850 commuters & coastal residents' },
             { label: 'Total Displaced Residents', value: '385,000 coastal residents' },
             { label: 'Subway System Offline', value: '7 under-river tunnels inundated with active transit' },
             { label: 'Total Economic Destruction', value: '$42.5 Billion USD' },
-            { label: 'Peak Recorded Surge', value: '4.82 m (15.8 ft NAVD88) at The Narrows' },
-            { label: 'Total Water Pumped Out', value: '1.2 Billion gallons of seawater' }
+            { label: 'Peak Simulated Surge', value: '4.82 m (15.8 ft NAVD88) at The Narrows' },
+            { label: 'Seawater Inundation Volume', value: '1.2 Billion gallons' }
           ];
     },
     get scientificNote() {
       return currentNYMode === 'modern'
-        ? 'Predictive Forecasting Success: 48-hour advance NOAA SLOSH & HURREVAC modeling allowed NYC OEM and MTA to execute a 24-hour advance transit shutdown and Zone A evacuation, keeping direct storm fatalities to 44.'
-        : 'Sudden rapid-onset surge model: Unlike Sandy where 48-hour advance transit shutdowns kept NYC deaths to 44, a sudden unevacuated morning rush-hour deluge causes catastrophic flash-flood casualties (1,480 dead, 3,850 missing), mirroring the sudden flood catastrophe of the Nepal deluges.';
+        ? 'What-If Model Finding A: When 48-hour advance satellite forecasting triggers mandatory 24-hour transit shutdowns and Zone A evacuation, human lives are effectively shielded (fatalities held to 44) despite massive infrastructure damage.'
+        : 'What-If Model Finding B: If a Category-4 surge strikes during peak morning rush hour before a 24-hour clearance window can be executed, subways become subterranean siphons, producing catastrophic deluge casualties (1,480 dead, 3,850 missing) comparable to mountain flash floods.';
     },
     warningGap: 'Extreme vulnerability of subterranean transit: if compound surges arrive before 24-hour evacuation clearance, tunnel portals act as giant siphon conduits.',
     countermeasure: {
@@ -316,8 +316,8 @@ export const NEWYORK_NARRATION = [
     tEnd: 1.00,
     get text() {
       return currentNYMode === 'modern'
-        ? "44 verified fatalities, 385,000 evacuated, and 7 subway tubes flooded under $42.5 billion in damage. 48-hour advance forecasting and preemptive transit shutdown prevented catastrophic mass loss of life."
-        : "1,480 confirmed fatalities, 3,850 missing, 385,000 displaced, and 7 subway tubes submerged in a sudden rush-hour deluge causing $42.5 billion in destruction. The USACE unwatering armada mobilizes around the clock to drain the city.";
+        ? "What-If Simulation Outcome A: 44 fatalities, 385,000 evacuated, and 7 subway tubes flooded under $42.5 billion in physical damage. 48-hour advance forecasting and preemptive transit shutdown prevented catastrophic mass loss of life."
+        : "What-If Simulation Outcome B: 1,480 fatalities, 3,850 missing, and 7 subway tubes submerged in a sudden rush-hour warning failure causing $42.5 billion in destruction. The USACE unwatering armada mobilizes to drain the city.";
     }
   }
 ];
