@@ -63,20 +63,16 @@ export class FloodSimulation {
   initDelhiLandmarkBadges() {
     this.landmarkBadges = [];
     const landmarks = [
-      { name: "Wazirabad Barrage", sub: "Water Works Submerged", u: 0.20, offset: new THREE.Vector3(0, 10, 0) },
-      { name: "Old Iron Bridge", sub: "Loha Pul (1866) • 208.08m", u: 0.35, offset: new THREE.Vector3(0, 12, 0) },
-      { name: "Kashmere Gate", sub: "Ring Road Submerged", u: 0.48, offset: new THREE.Vector3(-12, 10, 0) },
-      { name: "Red Fort (Lal Qila)", sub: "Historic 208.66m Record Peak", u: 0.60, offset: new THREE.Vector3(-18, 14, 0) },
-      { name: "ITO Barrage", sub: "Regulator 12 Breach & Bund", u: 0.74, offset: new THREE.Vector3(-12, 10, 0) },
-      { name: "Rajghat & Relief Camp", sub: "1,000 HP Dewatering Fleet", u: 0.88, offset: new THREE.Vector3(-12, 10, 0) }
+      { name: "Wazirabad Barrage", sub: "Water Works Submerged", u: 0.20, offset: new THREE.Vector3(0, 18, 0) },
+      { name: "Old Iron Bridge", sub: "Loha Pul (1866) • 208.08m", u: 0.35, offset: new THREE.Vector3(0, 20, 0) },
+      { name: "Kashmere Gate", sub: "Ring Road Submerged", u: 0.48, offset: new THREE.Vector3(-14, 18, 0) },
+      { name: "Red Fort (Lal Qila)", sub: "Historic 208.66m Record Peak", u: 0.60, offset: new THREE.Vector3(-22, 22, 0) },
+      { name: "ITO Barrage", sub: "Regulator 12 Breach & Bund", u: 0.74, offset: new THREE.Vector3(-14, 18, 0) },
+      { name: "Rajghat & Relief Camp", sub: "1,000 HP Dewatering Fleet", u: 0.88, offset: new THREE.Vector3(-14, 18, 0) }
     ];
 
     for (const lm of landmarks) {
-      const sprite = this.createBadgeSprite(lm.name, lm.sub);
-      const pt = this.river.getPointAt(lm.u);
-      sprite.position.copy(pt).add(lm.offset);
-      this.group.add(sprite);
-      this.landmarkBadges.push({ sprite, u: lm.u });
+      this.addPlaceBoard(lm.name, lm.sub, lm.u, lm.offset);
     }
   }
 
@@ -109,22 +105,18 @@ export class FloodSimulation {
   initNewYorkLandmarkBadges() {
     this.landmarkBadges = [];
     const landmarks = [
-      { name: "Verrazzano Narrows", sub: "Morning Surge Funnel • 4.8m", u: 0.10, offset: new THREE.Vector3(0, 24, 0) },
-      { name: "Statue of Liberty", sub: "Liberty Island • Fort Wood 1886", u: 0.32, offset: new THREE.Vector3(6.5, 26, -11.3) },
-      { name: "Wall St Financial District", sub: "14.9 ft Surge Peak • Seawall Breached", u: 0.49, offset: new THREE.Vector3(-26, 32, 8) },
-      { name: "South Ferry & Battery Park", sub: "7 Under-River Tubes Inundated", u: 0.52, offset: new THREE.Vector3(-14, 15, -8) },
-      { name: "FDR Drive & ESCR", sub: "16.5-ft Roller Floodgates", u: 0.63, offset: new THREE.Vector3(-20, 16, 14) },
-      { name: "Brooklyn Bridge", sub: "DUMBO Waterfront Submerged", u: 0.74, offset: new THREE.Vector3(0, 34, 0) },
-      { name: "ConEd 14th St Substation", sub: "345 kV Arc Blast • Blackout", u: 0.86, offset: new THREE.Vector3(-15, 22, 20) },
-      { name: "USACE Unwatering Armada", sub: "380k GPM Tunnel Dewatering", u: 0.94, offset: new THREE.Vector3(-12, 16, 0) }
+      { name: "Verrazzano Narrows", sub: "Morning Surge Funnel • 4.8m", u: 0.10, offset: new THREE.Vector3(0, 26, 0) },
+      { name: "Statue of Liberty", sub: "Liberty Island • Fort Wood 1886", u: 0.32, offset: new THREE.Vector3(6.5, 32, -11.3) },
+      { name: "Wall St Financial District", sub: "14.9 ft Surge Peak • Seawall Breached", u: 0.49, offset: new THREE.Vector3(-26, 38, 8) },
+      { name: "South Ferry & Battery Park", sub: "7 Under-River Tubes Inundated", u: 0.52, offset: new THREE.Vector3(-14, 26, -8) },
+      { name: "FDR Drive & ESCR", sub: "16.5-ft Roller Floodgates", u: 0.63, offset: new THREE.Vector3(-20, 24, 14) },
+      { name: "Brooklyn Bridge", sub: "DUMBO Waterfront Submerged", u: 0.74, offset: new THREE.Vector3(0, 36, 0) },
+      { name: "ConEd 14th St Substation", sub: "345 kV Arc Blast • Blackout", u: 0.86, offset: new THREE.Vector3(-15, 30, 20) },
+      { name: "USACE Unwatering Armada", sub: "380k GPM Tunnel Dewatering", u: 0.94, offset: new THREE.Vector3(-12, 22, 0) }
     ];
 
     for (const lm of landmarks) {
-      const sprite = this.createBadgeSprite(lm.name, lm.sub);
-      const pt = this.river.getPointAt(lm.u);
-      sprite.position.copy(pt).add(lm.offset);
-      this.group.add(sprite);
-      this.landmarkBadges.push({ sprite, u: lm.u });
+      this.addPlaceBoard(lm.name, lm.sub, lm.u, lm.offset);
     }
   }
 
@@ -152,21 +144,17 @@ export class FloodSimulation {
   initBeijingLandmarkBadges() {
     this.landmarkBadges = [];
     const landmarks = [
-      { name: "Miaofengshan Headwaters", sub: "1,029mm Cloudburst Peak", u: 0.05, offset: new THREE.Vector3(0, 14, 0) },
-      { name: "Luopoling Mountain Pass", sub: "K396 Train Stranded • Mudslide", u: 0.20, offset: new THREE.Vector3(-14, 12, 0) },
-      { name: "National Highway G109", sub: "1,050 km Mountain Roads Cut", u: 0.35, offset: new THREE.Vector3(14, 12, 0) },
-      { name: "Sanjiadian Dam Sluice", sub: "4,649 m³/s Gorge Throttle", u: 0.48, offset: new THREE.Vector3(0, 14, 0) },
-      { name: "Lugouqiao (Marco Polo)", sub: "1189 AD Bridge & Sluice Opened", u: 0.60, offset: new THREE.Vector3(-14, 12, 0) },
-      { name: "PLA Air-Bridge Task Force", sub: "Z-20 Airborne Relief Drops", u: 0.74, offset: new THREE.Vector3(-16, 16, 0) },
-      { name: "Yongding Retention Basin", sub: "180M m³ Sponge City Storage", u: 0.88, offset: new THREE.Vector3(-14, 10, 0) }
+      { name: "Miaofengshan Headwaters", sub: "1,029mm Cloudburst Peak", u: 0.05, offset: new THREE.Vector3(0, 20, 0) },
+      { name: "Luopoling Mountain Pass", sub: "K396 Train Stranded • Mudslide", u: 0.20, offset: new THREE.Vector3(-14, 18, 0) },
+      { name: "National Highway G109", sub: "1,050 km Mountain Roads Cut", u: 0.35, offset: new THREE.Vector3(14, 18, 0) },
+      { name: "Sanjiadian Dam Sluice", sub: "4,649 m³/s Gorge Throttle", u: 0.48, offset: new THREE.Vector3(0, 20, 0) },
+      { name: "Lugouqiao (Marco Polo)", sub: "1189 AD Bridge & Sluice Opened", u: 0.60, offset: new THREE.Vector3(-14, 18, 0) },
+      { name: "PLA Air-Bridge Task Force", sub: "Z-20 Airborne Relief Drops", u: 0.74, offset: new THREE.Vector3(-16, 22, 0) },
+      { name: "Yongding Retention Basin", sub: "180M m³ Sponge City Storage", u: 0.88, offset: new THREE.Vector3(-14, 18, 0) }
     ];
 
     for (const lm of landmarks) {
-      const sprite = this.createBadgeSprite(lm.name, lm.sub);
-      const pt = this.river.getPointAt(lm.u);
-      sprite.position.copy(pt).add(lm.offset);
-      this.group.add(sprite);
-      this.landmarkBadges.push({ sprite, u: lm.u });
+      this.addPlaceBoard(lm.name, lm.sub, lm.u, lm.offset);
     }
   }
 
@@ -193,21 +181,17 @@ export class FloodSimulation {
   initTokyoLandmarkBadges() {
     this.landmarkBadges = [];
     const landmarks = [
-      { name: "Upper Arakawa Catchment", sub: "Typhoon Spiral Rainband • 650mm", u: 0.05, offset: new THREE.Vector3(0, 14, 0) },
-      { name: "Arakawa Super-Levee", sub: "Shinkansen Halted • 7,200 m³/s", u: 0.20, offset: new THREE.Vector3(-14, 12, 0) },
-      { name: "G-CANS Silo No. 1", sub: "65m Vertical Drop Shaft • 200 m³/s", u: 0.35, offset: new THREE.Vector3(14, 12, 0) },
-      { name: "G-CANS Underground Temple", sub: "59 Concrete Pillars • Jet Turbines", u: 0.48, offset: new THREE.Vector3(-14, 12, 0) },
-      { name: "Tokyo Metro Portals", sub: "180 Watertight Rolling Gates", u: 0.60, offset: new THREE.Vector3(-12, 10, 0) },
-      { name: "Sumida River & Skytree", sub: "Koto Zero-Meter Tidal Defense", u: 0.74, offset: new THREE.Vector3(16, 16, 0) },
-      { name: "JSDF & Edo River Station", sub: "Amphibious Fleet • 14.5M m³ Flushed", u: 0.88, offset: new THREE.Vector3(-14, 10, 0) }
+      { name: "Upper Arakawa Catchment", sub: "Typhoon Spiral Rainband • 650mm", u: 0.05, offset: new THREE.Vector3(0, 20, 0) },
+      { name: "Arakawa Super-Levee", sub: "Shinkansen Halted • 7,200 m³/s", u: 0.20, offset: new THREE.Vector3(-14, 18, 0) },
+      { name: "G-CANS Silo No. 1", sub: "65m Vertical Drop Shaft • 200 m³/s", u: 0.35, offset: new THREE.Vector3(14, 18, 0) },
+      { name: "G-CANS Underground Temple", sub: "59 Concrete Pillars • Jet Turbines", u: 0.48, offset: new THREE.Vector3(-14, 18, 0) },
+      { name: "Tokyo Metro Portals", sub: "180 Watertight Rolling Gates", u: 0.60, offset: new THREE.Vector3(-12, 18, 0) },
+      { name: "Sumida River & Skytree", sub: "Koto Zero-Meter Tidal Defense", u: 0.74, offset: new THREE.Vector3(16, 22, 0) },
+      { name: "JSDF & Edo River Station", sub: "Amphibious Fleet • 14.5M m³ Flushed", u: 0.88, offset: new THREE.Vector3(-14, 18, 0) }
     ];
 
     for (const lm of landmarks) {
-      const sprite = this.createBadgeSprite(lm.name, lm.sub);
-      const pt = this.river.getPointAt(lm.u);
-      sprite.position.copy(pt).add(lm.offset);
-      this.group.add(sprite);
-      this.landmarkBadges.push({ sprite, u: lm.u });
+      this.addPlaceBoard(lm.name, lm.sub, lm.u, lm.offset);
     }
   }
 
@@ -235,21 +219,17 @@ export class FloodSimulation {
   initLondonLandmarkBadges() {
     this.landmarkBadges = [];
     const landmarks = [
-      { name: "Thames Estuary", sub: "North Sea Surge Funnel • +5.2m", u: 0.05, offset: new THREE.Vector3(0, 14, 0) },
-      { name: "Woolwich Reach", sub: "PLA Navigation Halted • Sirens", u: 0.20, offset: new THREE.Vector3(-14, 12, 0) },
-      { name: "The Thames Barrier", sub: "10 Rising Sector Gates Locked", u: 0.35, offset: new THREE.Vector3(0, 14, 0) },
-      { name: "Canary Wharf & Docks", sub: "£320B Financial Assets Shielded", u: 0.48, offset: new THREE.Vector3(-16, 16, 0) },
-      { name: "Under-River Tube Portals", sub: "16 Hydraulic Flood Doors Sealed", u: 0.60, offset: new THREE.Vector3(-12, 10, 0) },
-      { name: "Tower Bridge & Heritage", sub: "Embankment Walls Deflect Swell", u: 0.74, offset: new THREE.Vector3(0, 14, 0) },
-      { name: "Victoria Embankment", sub: "Parliament & Whitehall Safe", u: 0.88, offset: new THREE.Vector3(-14, 10, 0) }
+      { name: "Thames Estuary", sub: "North Sea Surge Funnel • +5.2m", u: 0.05, offset: new THREE.Vector3(0, 20, 0) },
+      { name: "Woolwich Reach", sub: "PLA Navigation Halted • Sirens", u: 0.20, offset: new THREE.Vector3(-14, 18, 0) },
+      { name: "The Thames Barrier", sub: "10 Rising Sector Gates Locked", u: 0.35, offset: new THREE.Vector3(0, 20, 0) },
+      { name: "Canary Wharf & Docks", sub: "£320B Financial Assets Shielded", u: 0.48, offset: new THREE.Vector3(-16, 22, 0) },
+      { name: "Under-River Tube Portals", sub: "16 Hydraulic Flood Doors Sealed", u: 0.60, offset: new THREE.Vector3(-12, 18, 0) },
+      { name: "Tower Bridge & Heritage", sub: "Embankment Walls Deflect Swell", u: 0.74, offset: new THREE.Vector3(0, 20, 0) },
+      { name: "Victoria Embankment", sub: "Parliament & Whitehall Safe", u: 0.88, offset: new THREE.Vector3(-14, 18, 0) }
     ];
 
     for (const lm of landmarks) {
-      const sprite = this.createBadgeSprite(lm.name, lm.sub);
-      const pt = this.river.getPointAt(lm.u);
-      sprite.position.copy(pt).add(lm.offset);
-      this.group.add(sprite);
-      this.landmarkBadges.push({ sprite, u: lm.u });
+      this.addPlaceBoard(lm.name, lm.sub, lm.u, lm.offset);
     }
   }
 
@@ -3167,42 +3147,158 @@ export class FloodSimulation {
 
   createBadgeSprite(title, subtitle) {
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 140;
+    canvas.width = 1024;
+    canvas.height = 260;
     const ctx = canvas.getContext('2d');
 
-    ctx.fillStyle = 'rgba(9, 19, 29, 0.88)';
-    ctx.strokeStyle = '#e8952f';
-    ctx.lineWidth = 4;
+    // High-contrast modern GIS place placard background
+    ctx.fillStyle = 'rgba(7, 16, 28, 0.94)';
+    ctx.strokeStyle = '#f59e0b'; // Radiant amber-gold border
+    ctx.lineWidth = 6;
     ctx.beginPath();
-    ctx.roundRect(10, 10, 492, 120, 16);
+    if (typeof ctx.roundRect === 'function') {
+      ctx.roundRect(16, 16, 992, 228, 24);
+    } else if (typeof ctx.rect === 'function') {
+      ctx.rect(16, 16, 992, 228);
+    }
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = '#e8952f';
+    // Subtle dark upper highlight banner
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.08)';
     ctx.beginPath();
-    ctx.arc(36, 46, 12, 0, Math.PI * 2);
+    if (typeof ctx.roundRect === 'function') {
+      ctx.roundRect(20, 20, 984, 56, [20, 20, 0, 0]);
+    } else if (typeof ctx.rect === 'function') {
+      ctx.rect(20, 20, 984, 56);
+    }
     ctx.fill();
 
-    ctx.fillStyle = '#eaf1f6';
-    ctx.font = 'bold 36px -apple-system, sans-serif';
-    ctx.fillText(title, 60, 58);
+    // Sector / Location Tag Pill
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.22)';
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    if (typeof ctx.roundRect === 'function') {
+      ctx.roundRect(125, 28, 170, 36, 8);
+    } else if (typeof ctx.rect === 'function') {
+      ctx.rect(125, 28, 170, 36);
+    }
+    ctx.fill();
+    ctx.stroke();
 
-    ctx.fillStyle = '#9fb3c0';
-    ctx.font = 'bold 24px monospace';
-    ctx.fillText(subtitle, 60, 102);
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText("KEY LANDMARK", 138, 53);
+
+    // Glowing Map Pin / Beacon Dot on the left
+    const cx = 68, cy = 130;
+    ctx.strokeStyle = 'rgba(245, 158, 11, 0.45)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 38, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.25)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 26, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 16, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Title rendering with dynamic scaling to fit available width safely
+    const maxTitleW = 840;
+    let titleFontSize = 46;
+    ctx.font = `bold ${titleFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    let measuredTitleW = (typeof ctx.measureText === 'function') ? ctx.measureText(title).width : (title.length * 24);
+    if (measuredTitleW > maxTitleW) {
+      titleFontSize = Math.max(28, Math.floor(titleFontSize * (maxTitleW / measuredTitleW)));
+      ctx.font = `bold ${titleFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    }
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(title, 125, 126);
+
+    // Subtitle rendering with dynamic scaling
+    const maxSubW = 840;
+    let subFontSize = 28;
+    ctx.font = `bold ${subFontSize}px "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace`;
+    let measuredSubW = (typeof ctx.measureText === 'function') ? ctx.measureText(subtitle).width : (subtitle.length * 16);
+    if (measuredSubW > maxSubW) {
+      subFontSize = Math.max(20, Math.floor(subFontSize * (maxSubW / measuredSubW)));
+      ctx.font = `bold ${subFontSize}px "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace`;
+    }
+
+    ctx.fillStyle = '#38bdf8'; // High-contrast luminous cyan for subtitle
+    ctx.fillText(subtitle, 125, 185);
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+
     const spriteMat = new THREE.SpriteMaterial({
       map: texture,
       transparent: true,
-      depthTest: true,
+      depthTest: false, // NEVER occluded by buildings, trees or terrain!
       depthWrite: false
     });
 
     const sprite = new THREE.Sprite(spriteMat);
-    sprite.scale.set(13, 3.6, 1);
+    sprite.renderOrder = 9999;
+    sprite.scale.set(22.0, 5.6, 1.0); // Prominent, clearly visible from simulation camera distance
+    return sprite;
+  }
+
+  addPlaceBoard(name, subtitle, u, offset) {
+    const sprite = this.createBadgeSprite(name, subtitle);
+    const pt = this.river.getPointAt(u);
+    const boardPos = pt.clone().add(offset);
+    sprite.position.copy(boardPos);
+    this.group.add(sprite);
+
+    // Tether Line & Anchor Ring linking the board directly to the ground / water
+    const groundY = (this.terrain && typeof this.terrain.getTerrainHeight === 'function')
+      ? this.terrain.getTerrainHeight(boardPos.x, boardPos.z)
+      : pt.y;
+
+    const lineGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(boardPos.x, boardPos.y - 2.8, boardPos.z),
+      new THREE.Vector3(boardPos.x, groundY + 0.3, boardPos.z)
+    ]);
+    const lineMat = new THREE.LineBasicMaterial({
+      color: 0xf59e0b,
+      transparent: true,
+      opacity: 0.75,
+      depthWrite: false
+    });
+    const tetherLine = new THREE.Line(lineGeo, lineMat);
+    tetherLine.renderOrder = 9998;
+    this.group.add(tetherLine);
+
+    // Glowing ground anchor ring
+    const ringGeo = new THREE.RingGeometry(1.6, 2.4, 24);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xf59e0b,
+      transparent: true,
+      opacity: 0.85,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const anchorRing = new THREE.Mesh(ringGeo, ringMat);
+    anchorRing.rotation.x = -Math.PI * 0.5;
+    anchorRing.position.set(boardPos.x, groundY + 0.35, boardPos.z);
+    anchorRing.renderOrder = 9998;
+    this.group.add(anchorRing);
+
+    this.landmarkBadges.push({ sprite, tetherLine, anchorRing, u });
     return sprite;
   }
 
