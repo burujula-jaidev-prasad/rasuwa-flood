@@ -37,6 +37,10 @@ export class UIManager {
     this.elFlyerMetricsGrid = document.getElementById('flyer-metrics-grid');
     this.elFlyerTimeline = document.getElementById('flyer-timeline');
     this.elFlyerAlertText = document.getElementById('flyer-alert-text');
+    this.elOpenFlowchartBtn = document.getElementById('open-flowchart-btn');
+    this.elFlowchartContainer = document.getElementById('disaster-flowchart-container');
+    this.elFlowchartSection = document.getElementById('flyer-flowchart-section');
+    this.elFlowchartTitle = document.getElementById('flyer-flowchart-title');
 
     this.elBrandBadge = document.getElementById('brand-badge');
     this.elBrandTitle = document.getElementById('brand-title');
@@ -144,6 +148,15 @@ export class UIManager {
     if (this.elOpenFlyerBtn) {
       this.elOpenFlyerBtn.addEventListener('click', () => {
         this.showIntroCard();
+      });
+    }
+
+    if (this.elOpenFlowchartBtn) {
+      this.elOpenFlowchartBtn.addEventListener('click', () => {
+        this.showIntroCard();
+        setTimeout(() => {
+          this.elFlowchartSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 120);
       });
     }
 
@@ -451,6 +464,68 @@ export class UIManager {
             desc: 'East River floodwaters inundate the ConEd 14th St Substation, generating an explosive 345 kV transformer arc-flash and plunging Lower Manhattan into a total electrical blackout.'
           }
         ],
+        flowchart: [
+          {
+            id: 'ny-funnel',
+            step: 1,
+            time: '06:30 AM',
+            title: '[Atlantic Storm Surge Funneling]',
+            badge: 'Harbor Funneling',
+            badgeClass: 'amber',
+            targetT: 0.06,
+            connectorText: '15.8-foot surge funnels through The Narrows at 48 km/h',
+            sideBranch: null,
+            details: 'Astronomical high tide and Cat-4 hurricane wind stress funnel oceanic surge into Upper New York Bay, battering harbor channels.'
+          },
+          {
+            id: 'ny-ferry',
+            step: 2,
+            time: '07:15 AM',
+            title: '[South Ferry & Slip Breakout]',
+            badge: 'Mooring Failure',
+            badgeClass: 'orange',
+            targetT: 0.22,
+            connectorText: 'Extreme hydrodynamic uplift snaps terminal mooring hawsers',
+            sideBranch: 'Staten Island Ferry & Fast Catamaran torn adrift into open bay (44°–53° violent list)',
+            details: 'Vessels break free from Whitehall slips as seawater inundates lower passenger decks and gangways collapse.'
+          },
+          {
+            id: 'ny-battery',
+            step: 3,
+            time: '07:45 AM',
+            title: '[The Battery Seawall Breach]',
+            badge: 'Overtopping',
+            badgeClass: 'yellow',
+            targetT: 0.50,
+            connectorText: '14.9-ft surge crest overtops perimeter granite seawall',
+            sideBranch: 'Financial District & Battery Park promenade submerged under 3.5m seawater',
+            details: 'Floodwaters rush down Greenwich, West, and Water Streets into Wall Street financial vaults and basements.'
+          },
+          {
+            id: 'ny-transit',
+            step: 4,
+            time: '08:15 AM',
+            title: '[Subterranean Transit Ingress]',
+            badge: 'Subway Inundation',
+            badgeClass: 'red',
+            targetT: 0.65,
+            connectorText: '14.5 Million gallons of corrosive brine deluge 7 under-river tubes',
+            sideBranch: 'Pre-emptively sealed: zero commuter casualties',
+            details: 'Seawater cascades down sidewalk ventilation grates and station portals, paralyzing the Lower Manhattan transit grid.'
+          },
+          {
+            id: 'ny-coned',
+            step: 5,
+            time: '09:00 AM',
+            title: '[ConEd 14th St Substation Blast]',
+            badge: 'Grid Explosion',
+            badgeClass: 'critical',
+            targetT: 0.88,
+            connectorText: 'East River floodwaters submerge 345 kV high-voltage transformers',
+            sideBranch: 'Massive electrical arc-flash & total Lower Manhattan blackout',
+            details: 'Transformer short-circuit triggers catastrophic arc-blast, leaving 250,000 customers without electricity or telemetry.'
+          }
+        ],
         alert: '<strong>What-If Simulation Model Finding A:</strong> If 48-hour advance satellite and SLOSH hydrodynamic forecasting triggers a mandatory 24-hour transit shutdown and Zone A evacuation, human lives are effectively protected (fatalities limited to 44) even as $42.5B in physical infrastructure is overwhelmed.'
       } : {
         tag: 'NOAA / USACE WHAT-IF SIMULATION MODEL (2026-2030)',
@@ -495,6 +570,68 @@ export class UIManager {
             desc: 'East River floodwaters inundate the ConEd 14th St Substation, generating an explosive 345 kV transformer arc-flash and plunging Lower Manhattan into a total electrical blackout.'
           }
         ],
+        flowchart: [
+          {
+            id: 'ny-funnel',
+            step: 1,
+            time: '06:30 AM',
+            title: '[Atlantic Storm Surge Funneling]',
+            badge: 'Harbor Funneling',
+            badgeClass: 'amber',
+            targetT: 0.06,
+            connectorText: '15.8-foot surge funnels through The Narrows at 48 km/h',
+            sideBranch: null,
+            details: 'Astronomical high tide and Cat-4 hurricane wind stress funnel oceanic surge into Upper New York Bay, battering harbor channels.'
+          },
+          {
+            id: 'ny-ferry',
+            step: 2,
+            time: '07:15 AM',
+            title: '[South Ferry & Slip Breakout]',
+            badge: 'Mooring Failure',
+            badgeClass: 'orange',
+            targetT: 0.22,
+            connectorText: 'Extreme hydrodynamic uplift snaps terminal mooring hawsers',
+            sideBranch: 'Staten Island Ferry & Fast Catamaran torn adrift into open bay (44°–53° violent list)',
+            details: 'Vessels break free from Whitehall slips as seawater inundates lower passenger decks and gangways collapse.'
+          },
+          {
+            id: 'ny-battery',
+            step: 3,
+            time: '07:45 AM',
+            title: '[The Battery Seawall Breach]',
+            badge: 'Overtopping',
+            badgeClass: 'yellow',
+            targetT: 0.50,
+            connectorText: '14.9-ft surge crest overtops perimeter granite seawall',
+            sideBranch: 'Financial District & Battery Park promenade submerged under 3.5m seawater',
+            details: 'Floodwaters rush down Greenwich, West, and Water Streets into Wall Street financial vaults and basements.'
+          },
+          {
+            id: 'ny-transit',
+            step: 4,
+            time: '08:15 AM',
+            title: '[Subterranean Transit Ingress]',
+            badge: 'Subway Deluge',
+            badgeClass: 'red',
+            targetT: 0.65,
+            connectorText: '14.5 Million gallons of corrosive brine deluge 7 under-river tubes',
+            sideBranch: 'Rush-hour deluge: active commuter entrapment (1,480 fatalities projected)',
+            details: 'Seawater cascades down sidewalk ventilation grates and station portals into active rush-hour subway tunnels.'
+          },
+          {
+            id: 'ny-coned',
+            step: 5,
+            time: '09:00 AM',
+            title: '[ConEd 14th St Substation Blast]',
+            badge: 'Grid Explosion',
+            badgeClass: 'critical',
+            targetT: 0.88,
+            connectorText: 'East River floodwaters submerge 345 kV high-voltage transformers',
+            sideBranch: 'Massive electrical arc-flash & total Lower Manhattan blackout',
+            details: 'Transformer short-circuit triggers catastrophic arc-blast, leaving 250,000 customers without electricity or telemetry.'
+          }
+        ],
         alert: '<strong>What-If Simulation Model Finding B:</strong> If a rapid-acceleration storm strikes during peak 07:30 AM rush hour before the 24-hour evacuation clearance time can be executed, subways flood with active commuters, generating a sudden deluge catastrophe (1,480 dead, 3,850 trapped) comparable to mountain flash floods.'
       },
       delhi: (delhiMode === 'warning') ? {
@@ -512,32 +649,130 @@ export class UIManager {
           {
             num: '01',
             time: 'Day 1 09:00',
-            title: 'Hathnikund 3.59 Lakh Cusecs Emergency Sluice Release',
+            title: 'Himalayan Cloudburst & Hathnikund Release',
             desc: 'Upper catchment cloudbursts in Himachal swell Hathnikund Barrage; 359,000 cusecs are released into Yamuna. 48-hour CWC warning triggers immediate evacuation of low-lying jhuggis.'
           },
           {
             num: '02',
-            time: 'Day 2 13:00',
-            title: 'Old Yamuna Iron Bridge Traffic Halted (205.33m)',
-            desc: 'River crosses the 205.33m danger mark and swells past 207m. Northern Railway halts train traffic on Loha Pul (built 1866) as floodwaters submerge riverbed farms.'
+            time: 'Day 2 06:00',
+            title: '42% Riverbed Siltation Bottleneck',
+            desc: 'Heavy siltation constricts Yamuna cross-section by 42%; river stage rapidly surges +3.33m above the 205.33m danger mark towards all-time record 208.66m.'
           },
           {
             num: '03',
             time: 'Day 3 07:00',
-            title: 'Wazirabad & Chandrawal WTP Inundation (234 MGD)',
-            desc: 'Swollen Yamuna overtops intake bunds, flooding raw water pump houses at Wazirabad, Chandrawal, and Okhla. 234 MGD water supply is severed across Central & South Delhi.'
+            title: 'Wazirabad & Chandrawal WTPs Flooded',
+            desc: 'Swollen Yamuna overtops intake bunds, flooding raw water pump houses at Wazirabad, Chandrawal, and Okhla. 234 MGD water supply severed across Central & South Delhi.'
           },
           {
             num: '04',
-            time: 'Day 3 16:30',
-            title: 'Kashmere Gate ISBT & Ring Road Submergence',
-            desc: 'Floodwaters spill onto Ring Road, inundating Kashmere Gate ISBT under 2.4m water. DTC buses and auto-rickshaws stall; NDRF motorized inflatable boats deploy to rescue stranded commuters.'
+            time: 'Day 3 13:00',
+            title: 'Old Iron Bridge (Loha Pul 1866) Suspended',
+            desc: 'River swells to 208.08m (0.4m below bottom girders). Northern Railway halts 142 passenger & freight trains and road traffic over the historic double-decker bridge.'
           },
           {
             num: '05',
+            time: 'Day 3 16:30',
+            title: 'Kashmere Gate ISBT & Ring Road Inundation',
+            desc: 'Floodwaters breach Monastery Market bund; Ring Road and Kashmere Gate ISBT submerge under 2.4m water. Over 1,800 vehicles stall as NDRF Zodiac boats deploy.'
+          },
+          {
+            num: '06',
+            time: 'Day 3 19:30',
+            title: 'Red Fort (Lal Qila) Ancient Paleo-Channel Reclaimed',
+            desc: 'For the first time in 45 years, the Yamuna reoccupies its Mughal course, filling the outer defensive moat and submerging roads up to the 17th-century ramparts.'
+          },
+          {
+            num: '07',
             time: 'Day 4 10:00',
-            title: 'ITO Barrage Silted Jam & Regulator 12 Blowout',
-            desc: '5 of 32 ITO Barrage gates remain jammed under 40 years of heavy silt. Hydrodynamic backflow breaches Regulator 12, drowning Vikas Marg and reaching the Supreme Court.'
+            title: 'ITO Barrage Jam & Regulator 12 Reverse Surge',
+            desc: '5 jammed barrage gates block downstream discharge. Catastrophic hydraulic backpressure blows out Regulator 12, driving reverse river surge into Vikas Marg and the Supreme Court.'
+          }
+        ],
+        flowchart: [
+          {
+            id: 'cloudburst',
+            step: 1,
+            time: 'Day 1 09:00',
+            title: '[Himalayan Cloudburst]',
+            badge: 'Barrage Release',
+            badgeClass: 'amber',
+            targetT: 0.06,
+            connectorText: '359,000 cusecs released from Hathnikund Barrage',
+            sideBranch: null,
+            details: 'Torrential cloudburst in upper Himachal & Uttarakhand catchments forces Hathnikund Barrage to release massive 359,000 cusecs (10,194 m³/s) surge into the Yamuna corridor.'
+          },
+          {
+            id: 'siltation',
+            step: 2,
+            time: 'Day 2 06:00',
+            title: '[42% Riverbed Siltation Bottleneck]',
+            badge: 'Hydraulic Bottleneck',
+            badgeClass: 'orange',
+            targetT: 0.15,
+            connectorText: 'Discharge cross-section constricted; swells to record 208.66m',
+            sideBranch: null,
+            details: 'Decades of heavy sediment deposition constrict riverbed cross-sectional discharge by 42%; river swells past the 205.33m Danger Mark to an all-time record 208.66m.'
+          },
+          {
+            id: 'wtp',
+            step: 3,
+            time: 'Day 3 07:00',
+            title: '[Wazirabad & Chandrawal WTPs Flooded]',
+            badge: 'Water Grid Offline',
+            badgeClass: 'red',
+            targetT: 0.22,
+            connectorText: 'River floodwaters overtop raw water intake bunds',
+            sideBranch: '234 MGD (25% drinking water offline across Central & South Delhi; 4.2M citizens affected)',
+            details: 'Submergence of raw water pumping stations and switchboards at Wazirabad and Chandrawal cuts 234 MGD drinking water, impacting 4.2M citizens.'
+          },
+          {
+            id: 'loha-pul',
+            step: 4,
+            time: 'Day 3 13:00',
+            title: '[Old Iron Bridge (Loha Pul 1866)]',
+            badge: 'Transit Suspended',
+            badgeClass: 'yellow',
+            targetT: 0.36,
+            connectorText: 'Water level reaches 208.08m (0.4m below bottom truss girders)',
+            sideBranch: 'Railway & road transit suspended (142 passenger & freight trains halted)',
+            details: 'Severe backwater scour on 1866 masonry piers forces Northern Railway to suspend all rail traffic across the double-decker iron bridge.'
+          },
+          {
+            id: 'ring-road',
+            step: 5,
+            time: 'Day 3 16:30',
+            title: '[Kashmere Gate ISBT & Ring Road]',
+            badge: 'Arterial Inundation',
+            badgeClass: 'red',
+            targetT: 0.50,
+            connectorText: 'Floodwaters overtop Ring Road embankment near Monastery Market',
+            sideBranch: 'Submerged under 2.4m water; NDRF Zodiac boats deploy for commuter rescue',
+            details: 'Mahatma Gandhi Marg (Ring Road) and Kashmere Gate ISBT submerge under 2.4m water; interstate buses and 1,800+ vehicles stall as NDRF deploys motorized inflatable Zodiac boats.'
+          },
+          {
+            id: 'red-fort',
+            step: 6,
+            time: 'Day 3 19:30',
+            title: '[Red Fort (Lal Qila)]',
+            badge: 'Paleo-Channel Reclaimed',
+            badgeClass: 'amber',
+            targetT: 0.62,
+            connectorText: 'Hydrodynamic backwater surges into ancient Yamuna riverbed',
+            sideBranch: 'Water reclaims ancient Mughal paleo-channel up to 17th-century ramparts',
+            details: 'For the first time in 45 years, the Yamuna reoccupies its historic Mughal riverbed, filling the perimeter defensive moat and touching the base of the Red Fort ramparts.'
+          },
+          {
+            id: 'ito-breach',
+            step: 7,
+            time: 'Day 4 10:00',
+            title: '[ITO Barrage Jam & Regulator 12 Blowout]',
+            badge: 'Reverse Surge Catastrophe',
+            badgeClass: 'critical',
+            targetT: 0.76,
+            connectorText: '5 of 32 barrage gates stuck in silt; hydraulic head blows out Drain 12 sluice',
+            sideBranch: 'Reverse surge drowns Supreme Court & Vikas Marg',
+            details: '5 jammed barrage gates block downstream discharge. Catastrophic backpressure blows out Regulator 12, driving reverse river surge into Vikas Marg, IP Estate, and the Supreme Court.'
           }
         ],
         alert: '<strong>What-If Simulation Model Finding A:</strong> If 48-hour advance hydrological telemetry from Hathnikund Barrage is utilized to evacuate floodplain jhuggis and bastis, human casualties are minimized (11 drownings) despite record 208.66m river stages and ₹28.4B in municipal infrastructure damages.'
@@ -556,13 +791,13 @@ export class UIManager {
           {
             num: '01',
             time: 'Day 1 09:00',
-            title: 'Hathnikund 3.59 Lakh Cusecs Emergency Sluice Release',
+            title: 'Himalayan Cloudburst & Hathnikund Release',
             desc: 'Himalayan cloudbursts swell Hathnikund Barrage; 359,000 cusecs are released into Yamuna. Siltation in the riverbed narrows cross-sectional flow by 42%.'
           },
           {
             num: '02',
-            time: 'Day 2 13:00',
-            title: 'Old Yamuna Iron Bridge Traffic Halted (205.33m)',
+            time: 'Day 2 06:00',
+            title: '42% Riverbed Siltation Bottleneck',
             desc: 'River crosses the 205.33m danger mark, rapidly surging towards 208m. Dense Yamuna Bazar and Majnu Ka Tila floodplain bastis remain asleep without warning.'
           },
           {
@@ -575,13 +810,111 @@ export class UIManager {
             num: '04',
             time: 'Day 3 07:00',
             title: 'Wazirabad & Chandrawal WTP Inundation (234 MGD)',
-            desc: 'Swollen Yamuna overtops intake bunds, flooding raw water pump houses at Wazirabad, Chandrawal, and Okhla. 234 MGD water supply severed, paralyzing hospitals and emergency centers.'
+            desc: 'Swollen Yamuna overtops intake bunds, flooding raw water pump houses at Wazirabad, Chandrawal, and Okhla. 234 MGD water supply severed, paralyzing hospitals.'
           },
           {
             num: '05',
+            time: 'Day 3 13:00',
+            title: 'Old Iron Bridge (Loha Pul 1866) Suspended',
+            desc: 'River swells to 208.08m (0.4m below bottom girders). Northern Railway halts 142 passenger & freight trains and road traffic over the historic bridge.'
+          },
+          {
+            num: '06',
             time: 'Day 3 16:30',
-            title: 'ITO Barrage Silted Jam & Regulator 12 Blowout',
-            desc: 'Jammed ITO Barrage gates cause violent backflow through Drain 12, inundating arterial Ring Road and Supreme Court, trapping 1,850 citizens in raging urban floodwaters.'
+            title: 'Kashmere Gate ISBT & Ring Road Submergence',
+            desc: 'Floodwaters overtop Ring Road embankment near Monastery Market, submerging roads under 2.4m water and trapping thousands of commuters in raging urban floodwaters.'
+          },
+          {
+            num: '07',
+            time: 'Day 4 10:00',
+            title: 'ITO Barrage Jam & Regulator 12 Blowout',
+            desc: 'Jammed ITO Barrage gates cause violent backflow through Drain 12, inundating arterial Ring Road and Supreme Court, trapping 1,850 citizens in surging waters.'
+          }
+        ],
+        flowchart: [
+          {
+            id: 'cloudburst',
+            step: 1,
+            time: 'Day 1 09:00',
+            title: '[Himalayan Cloudburst]',
+            badge: 'Barrage Release',
+            badgeClass: 'amber',
+            targetT: 0.06,
+            connectorText: '359,000 cusecs released from Hathnikund Barrage',
+            sideBranch: null,
+            details: 'Torrential cloudburst in upper Himachal & Uttarakhand catchments forces Hathnikund Barrage to release massive 359,000 cusecs (10,194 m³/s) surge into the Yamuna corridor.'
+          },
+          {
+            id: 'siltation',
+            step: 2,
+            time: 'Day 2 06:00',
+            title: '[42% Riverbed Siltation Bottleneck]',
+            badge: 'Hydraulic Bottleneck',
+            badgeClass: 'orange',
+            targetT: 0.15,
+            connectorText: 'Discharge cross-section constricted; swells to record 208.66m',
+            sideBranch: null,
+            details: 'Decades of heavy sediment deposition constrict riverbed cross-sectional discharge by 42%; river swells past the 205.33m Danger Mark to an all-time record 208.66m.'
+          },
+          {
+            id: 'wtp',
+            step: 3,
+            time: 'Day 3 07:00',
+            title: '[Wazirabad & Chandrawal WTPs Flooded]',
+            badge: 'Water Grid Offline',
+            badgeClass: 'red',
+            targetT: 0.22,
+            connectorText: 'River floodwaters overtop raw water intake bunds',
+            sideBranch: '234 MGD (25% drinking water offline across Central & South Delhi; 4.2M citizens affected)',
+            details: 'Submergence of raw water pumping stations and switchboards at Wazirabad and Chandrawal cuts 234 MGD drinking water, impacting 4.2M citizens.'
+          },
+          {
+            id: 'loha-pul',
+            step: 4,
+            time: 'Day 3 13:00',
+            title: '[Old Iron Bridge (Loha Pul 1866)]',
+            badge: 'Transit Suspended',
+            badgeClass: 'yellow',
+            targetT: 0.36,
+            connectorText: 'Water level reaches 208.08m (0.4m below bottom truss girders)',
+            sideBranch: 'Railway & road transit suspended (142 passenger & freight trains halted)',
+            details: 'Severe backwater scour on 1866 masonry piers forces Northern Railway to suspend all rail traffic across the double-decker iron bridge.'
+          },
+          {
+            id: 'ring-road',
+            step: 5,
+            time: 'Day 3 16:30',
+            title: '[Kashmere Gate ISBT & Ring Road]',
+            badge: 'Arterial Inundation',
+            badgeClass: 'red',
+            targetT: 0.50,
+            connectorText: 'Floodwaters overtop Ring Road embankment near Monastery Market',
+            sideBranch: 'Submerged under 2.4m water; NDRF Zodiac boats deploy for commuter rescue',
+            details: 'Mahatma Gandhi Marg (Ring Road) and Kashmere Gate ISBT submerge under 2.4m water; interstate buses and 1,800+ vehicles stall as NDRF deploys motorized inflatable Zodiac boats.'
+          },
+          {
+            id: 'red-fort',
+            step: 6,
+            time: 'Day 3 19:30',
+            title: '[Red Fort (Lal Qila)]',
+            badge: 'Paleo-Channel Reclaimed',
+            badgeClass: 'amber',
+            targetT: 0.62,
+            connectorText: 'Hydrodynamic backwater surges into ancient Yamuna riverbed',
+            sideBranch: 'Water reclaims ancient Mughal paleo-channel up to 17th-century ramparts',
+            details: 'For the first time in 45 years, the Yamuna reoccupies its historic Mughal riverbed, filling the perimeter defensive moat and touching the base of the Red Fort ramparts.'
+          },
+          {
+            id: 'ito-breach',
+            step: 7,
+            time: 'Day 4 10:00',
+            title: '[ITO Barrage Jam & Regulator 12 Blowout]',
+            badge: 'Reverse Surge Catastrophe',
+            badgeClass: 'critical',
+            targetT: 0.76,
+            connectorText: '5 of 32 barrage gates stuck in silt; hydraulic head blows out Drain 12 sluice',
+            sideBranch: 'Reverse surge drowns Supreme Court & Vikas Marg',
+            details: '5 jammed barrage gates block downstream discharge. Catastrophic backpressure blows out Regulator 12, driving reverse river surge into Vikas Marg, IP Estate, and the Supreme Court.'
           }
         ],
         alert: '<strong>What-If Simulation Model Finding B:</strong> In the absence of 48-hour advance evacuation protocols, a nocturnal overtopping or regulator blowout transforms the Yamuna monsoon flood into a devastating flash deluge (420 fatalities, 1,850 missing), mirroring mountain debris flows in urban population density.'
@@ -838,6 +1171,78 @@ export class UIManager {
           </div>
         </div>
       `).join('');
+    }
+
+    if (this.elFlowchartContainer) {
+      if (d.flowchart && d.flowchart.length > 0) {
+        if (this.elFlowchartSection) this.elFlowchartSection.style.display = 'flex';
+        if (this.elFlowchartTitle) {
+          this.elFlowchartTitle.textContent = (scenarioId === 'delhi')
+            ? 'DELHI DISASTER FLOWCHART • HYDRODYNAMIC CAUSAL CASCADE'
+            : (scenarioId === 'newyork')
+            ? 'NEW YORK DISASTER FLOWCHART • STORM SURGE CAUSAL CASCADE'
+            : 'DISASTER CASCADE FLOWCHART • CAUSAL HYDRODYNAMIC SEQUENCE';
+        }
+
+        this.elFlowchartContainer.innerHTML = d.flowchart.map((node, idx) => {
+          const isLast = idx === d.flowchart.length - 1;
+          const branchHtml = node.sideBranch ? `
+            <div class="fc-branch">
+              <span class="fc-branch-arrow">──►</span>
+              <span class="fc-branch-text">${node.sideBranch}</span>
+            </div>
+          ` : '';
+
+          const connectorHtml = !isLast ? `
+            <div class="fc-connector">
+              <div class="fc-line">
+                <div class="fc-line-stem"></div>
+                <div class="fc-line-arrow">▼</div>
+              </div>
+              <div class="fc-connector-label">
+                <span>│</span>
+                <span>(${node.connectorText})</span>
+              </div>
+            </div>
+          ` : '';
+
+          return `
+            <div class="fc-node-block">
+              <div class="fc-card" data-seek-t="${node.targetT}" title="Click to inspect this stage in 3D simulation">
+                <div class="fc-card-main">
+                  <div class="fc-card-header">
+                    <span class="fc-title">${node.title}</span>
+                    <span class="fc-time-tag">${node.time}</span>
+                    <span class="fc-badge ${node.badgeClass}">${node.badge}</span>
+                  </div>
+                  <div class="fc-flow-desc">${node.details}</div>
+                </div>
+                <button type="button" class="fc-jump-btn" title="Jump to 3D simulation at this waypoint">
+                  <span>Inspect 3D</span>
+                  <span>▶</span>
+                </button>
+              </div>
+              ${branchHtml}
+              ${connectorHtml}
+            </div>
+          `;
+        }).join('');
+
+        // Wire click handler to seek and inspect
+        const fcCards = this.elFlowchartContainer.querySelectorAll('.fc-card');
+        fcCards.forEach(card => {
+          card.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const targetT = parseFloat(card.getAttribute('data-seek-t') || '0');
+            if (this.options.onSeek) {
+              this.options.onSeek(targetT);
+            }
+            this.hideIntroCard();
+          });
+        });
+      } else {
+        if (this.elFlowchartSection) this.elFlowchartSection.style.display = 'none';
+      }
     }
 
     if (this.elFlyerAlertText) {

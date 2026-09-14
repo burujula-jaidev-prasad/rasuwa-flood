@@ -1604,3 +1604,235 @@ html, body {
   border-radius: 2px;
 }
 
+/* ==========================================================================
+   Disaster Cascade Flowchart Component
+   ========================================================================== */
+.incident-flyer-btn.flowchart-btn {
+  background: rgba(14, 165, 233, 0.16);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #38bdf8;
+}
+
+.incident-flyer-btn.flowchart-btn:hover {
+  background: rgba(14, 165, 233, 0.3);
+  border-color: #38bdf8;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+}
+
+.disaster-flowchart-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  padding: 6px 0;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.fc-node-block {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.fc-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  text-decoration: none;
+}
+
+.fc-card:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(56, 189, 248, 0.65);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(56, 189, 248, 0.25);
+}
+
+.fc-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.fc-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fc-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+.fc-time-tag {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.fc-badge {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+
+.fc-badge.amber {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.fc-badge.orange {
+  background: rgba(249, 115, 22, 0.15);
+  color: #fb923c;
+  border: 1px solid rgba(249, 115, 22, 0.35);
+}
+
+.fc-badge.yellow {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.35);
+}
+
+.fc-badge.red {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.fc-badge.critical {
+  background: rgba(220, 38, 38, 0.25);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}
+
+.fc-flow-desc {
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+
+.fc-jump-btn {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.fc-card:hover .fc-jump-btn {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #38bdf8;
+  transform: translateX(2px);
+}
+
+/* Vertical Causal Connector with Flow Info */
+.fc-connector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 16px 6px 28px;
+  position: relative;
+}
+
+.fc-line {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #38bdf8;
+  font-weight: 800;
+  line-height: 1;
+  width: 14px;
+  flex-shrink: 0;
+}
+
+.fc-line-stem {
+  width: 2px;
+  height: 18px;
+  background: linear-gradient(to bottom, rgba(56, 189, 248, 0.8), rgba(245, 158, 11, 0.8));
+}
+
+.fc-line-arrow {
+  color: #f59e0b;
+  font-size: 11px;
+  line-height: 1;
+  margin-top: -2px;
+}
+
+.fc-connector-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.8);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border-left: 3px solid #f59e0b;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Secondary Impact / Consequence Side-Branch */
+.fc-branch {
+  margin: 6px 0 8px 36px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px dashed rgba(239, 68, 68, 0.45);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.fc-branch-arrow {
+  color: #f87171;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.fc-branch-text {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #fecaca;
+  line-height: 1.4;
+}
+
