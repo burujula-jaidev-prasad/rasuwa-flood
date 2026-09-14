@@ -68,6 +68,7 @@ export class UIManager {
     this.elNyModeToggle = document.getElementById('ny-mode-toggle');
     this.elModeBtnModern = document.getElementById('mode-btn-modern');
     this.elModeBtnFailure = document.getElementById('mode-btn-failure');
+    this.elKpiToggleBtn = document.getElementById('kpi-toggle-view-btn');
 
     this.elWaypointList = document.getElementById('waypoint-list');
     this.elRightPanel = document.getElementById('analytics-card');
@@ -233,6 +234,19 @@ export class UIManager {
       this.elModeBtnFailure.addEventListener('click', (e) => {
         e.stopPropagation();
         this.setNewYorkMode('failure');
+      });
+    }
+
+    if (this.elKpiToggleBtn) {
+      this.elKpiToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const container = document.querySelector('.tally-container');
+        if (!container) return;
+        const isCollapsed = container.classList.toggle('collapsed');
+        const icon = this.elKpiToggleBtn.querySelector('.kpi-toggle-icon');
+        const text = this.elKpiToggleBtn.querySelector('.kpi-toggle-text');
+        if (icon) icon.textContent = isCollapsed ? '⌄' : '⌃';
+        if (text) text.textContent = isCollapsed ? 'KPIs' : 'Hide';
       });
     }
   }
