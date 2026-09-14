@@ -1,4 +1,4 @@
-import { WAYPOINTS, TIMELINE_CONFIG, getTallyValues, getCurrentWaypoint, getCurrentNarration, getScenario, setNYForecastMode, getNYForecastMode } from './data.js';
+import { WAYPOINTS, TIMELINE_CONFIG, getTallyValues, getCurrentWaypoint, getCurrentNarration, getScenario, setNYForecastMode, getNYForecastMode, setDelhiForecastMode, getDelhiForecastMode } from './data.js';
 
 export class UIManager {
   constructor(options) {
@@ -222,18 +222,26 @@ export class UIManager {
       });
     });
 
-    // Forecast mode toggle listeners (New York)
+    // Forecast mode toggle listeners (New York & Delhi)
     if (this.elModeBtnModern) {
       this.elModeBtnModern.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.setNewYorkMode('modern');
+        if (this.currentScenario?.config?.id === 'delhi') {
+          this.setDelhiMode('warning');
+        } else {
+          this.setNewYorkMode('modern');
+        }
       });
     }
 
     if (this.elModeBtnFailure) {
       this.elModeBtnFailure.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.setNewYorkMode('failure');
+        if (this.currentScenario?.config?.id === 'delhi') {
+          this.setDelhiMode('breach');
+        } else {
+          this.setNewYorkMode('failure');
+        }
       });
     }
 
@@ -270,6 +278,37 @@ export class UIManager {
 
     if (this.currentScenario?.config?.id === 'newyork') {
       this.renderIntroFlyer('newyork');
+    }
+
+    const currentT = parseFloat(this.elScrubber?.value || '0');
+    this.update(currentT, currentT * TIMELINE_CONFIG.DUR, this.lastUWave || 0);
+
+    const { waypoint } = getCurrentWaypoint(currentT, this.lastUWave || 0);
+    this.renderAnalytics(waypoint);
+  }
+
+  setDelhiMode(mode) {
+    setDelhiForecastMode(mode);
+    if (this.elModeBtnModern) this.elModeBtnModern.classList.toggle('active', mode === 'warning');
+    if (this.elModeBtnFailure) this.elModeBtnFailure.classList.toggle('active', mode === 'breach');
+
+    const flyerBtns = document.querySelectorAll('.flyer-mode-btn');
+    flyerBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === mode);
+    });
+
+    if (this.elTallyHumanLabel) {
+      this.elTallyHumanLabel.textContent = (mode === 'warning') ? 'What-If: Warning' : 'What-If: Breach';
+    }
+    if (this.elTallyDeadUnit) {
+      this.elTallyDeadUnit.textContent = (mode === 'warning') ? 'drowned' : 'fatalities';
+    }
+    if (this.elTallyMissingUnit) {
+      this.elTallyMissingUnit.textContent = (mode === 'warning') ? 'evacuated' : 'missing';
+    }
+
+    if (this.currentScenario?.config?.id === 'delhi') {
+      this.renderIntroFlyer('delhi');
     }
 
     const currentT = parseFloat(this.elScrubber?.value || '0');
@@ -354,6 +393,7 @@ export class UIManager {
     if (!this.elFlyerTitle) return;
 
     const nyMode = getNYForecastMode();
+    const delhiMode = getDelhiForecastMode();
 
     const flyerData = {
       newyork: (nyMode === 'modern') ? {
@@ -445,50 +485,94 @@ export class UIManager {
         ],
         alert: '<strong>What-If Simulation Model Finding B:</strong> If a rapid-acceleration storm strikes during peak 07:30 AM rush hour before the 24-hour evacuation clearance time can be executed, subways flood with active commuters, generating a sudden deluge catastrophe (1,480 dead, 3,850 trapped) comparable to mountain flash floods.'
       },
-      delhi: {
-        tag: 'CWC / DJB MONSOON MODEL',
-        docId: 'DOC-ID: DL-YAMUNA-2023',
-        title: 'Delhi: Yamuna River Record Monsoon Inundation',
-        subtitle: 'Hathnikund Barrage Discharge, Floodplain Encroachment & ITO Barrage Siltation',
+      delhi: (delhiMode === 'warning') ? {
+        tag: 'CWC / DDMA WHAT-IF SIMULATION MODEL (2026-2030)',
+        docId: 'SIM-ID: DEL-WHAT-IF-2026',
+        title: 'WHAT IF: Himalayan Cloudburst Inundates Delhi?',
+        subtitle: 'What-If Stress Test A: 48-Hour CWC Advance Warning Active (11 Casualties)',
         metrics: [
-          { label: 'Peak River Stage', val: '208.66 m', sub: 'Record Watermark (+3.33m Danger)', color: 'amber' },
-          { label: 'Peak Discharge', val: '359,000 cusecs', sub: 'Hathnikund Release', color: 'cyan' },
-          { label: 'Water Plants Offline', val: '3 Mega Works', sub: '234 MGD (25% Capital Supply)', color: 'red' },
-          { label: 'Displaced Population', val: '27,000+ Evacuated', sub: 'Yamuna Floodplain Relief Camps', color: 'yellow' }
+          { label: 'What-If Casualties', val: '11 Drownings', sub: 'Shielded by 48h Advance CWC Alert', color: 'cyan' },
+          { label: 'Evacuated Population', val: '27,000 Safe', sub: 'Yamuna Floodplain Relief Camps', color: 'amber' },
+          { label: 'Peak River Stage', val: '208.66 m <small>(+3.33m)</small>', sub: 'Record Level (Surpassing 1978)', color: 'yellow' },
+          { label: 'Drinking Water Offline', val: '234 MGD (25%)', sub: 'Wazirabad & Chandrawal Inundated', color: 'red' }
         ],
         steps: [
           {
             num: '01',
             time: 'Day 1 09:00',
-            title: 'Hathnikund Barrage Discharge Surge',
-            desc: 'Upper catchment cloudbursts in Himachal trigger 3.59 lakh cusecs emergency release down the Yamuna riverbed.'
+            title: 'Hathnikund 3.59 Lakh Cusecs Emergency Sluice Release',
+            desc: 'Upper catchment cloudbursts in Himachal swell Hathnikund Barrage; 359,000 cusecs are released into Yamuna. 48-hour CWC warning triggers immediate evacuation of low-lying jhuggis.'
           },
           {
             num: '02',
             time: 'Day 2 13:00',
-            title: 'Old Railway Bridge Danger Mark Exceeded',
-            desc: 'River crosses the 205.33m danger mark, halting railway transit and submerging low-lying agricultural floodplains.'
+            title: 'Old Yamuna Iron Bridge Traffic Halted (205.33m)',
+            desc: 'River crosses the 205.33m danger mark and swells past 207m. Northern Railway halts train traffic on Loha Pul (built 1866) as floodwaters submerge riverbed farms.'
           },
           {
             num: '03',
             time: 'Day 3 07:00',
-            title: 'Wazirabad & Chandrawal Water Works Flooded',
-            desc: 'Submerged raw water pump houses force shutdown of key water treatment plants, cutting drinking water to Central Delhi.'
+            title: 'Wazirabad & Chandrawal WTP Inundation (234 MGD)',
+            desc: 'Swollen Yamuna overtops intake bunds, flooding raw water pump houses at Wazirabad, Chandrawal, and Okhla. 234 MGD water supply is severed across Central & South Delhi.'
           },
           {
             num: '04',
             time: 'Day 3 16:30',
-            title: 'ITO Barrage Silted Gates & Regulator Breach',
-            desc: 'Jammed barrage gates back up floodwaters into Drain 12, inundating the Vikas Marg arterial corridor and Supreme Court.'
+            title: 'Kashmere Gate ISBT & Ring Road Submergence',
+            desc: 'Floodwaters spill onto Ring Road, inundating Kashmere Gate ISBT under 2.4m water. DTC buses and auto-rickshaws stall; NDRF motorized inflatable boats deploy to rescue stranded commuters.'
           },
           {
             num: '05',
             time: 'Day 4 10:00',
-            title: 'Red Fort & Ring Road Submergence',
-            desc: 'Floodwaters breach historical bastions around Red Fort and completely shut down Delhi’s Ring Road.'
+            title: 'ITO Barrage Silted Jam & Regulator 12 Blowout',
+            desc: '5 of 32 ITO Barrage gates remain jammed under 40 years of heavy silt. Hydrodynamic backflow breaches Regulator 12, drowning Vikas Marg and reaching the Supreme Court.'
           }
         ],
-        alert: '<strong>Core Scientific Finding:</strong> Decades of heavy siltation and narrowed floodplain development reduced the Yamuna’s discharge cross-section by 42%, causing flash ponding at much lower discharge rates than 1978.'
+        alert: '<strong>What-If Simulation Model Finding A:</strong> If 48-hour advance hydrological telemetry from Hathnikund Barrage is utilized to evacuate floodplain jhuggis and bastis, human casualties are minimized (11 drownings) despite record 208.66m river stages and ₹28.4B in municipal infrastructure damages.'
+      } : {
+        tag: 'CWC / DDMA WHAT-IF SIMULATION MODEL (2026-2030)',
+        docId: 'SIM-ID: DEL-WHAT-IF-2026',
+        title: 'WHAT IF: Himalayan Cloudburst Inundates Delhi?',
+        subtitle: 'What-If Stress Test B: Sudden Nocturnal Regulator Breach (420 Deluge Casualties)',
+        metrics: [
+          { label: 'What-If Fatalities', val: '420 Projected', sub: 'Nocturnal Basti Flash Deluge', color: 'red' },
+          { label: 'Missing / Trapped', val: '1,850 Residents', sub: 'Submerged Low-Lying Jhuggis', color: 'amber' },
+          { label: 'Peak River Stage', val: '208.66 m <small>(+3.33m)</small>', sub: 'Record Level (Surpassing 1978)', color: 'yellow' },
+          { label: 'Displaced Population', val: '250,000 People', sub: 'Mass Unprepared Urban Displacement', color: 'cyan' }
+        ],
+        steps: [
+          {
+            num: '01',
+            time: 'Day 1 09:00',
+            title: 'Hathnikund 3.59 Lakh Cusecs Emergency Sluice Release',
+            desc: 'Himalayan cloudbursts swell Hathnikund Barrage; 359,000 cusecs are released into Yamuna. Siltation in the riverbed narrows cross-sectional flow by 42%.'
+          },
+          {
+            num: '02',
+            time: 'Day 2 13:00',
+            title: 'Old Yamuna Iron Bridge Traffic Halted (205.33m)',
+            desc: 'River crosses the 205.33m danger mark, rapidly surging towards 208m. Dense Yamuna Bazar and Majnu Ka Tila floodplain bastis remain asleep without warning.'
+          },
+          {
+            num: '03',
+            time: 'Day 3 02:30',
+            title: 'Catastrophic Nocturnal Bund Overtopping',
+            desc: 'Without early warning or daytime evacuation, 2.5m flood crest surges into midnight shanties at Yamuna Bazar and Bela Estate, washing away fragile tin and tarp dwellings.'
+          },
+          {
+            num: '04',
+            time: 'Day 3 07:00',
+            title: 'Wazirabad & Chandrawal WTP Inundation (234 MGD)',
+            desc: 'Swollen Yamuna overtops intake bunds, flooding raw water pump houses at Wazirabad, Chandrawal, and Okhla. 234 MGD water supply severed, paralyzing hospitals and emergency centers.'
+          },
+          {
+            num: '05',
+            time: 'Day 3 16:30',
+            title: 'ITO Barrage Silted Jam & Regulator 12 Blowout',
+            desc: 'Jammed ITO Barrage gates cause violent backflow through Drain 12, inundating arterial Ring Road and Supreme Court, trapping 1,850 citizens in raging urban floodwaters.'
+          }
+        ],
+        alert: '<strong>What-If Simulation Model Finding B:</strong> In the absence of 48-hour advance evacuation protocols, a nocturnal overtopping or regulator blowout transforms the Yamuna monsoon flood into a devastating flash deluge (420 fatalities, 1,850 missing), mirroring mountain debris flows in urban population density.'
       },
       rasuwa: {
         tag: 'DHM / ICIMOD GLOF MODEL',
@@ -681,16 +765,32 @@ export class UIManager {
 
     if (this.elFlyerMetricsGrid) {
       const isNY = (scenarioId === 'newyork');
-      const nyMode = getNYForecastMode();
-      const modeBarHtml = isNY ? `
-        <div class="flyer-mode-bar" style="grid-column: 1 / -1;">
-          <span class="flyer-mode-label">Select What-If Simulation Scenario:</span>
-          <div class="flyer-mode-pills">
-            <button type="button" class="flyer-mode-btn ${nyMode === 'modern' ? 'active' : ''}" data-mode="modern">🛡️ What-If: Early Warning Active (44 Casualties)</button>
-            <button type="button" class="flyer-mode-btn ${nyMode === 'failure' ? 'active' : ''}" data-mode="failure">⚠️ What-If: Sudden Warning Failure (1,480 Deluge Casualties)</button>
+      const isDelhi = (scenarioId === 'delhi');
+      let modeBarHtml = '';
+
+      if (isNY) {
+        const nyMode = getNYForecastMode();
+        modeBarHtml = `
+          <div class="flyer-mode-bar" style="grid-column: 1 / -1;">
+            <span class="flyer-mode-label">Select What-If Simulation Scenario:</span>
+            <div class="flyer-mode-pills">
+              <button type="button" class="flyer-mode-btn ${nyMode === 'modern' ? 'active' : ''}" data-mode="modern">🛡️ What-If: Early Warning Active (44 Casualties)</button>
+              <button type="button" class="flyer-mode-btn ${nyMode === 'failure' ? 'active' : ''}" data-mode="failure">⚠️ What-If: Sudden Warning Failure (1,480 Deluge Casualties)</button>
+            </div>
           </div>
-        </div>
-      ` : '';
+        `;
+      } else if (isDelhi) {
+        const dMode = getDelhiForecastMode();
+        modeBarHtml = `
+          <div class="flyer-mode-bar" style="grid-column: 1 / -1;">
+            <span class="flyer-mode-label">Select What-If Simulation Scenario:</span>
+            <div class="flyer-mode-pills">
+              <button type="button" class="flyer-mode-btn ${dMode === 'warning' ? 'active' : ''}" data-mode="warning">🛡️ What-If: 48h Advance Warning Active (11 Casualties)</button>
+              <button type="button" class="flyer-mode-btn ${dMode === 'breach' ? 'active' : ''}" data-mode="breach">⚠️ What-If: Sudden Regulator Breach (420 Deluge Casualties)</button>
+            </div>
+          </div>
+        `;
+      }
 
       this.elFlyerMetricsGrid.innerHTML = modeBarHtml + d.metrics.map(m => `
         <div class="flyer-metric-card">
@@ -700,12 +800,16 @@ export class UIManager {
         </div>
       `).join('');
 
-      if (isNY) {
+      if (isNY || isDelhi) {
         const btns = this.elFlyerMetricsGrid.querySelectorAll('.flyer-mode-btn');
         btns.forEach(btn => {
           btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            this.setNewYorkMode(btn.dataset.mode);
+            if (isDelhi) {
+              this.setDelhiMode(btn.dataset.mode);
+            } else {
+              this.setNewYorkMode(btn.dataset.mode);
+            }
           });
         });
       }
@@ -821,7 +925,8 @@ export class UIManager {
         } else if (isBeijing) {
           this.elTallyHumanRegion.textContent = 'Mentougou & Basin';
         } else if (isDelhi) {
-          this.elTallyHumanRegion.textContent = 'Yamuna Corridor';
+          const mode = getDelhiForecastMode();
+          this.elTallyHumanRegion.textContent = (mode === 'warning') ? 'CWC Warning Active' : 'Regulator Breach';
         } else {
           this.elTallyHumanRegion.textContent = 'Trishuli Corridor';
         }
@@ -1069,6 +1174,15 @@ export class UIManager {
       this.elBrandBadge.textContent = 'Forecasting Simulator';
     }
 
+    const elHydroIcon = document.querySelector('.tally-hydro .tally-icon');
+    if (elHydroIcon) {
+      if (id === 'delhi') elHydroIcon.textContent = '💧';
+      else if (id === 'tokyo') elHydroIcon.textContent = '🏛️';
+      else if (id === 'beijing') elHydroIcon.textContent = '🛣️';
+      else if (id === 'rasuwa') elHydroIcon.textContent = '⚡';
+      else elHydroIcon.textContent = '🚇';
+    }
+
     if (id === 'london') {
       if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Tube Armor';
       if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Floodplain Impact';
@@ -1095,10 +1209,11 @@ export class UIManager {
       if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = (mode === 'modern') ? 'evacuated' : 'missing';
       if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'NYC Metro & Harbor';
     } else if (id === 'delhi') {
+      const mode = getDelhiForecastMode();
       if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Works Offline';
-      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Human Impact';
-      if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = 'drowned';
-      if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = 'evacuated';
+      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = (mode === 'warning') ? 'What-If: Warning' : 'What-If: Breach';
+      if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = (mode === 'warning') ? 'drowned' : 'fatalities';
+      if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = (mode === 'warning') ? 'evacuated' : 'missing';
       if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'Yamuna Corridor';
     } else {
       if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Hydro Offline';
@@ -1108,12 +1223,33 @@ export class UIManager {
       if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'Trishuli Corridor';
     }
 
+    const isNY = (id === 'newyork');
+    const isDelhi = (id === 'delhi');
+
     if (this.elNyModeToggle) {
-      this.elNyModeToggle.style.display = (id === 'newyork') ? 'flex' : 'none';
-      if (id === 'newyork') {
+      this.elNyModeToggle.style.display = (isNY || isDelhi) ? 'flex' : 'none';
+      if (isNY) {
         const mode = getNYForecastMode();
-        if (this.elModeBtnModern) this.elModeBtnModern.classList.toggle('active', mode === 'modern');
-        if (this.elModeBtnFailure) this.elModeBtnFailure.classList.toggle('active', mode === 'failure');
+        this.elNyModeToggle.title = "What-If Simulation Model: Compare Early Warning (44 Casualties) vs Sudden Deluge Breach (1,480 Casualties)";
+        if (this.elModeBtnModern) {
+          this.elModeBtnModern.textContent = "🛡️ Warning (44)";
+          this.elModeBtnModern.classList.toggle('active', mode === 'modern');
+        }
+        if (this.elModeBtnFailure) {
+          this.elModeBtnFailure.textContent = "⚠️ Breach (1.4k)";
+          this.elModeBtnFailure.classList.toggle('active', mode === 'failure');
+        }
+      } else if (isDelhi) {
+        const mode = getDelhiForecastMode();
+        this.elNyModeToggle.title = "What-If Simulation Model: Compare CWC 48h Advance Warning (11 Drownings) vs Nocturnal Regulator Breach (420 Casualties)";
+        if (this.elModeBtnModern) {
+          this.elModeBtnModern.textContent = "🛡️ Warning (11)";
+          this.elModeBtnModern.classList.toggle('active', mode === 'warning');
+        }
+        if (this.elModeBtnFailure) {
+          this.elModeBtnFailure.textContent = "⚠️ Breach (420)";
+          this.elModeBtnFailure.classList.toggle('active', mode === 'breach');
+        }
       }
     }
 

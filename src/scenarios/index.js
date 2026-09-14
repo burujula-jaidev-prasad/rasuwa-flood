@@ -7,8 +7,12 @@ import {
   DELHI_RIVER_POINTS,
   DELHI_WAYPOINTS,
   DELHI_NARRATION,
-  getDelhiTallyValues
+  getDelhiTallyValues,
+  setDelhiForecastMode,
+  getDelhiForecastMode
 } from './delhi.js';
+
+export { setDelhiForecastMode, getDelhiForecastMode };
 
 import {
   RASUWA_CONFIG,

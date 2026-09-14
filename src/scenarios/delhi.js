@@ -4,14 +4,27 @@
 // Reference: CWC Record Stage 208.66m (breaching 205.33m Danger Mark by 3.33m)
 // ---------------------------------------------------------------------------
 
+let currentDelhiMode = 'warning'; // Default: 'warning' (48h CWC Warning: 11 deaths) | 'breach' (Nocturnal Regulator Breach: 420 deaths)
+
+export function setDelhiForecastMode(mode) {
+  if (mode === 'breach' || mode === 'warning') {
+    currentDelhiMode = mode;
+  }
+  return currentDelhiMode;
+}
+
+export function getDelhiForecastMode() {
+  return currentDelhiMode;
+}
+
 export const DELHI_CONFIG = {
   id: 'delhi',
   name: 'Delhi, India',
   country: 'India',
   flag: '🇮🇳',
-  hazard: 'Yamuna Record Inundation & Barrage Overtopping',
-  tagline: 'Extreme Himalayan Catchment Deluge & Urban Infrastructure Breach',
-  year: '2023 / 2026 Forecast',
+  hazard: 'What If: Yamuna Record Inundation & Regulator Breach?',
+  tagline: 'Predictive Hydrodynamic Simulation • Drain 12 Breach • Delhi Digital Twin',
+  year: '2023-2026 What-If Simulation Model',
   currency: {
     code: 'INR',
     symbol: '₹',
@@ -250,15 +263,36 @@ export const DELHI_WAYPOINTS = [
     subtitle: 'Full Yamuna Corridor (Wazirabad to Okhla)',
     coords: '28.53° N, 77.30° E (Okhla Outflow)',
     badge: 'Stage 8 • Total Impact • 2.8M Affected',
-    headline: 'Delhi Record Flood: ₹28.4 Billion Loss & 2.8 Million Impacted',
-    stats: [
-      { label: 'Total Population Affected', value: '~2,800,000 residents' },
-      { label: 'Evacuated to Relief Tents', value: '45,340 people in 47 camps' },
-      { label: 'Economic Destruction', value: '₹28.4 Billion (~$340M USD)' },
-      { label: 'All-Time Peak Stage', value: '208.66 m (Highest in history)' },
-      { label: 'Peak River Discharge', value: '12,500 m³/s (441,400 cusecs)' }
-    ],
-    scientificNote: 'Compound human-natural disaster: encroachment of Yamuna floodplains, jammed barrage gates, and lack of real-time hydro-pneumatic regulator maintenance.',
+    get headline() {
+      return currentDelhiMode === 'warning'
+        ? 'What-If Projection A (48-Hr Warning): 11 Fatalities, 27,000 Evacuated & ₹28.4B Loss'
+        : 'What-If Projection B (Nocturnal Breach): 420 Fatalities, 1,850 Missing & ₹28.4B Loss';
+    },
+    get stats() {
+      return currentDelhiMode === 'warning'
+        ? [
+            { label: 'Projected Fatalities', value: '11 deaths (isolated drain drownings, 27k safely evacuated)' },
+            { label: 'Floodplain Evacuees', value: '27,000+ residents in 47 elevated relief camps' },
+            { label: 'Water Plants Offline', value: '3 Mega Works (Wazirabad, Chandrawal, Okhla: 234 MGD)' },
+            { label: 'Total Economic Destruction', value: '₹28.4 Billion INR (~$340M USD)' },
+            { label: 'All-Time Peak Stage', value: '208.66 m (3.33 m above Danger Mark)' },
+            { label: 'Peak River Discharge', value: '12,500 m³/s (441,400 cusecs)' }
+          ]
+        : [
+            { label: 'Projected Fatalities', value: '420 deaths (nocturnal regulator collapse & slum flash deluge)' },
+            { label: 'Missing / Trapped', value: '1,850 residents in submerged Yamuna floodplains' },
+            { label: 'Displaced Population', value: '250,000 residents across Ring Road & Kashmere Gate' },
+            { label: 'Water Plants Offline', value: '3 Mega Works (Wazirabad, Chandrawal, Okhla: 234 MGD)' },
+            { label: 'Total Economic Destruction', value: '₹28.4 Billion INR (~$340M USD)' },
+            { label: 'All-Time Peak Stage', value: '208.66 m (3.33 m above Danger Mark)' },
+            { label: 'Peak River Discharge', value: '12,500 m³/s (441,400 cusecs)' }
+          ];
+    },
+    get scientificNote() {
+      return currentDelhiMode === 'warning'
+        ? 'What-If Model Finding A: When 48-hour advance CWC discharge warnings enable pre-emptive evacuation of Yamuna floodplains, human life is largely safeguarded (fatalities held to 11) despite 234 MGD water cuts and ₹28.4B in civic flooding.'
+        : 'What-If Model Finding B: If ITO Drain 12 regulator collapses at midnight while river is at record 208.66m, the hydraulic head reverses drainage into low-lying bastis without warning, producing sudden flash casualties (420 dead, 1,850 missing) comparable to mountain flash floods.';
+    },
     warningGap: 'Highlights urgent need for an automated Yamuna Basin flood management authority spanning Haryana, Delhi, and Uttar Pradesh.',
     countermeasure: {
       status: 'Post-Disaster Recovery Activated',
@@ -276,16 +310,97 @@ export const DELHI_NARRATION = [
   { tStart: 0.48, tEnd: 0.60, text: "Torrential backwater bursts onto Mahatma Gandhi Marg. Kashmere Gate ISBT, the Tibetan Monastery market, and low-lying flyovers are submerged under two metres of water." },
   { tStart: 0.60, tEnd: 0.72, text: "At 208.66 metres, the Yamuna reaches its highest level in recorded history, reclaiming its ancient Mughal bed right against the red sandstone ramparts of the Red Fort." },
   { tStart: 0.72, tEnd: 0.85, text: "Disaster strikes the civic core: Drain 12 regulator collapses, flooding ITO intersection, the Supreme Court, and key government secretariats." },
-  { tStart: 0.85, tEnd: 1.00, text: "Over 45,000 evacuated, 2.8 million impacted, and ₹28.4 billion in losses. The Indian Army engineers and dewatering units race to seal the city." }
+  {
+    tStart: 0.85,
+    tEnd: 1.00,
+    get text() {
+      return currentDelhiMode === 'warning'
+        ? "What-If Simulation Outcome A: 11 direct drownings, 27,000 evacuated, and 234 MGD water offline under ₹28.4 billion in damage. 48-hour CWC advance alerts prevented catastrophic human loss."
+        : "What-If Simulation Outcome B: 420 fatalities, 1,850 missing, and 250,000 displaced in a sudden nocturnal regulator breach causing ₹28.4 billion in civic destruction. Indian Army engineers mobilize sheet-piles around the clock.";
+    }
+  }
 ];
 
-export function getDelhiTallyValues(t, uWave = 0) {
-  // 1. Population Affected & Displaced
-  const popFactor = Math.min(Math.max((uWave - 0.10) / 0.80, 0), 1);
-  const evacuated = Math.round(350000 * popFactor);
-  const popAffectedMillions = (2.8 * popFactor).toFixed(2);
-  const dead = Math.round(480 * popFactor);
-  const missing = Math.round(14500 * popFactor);
+export function getDelhiTallyValues(t, uWave = 0, mode = currentDelhiMode) {
+  // Pre-disaster baseline: strictly zero casualties, zero damage before flood wave arrives
+  if (t <= 0.0001 || uWave <= 0.0001) {
+    return {
+      dead: 0,
+      missing: 0,
+      evacuated: 0,
+      popAffectedMillions: "0.00",
+      waterOfflineMGD: 0,
+      hydro: 0,
+      stageMeters: 204.5,
+      speedMS: 0,
+      speedKMH: 0,
+      intensityVal: "850 m³/s",
+      intensityTag: "Monsoon Normal",
+      intensityClass: "low",
+      pressureKPa: 0,
+      econUSD: 0,
+      econINR: "0.0",
+      econLocal: "₹0.0B",
+      econLevel: "Baseline",
+      econClass: "low"
+    };
+  }
+
+  // 1. Casualties based on active mode
+  let dead = 0;
+  let missing = 0;
+  let evacuated = 0;
+  let popAffectedMillions = "0.00";
+
+  if (mode === 'warning') {
+    // Mode A: 48-hr CWC Warning & Embankment Defense (Historical 2023 Benchmark)
+    // Evacuation: 0 -> 27,000 people. Fatalities: 0 -> 11 isolated drownings. Missing: 0.
+    if (uWave < 0.15) {
+      dead = 0;
+      missing = 0;
+      evacuated = 0;
+    } else if (uWave < 0.40) {
+      const f = (uWave - 0.15) / 0.25;
+      dead = Math.round(f * 3); // 0 -> 3
+      missing = 0;
+      evacuated = Math.round(f * 12500); // 0 -> 12,500
+    } else if (uWave < 0.75) {
+      const f = (uWave - 0.40) / 0.35;
+      dead = Math.round(3 + f * 5); // 3 -> 8
+      missing = 0;
+      evacuated = Math.round(12500 + f * 11500); // 12,500 -> 24,000
+    } else {
+      const f = Math.min(1.0, (uWave - 0.75) / 0.25);
+      dead = Math.round(8 + f * 3); // 8 -> 11
+      missing = 0;
+      evacuated = Math.round(24000 + f * 3000); // 24,000 -> 27,000
+    }
+    popAffectedMillions = (2.8 * Math.min(1.0, uWave / 0.85)).toFixed(2);
+  } else {
+    // Mode B: Nocturnal Regulator Breach & Fast-Mover Deluge (Worst-Case Stress Test)
+    // Fatalities: 0 -> 420. Missing: 0 -> 1,850. Evacuated/Displaced: 0 -> 250,000.
+    if (uWave < 0.15) {
+      dead = 0;
+      missing = 0;
+      evacuated = 0;
+    } else if (uWave < 0.40) {
+      const f = (uWave - 0.15) / 0.25;
+      dead = Math.round(f * 85); // 0 -> 85
+      missing = Math.round(f * 320); // 0 -> 320
+      evacuated = Math.round(f * 65000); // 0 -> 65,000
+    } else if (uWave < 0.75) {
+      const f = (uWave - 0.40) / 0.35;
+      dead = Math.round(85 + f * 215); // 85 -> 300
+      missing = Math.round(320 + f * 980); // 320 -> 1,300
+      evacuated = Math.round(65000 + f * 125000); // 65,000 -> 190,000
+    } else {
+      const f = Math.min(1.0, (uWave - 0.75) / 0.25);
+      dead = Math.round(300 + f * 120); // 300 -> 420
+      missing = Math.round(1300 + f * 550); // 1,300 -> 1,850
+      evacuated = Math.round(190000 + f * 60000); // 190,000 -> 250,000
+    }
+    popAffectedMillions = (2.8 * Math.min(1.0, uWave / 0.85)).toFixed(2);
+  }
 
   // 2. Drinking Water Deficit (0 -> 234 MGD offline / 4.2M people)
   const waterFactor = Math.min(Math.max((uWave - 0.15) / 0.30, 0), 1);
@@ -396,7 +511,8 @@ export function getDelhiTallyValues(t, uWave = 0) {
     intensityClass,
     pressureKPa,
     econUSD,
-    econLocal: `${econINR}B ₹`,
+    econINR,
+    econLocal: `₹${econINR}B`,
     econLevel,
     econClass
   };

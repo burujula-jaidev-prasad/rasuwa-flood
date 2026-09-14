@@ -53,8 +53,9 @@ export class FloodSimulation {
     this.initDelhiGenesis();
 
     // Procedural Delhi landmarks, bridges, vehicles, and countermeasures
-    const { wipeableItems } = buildDelhiScene(this.group, this.river, this.terrain);
+    const { wipeableItems, updateDelhiDynamic } = buildDelhiScene(this.group, this.river, this.terrain);
     this.wipeableItems = wipeableItems;
+    this.delhiUpdateDynamic = updateDelhiDynamic;
 
     // Delhi landmark badges
     this.initDelhiLandmarkBadges();
@@ -3500,12 +3501,14 @@ export class FloodSimulation {
         if (this.trailObj) this.river.updateFloodTrail(this.trailObj, 0);
         this.uWave = 0;
         this.updateWipeableItems(0);
+        if (this.delhiUpdateDynamic) this.delhiUpdateDynamic(clampedT, 0);
       } else {
         if (this.floodGroup) this.floodGroup.visible = true;
         uWave = Math.min(1.0, (clampedT - 0.10) / 0.90);
         this.uWave = uWave;
         this.updateSurgeFront(uWave);
         this.updateWipeableItems(uWave);
+        if (this.delhiUpdateDynamic) this.delhiUpdateDynamic(clampedT, uWave);
       }
       this.animateRain(2.8);
       return uWave;

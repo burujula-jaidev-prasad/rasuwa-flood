@@ -1,4 +1,11 @@
 import * as THREE from 'three';
+import {
+  getRedSandstoneTexture,
+  getDelhiBrickTexture,
+  getTinRoofTexture,
+  getTarpRoofTexture,
+  getAsphaltRoadTexture
+} from './delhi_textures.js';
 
 /**
  * Procedural 3D Landmarks, Bridges, Floodplain Settlements, Vehicles & Countermeasures
@@ -10,6 +17,13 @@ import * as THREE from 'three';
 export function buildDelhiScene(group, river, terrain) {
   const wipeableItems = [];
   const dynamicWaterItems = [];
+
+  // Procedural canvas textures for Delhi
+  const redSandstoneTex = getRedSandstoneTexture();
+  const delhiBrickTex = getDelhiBrickTexture();
+  const tinRoofTex = getTinRoofTexture();
+  const tarpRoofTex = getTarpRoofTexture();
+  const asphaltRoadTex = getAsphaltRoadTexture();
 
   // Helper to place objects on river tangents & bank normals
   function getRiverFrame(u) {
@@ -33,8 +47,12 @@ export function buildDelhiScene(group, river, terrain) {
     const hutGroup = new THREE.Group();
     const materials = [];
 
-    // Walls
-    const wallMat = new THREE.MeshStandardMaterial({ color: wallHex, roughness: 0.85 });
+    // Walls with brick texture
+    const wallMat = new THREE.MeshStandardMaterial({
+      color: wallHex,
+      map: delhiBrickTex || null,
+      roughness: 0.85
+    });
     materials.push(wallMat);
     const wallGeo = new THREE.BoxGeometry(bw, bh, bd);
     const wallMesh = new THREE.Mesh(wallGeo, wallMat);
@@ -72,8 +90,14 @@ export function buildDelhiScene(group, river, terrain) {
       hutGroup.add(pole);
     });
 
-    // Roof construction
-    const roofMat = new THREE.MeshStandardMaterial({ color: roofHex, roughness: 0.7, metalness: roofType === 'cgi' ? 0.3 : 0.05 });
+    // Roof construction with CGI tin or blue/orange tarpaulin texture
+    const roofTex = (roofType === 'cgi') ? tinRoofTex : ((roofType === 'tarp') ? tarpRoofTex : null);
+    const roofMat = new THREE.MeshStandardMaterial({
+      color: roofHex,
+      map: roofTex || null,
+      roughness: 0.7,
+      metalness: roofType === 'cgi' ? 0.35 : 0.05
+    });
     materials.push(roofMat);
 
     if (roofType === 'cgi') {
@@ -360,6 +384,181 @@ export function buildDelhiScene(group, river, terrain) {
     return { group: bundGroup, materials, primaryMat: sandbagMat };
   }
 
+  /**
+   * High-Fidelity National Disaster Response Force (NDRF) Motorized Rescue Boat
+   * Inflatable Zodiac dinghy with heavy-duty orange pontoon sponsons, rigid hull floor,
+   * outboard Yamaha motor with propeller cowl, bow searchlight, lifebuoys, and 2 relief personnel.
+   */
+  function createNDRFRescueBoat() {
+    const boatGroup = new THREE.Group();
+    const materials = [];
+
+    const orangePontoons = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.45, metalness: 0.1 });
+    const rubberBlack = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.85 });
+    const deckMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.7, metalness: 0.2 });
+    const motorMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4, metalness: 0.6 });
+    const ndrfBlue = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.7 });
+    const lifeVestOrange = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.5 });
+    const helmetWhite = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 });
+    const spotlightMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xfef08a, emissiveIntensity: 0.8 });
+    materials.push(orangePontoons, rubberBlack, deckMat, motorMat, ndrfBlue, lifeVestOrange, helmetWhite, spotlightMat);
+
+    // Rigid deck base
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.15, 3.4), deckMat);
+    deck.position.y = 0.15;
+    boatGroup.add(deck);
+
+    // Port & Starboard inflatable tubes (cylinders with conical ends)
+    [-0.8, 0.8].forEach(sideX => {
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 3.2, 12), orangePontoons);
+      tube.rotation.x = Math.PI * 0.5;
+      tube.position.set(sideX, 0.32, 0);
+      boatGroup.add(tube);
+
+      // Black rub-strake bumper
+      const bumper = new THREE.Mesh(new THREE.CylinderGeometry(0.33, 0.33, 3.2, 12), rubberBlack);
+      bumper.rotation.x = Math.PI * 0.5;
+      bumper.scale.set(1.02, 1.0, 0.15);
+      bumper.position.set(sideX * 1.01, 0.32, 0);
+      boatGroup.add(bumper);
+
+      // Conical cone ends at stern
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.6, 12), orangePontoons);
+      cone.rotation.x = -Math.PI * 0.5;
+      cone.position.set(sideX, 0.32, -1.9);
+      boatGroup.add(cone);
+    });
+
+    // Bow curved pontoon cross-section
+    const bowTube = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 1.6, 12), orangePontoons);
+    bowTube.rotation.z = Math.PI * 0.5;
+    bowTube.position.set(0, 0.38, 1.6);
+    boatGroup.add(bowTube);
+
+    // Bow spray splash guard
+    const bowNose = new THREE.Mesh(new THREE.ConeGeometry(0.7, 0.8, 4), orangePontoons);
+    bowNose.rotation.x = Math.PI * 0.5;
+    bowNose.position.set(0, 0.38, 1.9);
+    boatGroup.add(bowNose);
+
+    // Stern Transom Board
+    const transom = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.6, 0.15), rubberBlack);
+    transom.position.set(0, 0.45, -1.55);
+    boatGroup.add(transom);
+
+    // Outboard Motor Assembly
+    const motorGroup = new THREE.Group();
+    motorGroup.position.set(0, 0.6, -1.75);
+    const motorCowling = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.55, 0.5), motorMat);
+    motorCowling.position.y = 0.2;
+    motorGroup.add(motorCowling);
+
+    const motorShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.9, 8), motorMat);
+    motorShaft.position.set(0, -0.3, -0.05);
+    motorGroup.add(motorShaft);
+
+    const prop = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.15, 0.06), rubberBlack);
+    prop.position.set(0, -0.7, -0.05);
+    motorGroup.add(prop);
+
+    const tiller = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.6, 6), rubberBlack);
+    tiller.rotation.x = Math.PI * 0.4;
+    tiller.position.set(0.15, 0.35, 0.25);
+    motorGroup.add(tiller);
+    boatGroup.add(motorGroup);
+
+    // Bow Searchlight & Spotlight
+    const spotlight = new THREE.Group();
+    spotlight.position.set(0, 0.72, 1.55);
+    const lightHousing = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.25, 10), rubberBlack);
+    lightHousing.rotation.x = Math.PI * 0.5;
+    spotlight.add(lightHousing);
+
+    const lightLens = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.05, 10), spotlightMat);
+    lightLens.rotation.x = Math.PI * 0.5;
+    lightLens.position.set(0, 0, 0.13);
+    spotlight.add(lightLens);
+    boatGroup.add(spotlight);
+
+    // Lifebuoy ring attached to starboard tube
+    const buoyMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5 });
+    materials.push(buoyMat);
+    const buoy = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.08, 8, 16), buoyMat);
+    buoy.rotation.y = Math.PI * 0.5;
+    buoy.position.set(0.85, 0.5, 0.4);
+    boatGroup.add(buoy);
+
+    // 2 NDRF Personnel (Coxswain at motor + Spotter with binoculars)
+    [-0.2, 0.2].forEach((xOff, pIdx) => {
+      const personGroup = new THREE.Group();
+      personGroup.position.set(xOff, 0.25, (pIdx === 0 ? -1.1 : 0.6));
+
+      // Legs / Seated Lower Body
+      const legs = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.35, 0.45), ndrfBlue);
+      legs.position.y = 0.2;
+      personGroup.add(legs);
+
+      // Torso with NDRF Lifejacket
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.48, 0.32), lifeVestOrange);
+      torso.position.y = 0.58;
+      personGroup.add(torso);
+
+      // Head
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), new THREE.MeshStandardMaterial({ color: 0x8d5b4c }));
+      head.position.y = 0.92;
+      personGroup.add(head);
+
+      // White Rescue Helmet
+      const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8, 0, Math.PI * 2, 0, Math.PI * 0.6), helmetWhite);
+      helmet.position.y = 0.94;
+      personGroup.add(helmet);
+
+      boatGroup.add(personGroup);
+    });
+
+    boatGroup.castShadow = true;
+    return { group: boatGroup, materials, primaryMat: orangePontoons, motorGroup, spotlight };
+  }
+
+  /**
+   * Floating Urban Chemical / Fuel Barrels
+   */
+  function createFloatingBarrelCluster() {
+    const cluster = new THREE.Group();
+    const materials = [];
+
+    const barrelColors = [0x0284c7, 0xdc2626, 0xeab308];
+    const drumGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.9, 10);
+
+    for (let b = 0; b < 3; b++) {
+      const mat = new THREE.MeshStandardMaterial({ color: barrelColors[b % barrelColors.length], roughness: 0.5, metalness: 0.4 });
+      materials.push(mat);
+      const drum = new THREE.Mesh(drumGeo, mat);
+      drum.position.set((b - 1) * 0.45, 0.2, (b % 2 === 0 ? 0.2 : -0.2));
+      drum.rotation.z = (Math.random() - 0.5) * 0.4;
+      cluster.add(drum);
+    }
+    return { group: cluster, materials, primaryMat: materials[0] };
+  }
+
+  /**
+   * Floating Timber Planks & Bamboo Raft Debris
+   */
+  function createFloatingTimberRaft() {
+    const raft = new THREE.Group();
+    const materials = [];
+
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 });
+    materials.push(woodMat);
+
+    for (let p = 0; p < 5; p++) {
+      const plank = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.12, 2.8), woodMat);
+      plank.position.set((p - 2) * 0.38, 0.1, (Math.random() - 0.5) * 0.3);
+      raft.add(plank);
+    }
+    return { group: raft, materials, primaryMat: woodMat };
+  }
+
   // Helper to register dynamic wipeable collapsing item
   function registerWipeable(itemGroup, uTrigger, initialPos, tangent, side, options = {}) {
     itemGroup.position.copy(initialPos);
@@ -532,7 +731,11 @@ export function buildDelhiScene(group, river, terrain) {
   const lohaGroup = new THREE.Group();
   lohaGroup.position.copy(fLoha.pt);
 
-  const brickPierMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.85 });
+  const brickPierMat = new THREE.MeshStandardMaterial({
+    color: 0x991b1b,
+    map: delhiBrickTex || null,
+    roughness: 0.85
+  });
   const ironTrussMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.6, metalness: 0.7 });
   const locoMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.5 });
   const coachMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.6 });
@@ -655,7 +858,11 @@ export function buildDelhiScene(group, river, terrain) {
   const kashGroup = new THREE.Group();
   kashGroup.position.copy(fKash.pt);
 
-  const tarmacMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.9 });
+  const tarmacMat = new THREE.MeshStandardMaterial({
+    color: 0x18181b,
+    map: asphaltRoadTex || null,
+    roughness: 0.9
+  });
 
   const roadLength = 38.0;
   const ringRoad = new THREE.Mesh(new THREE.BoxGeometry(5.5, 0.5, roadLength), tarmacMat);
@@ -743,7 +950,11 @@ export function buildDelhiScene(group, river, terrain) {
   const fortGroup = new THREE.Group();
   fortGroup.position.copy(fFort.pt);
 
-  const redSandstoneMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.85 });
+  const redSandstoneMat = new THREE.MeshStandardMaterial({
+    color: 0x991b1b,
+    map: redSandstoneTex || null,
+    roughness: 0.85
+  });
   const whiteMarbleMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.3 });
 
   const wallLength = 48.0;
@@ -970,8 +1181,155 @@ export function buildDelhiScene(group, river, terrain) {
     });
   }
 
+  // ----------------------------------------------------
+  // 7. NDRF MOTORIZED RESCUE BOATS PATROL FLEET
+  // ----------------------------------------------------
+  const ndrfRescueFleet = [];
+
+  const boatDefs = [
+    { u: 0.24, side: -6.8, patrolSpan: 8.0, desc: 'Wazirabad & Majnu Ka Tila Floodplain Rescue' },
+    { u: 0.38, side: 5.5, patrolSpan: 10.0, desc: 'Loha Pul & Yamuna Bazar Evacuation Patrol' },
+    { u: 0.48, side: -10.2, patrolSpan: 12.0, desc: 'Kashmere Gate ISBT Submerged Ring Road Evac' },
+    { u: 0.63, side: -8.0, patrolSpan: 9.0, desc: 'Red Fort & Salimgarh Ancient Bed Patrol' },
+    { u: 0.76, side: -13.5, patrolSpan: 7.0, desc: 'ITO Drain 12 Regulator Breach Response' },
+    { u: 0.86, side: 7.5, patrolSpan: 11.0, desc: 'Rajghat Relief Corridor Shuttling' }
+  ];
+
+  boatDefs.forEach((bDef, idx) => {
+    const boat = createNDRFRescueBoat();
+    const f = getRiverFrame(bDef.u);
+    const pos = f.pt.clone().addScaledVector(f.side, bDef.side);
+    pos.y = terrain.getTerrainHeight(pos.x, pos.z) + 0.35;
+    boat.group.position.copy(pos);
+    boat.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f.tangent);
+    group.add(boat.group);
+
+    ndrfRescueFleet.push({
+      group: boat.group,
+      motorGroup: boat.motorGroup,
+      spotlight: boat.spotlight,
+      uTrigger: bDef.u - 0.04,
+      uCenter: bDef.u,
+      sideOffset: bDef.side,
+      patrolSpan: bDef.patrolSpan,
+      basePos: pos.clone(),
+      phase: idx * 1.35
+    });
+  });
+
+  function updateRescueBoats(clampedT, uWave) {
+    const timeSec = Date.now() * 0.001;
+    for (let i = 0; i < ndrfRescueFleet.length; i++) {
+      const boat = ndrfRescueFleet[i];
+      if (uWave < boat.uTrigger) {
+        // Moored on standby prior to flood crest reaching sector
+        boat.group.position.copy(boat.basePos);
+        const f = getRiverFrame(boat.uCenter);
+        boat.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f.tangent);
+        if (boat.spotlight) boat.spotlight.rotation.y = 0;
+        if (boat.motorGroup) boat.motorGroup.rotation.y = 0;
+      } else {
+        // Active flood response: navigate dynamic floodwaters
+        const waveIntensity = Math.min(1.0, (uWave - boat.uTrigger) / 0.15);
+        const patrol = Math.sin(timeSec * 0.75 + boat.phase) * boat.patrolSpan * 0.002;
+        const currentU = Math.min(0.96, Math.max(0.05, boat.uCenter + patrol));
+        const f = getRiverFrame(currentU);
+
+        // Water level elevation
+        const waterHeight = Math.max(terrain.getTerrainHeight(f.pt.x, f.pt.z) + 0.3, f.pt.y + 0.5 + waveIntensity * 1.8);
+        const heave = Math.sin(timeSec * 2.8 + boat.phase) * 0.14;
+        const roll = Math.cos(timeSec * 2.2 + boat.phase) * 0.10;
+        const pitch = Math.sin(timeSec * 1.9 + boat.phase) * 0.08;
+
+        const pos = f.pt.clone().addScaledVector(f.side, boat.sideOffset);
+        pos.y = waterHeight + heave;
+        boat.group.position.copy(pos);
+
+        boat.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f.tangent);
+        boat.group.rotateZ(roll);
+        boat.group.rotateX(pitch);
+
+        // Dynamic tiller & searchlight sweeping
+        if (boat.motorGroup) {
+          boat.motorGroup.rotation.y = Math.sin(timeSec * 2.2 + boat.phase) * 0.28;
+        }
+        if (boat.spotlight) {
+          boat.spotlight.rotation.y = Math.sin(timeSec * 1.6 + boat.phase) * 0.48;
+          boat.spotlight.rotation.x = Math.PI * 0.5 + Math.sin(timeSec * 1.2 + boat.phase) * 0.12;
+        }
+      }
+    }
+  }
+
+  // ----------------------------------------------------
+  // 8. FLOATING URBAN DEBRIS FLOTILLA (Chemical Drums, Timber Rafts)
+  // ----------------------------------------------------
+  const floatingFlotilla = [];
+  const debrisDefs = [
+    { type: 'barrels', u: 0.23, side: 3.5, driftRate: 0.25 },
+    { type: 'timber',  u: 0.27, side: -4.0, driftRate: 0.28 },
+    { type: 'barrels', u: 0.36, side: 4.2, driftRate: 0.30 },
+    { type: 'timber',  u: 0.42, side: -3.8, driftRate: 0.26 },
+    { type: 'barrels', u: 0.49, side: -8.5, driftRate: 0.32 },
+    { type: 'timber',  u: 0.53, side: 3.0, driftRate: 0.27 },
+    { type: 'barrels', u: 0.63, side: -5.0, driftRate: 0.34 },
+    { type: 'timber',  u: 0.69, side: 4.5, driftRate: 0.29 },
+    { type: 'barrels', u: 0.75, side: -9.0, driftRate: 0.33 },
+    { type: 'timber',  u: 0.81, side: 3.2, driftRate: 0.28 }
+  ];
+
+  debrisDefs.forEach((dDef, dIdx) => {
+    const itemObj = (dDef.type === 'barrels') ? createFloatingBarrelCluster() : createFloatingTimberRaft();
+    const f = getRiverFrame(dDef.u);
+    const startPos = f.pt.clone().addScaledVector(f.side, dDef.side);
+    startPos.y = f.pt.y + 0.4;
+    itemObj.group.position.copy(startPos);
+    itemObj.group.visible = false;
+    group.add(itemObj.group);
+
+    floatingFlotilla.push({
+      mesh: itemObj.group,
+      uTrigger: dDef.u,
+      baseSide: dDef.side,
+      driftRate: dDef.driftRate,
+      pristinePos: startPos.clone(),
+      phase: dIdx * 1.8
+    });
+  });
+
+  function updateFloatingDebris(uWave) {
+    const timeSec = Date.now() * 0.001;
+    for (let i = 0; i < floatingFlotilla.length; i++) {
+      const item = floatingFlotilla[i];
+      if (uWave <= item.uTrigger) {
+        item.mesh.visible = false;
+        item.mesh.position.copy(item.pristinePos);
+      } else {
+        item.mesh.visible = true;
+        const prog = Math.min(1.0, (uWave - item.uTrigger) / (1.0 - item.uTrigger + 0.001));
+        const currU = Math.min(0.98, item.uTrigger + prog * item.driftRate * (1.0 - item.uTrigger) * 2.0);
+        const f = getRiverFrame(currU);
+
+        const wander = Math.sin(timeSec * 1.2 + item.phase) * 1.2;
+        const heave = Math.sin(timeSec * 3.2 + item.phase) * 0.16;
+        const pos = f.pt.clone().addScaledVector(f.side, item.baseSide + wander);
+        pos.y = f.pt.y + 0.5 + heave;
+        item.mesh.position.copy(pos);
+
+        item.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f.tangent);
+        item.mesh.rotateY(prog * 8.0 + item.phase);
+        item.mesh.rotateX(Math.sin(timeSec * 2.5 + item.phase) * 0.2);
+        item.mesh.rotateZ(Math.cos(timeSec * 2.0 + item.phase) * 0.15);
+      }
+    }
+  }
+
   return {
     wipeableItems,
-    dynamicWaterItems
+    dynamicWaterItems,
+    updateDelhiDynamic: (clampedT, uWave) => {
+      updateRescueBoats(clampedT, uWave);
+      updateFloatingDebris(uWave);
+    }
   };
 }
