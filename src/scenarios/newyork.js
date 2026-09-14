@@ -251,16 +251,18 @@ export const NEWYORK_WAYPOINTS = [
     subtitle: 'NYC Metro Coastal Disaster & $42.5 Billion Toll',
     coords: '40.71° N, 74.00° W (Citywide)',
     badge: 'Stage 8 • Full Loss Metric • $42.5B Loss',
-    headline: 'NYC Morning Surge Toll: $42.5 Billion Loss & 385,000 Displaced',
+    headline: 'NYC Sudden Surge Toll: 1,480 Fatalities, $42.5B Loss & 385,000 Displaced',
     stats: [
+      { label: 'Confirmed Sudden Fatalities', value: '1,480 deaths (rush-hour subway & coastal deluge)' },
+      { label: 'Missing / Subterranean Trapped', value: '3,850 commuters & basement dwellers' },
       { label: 'Total Economic Destruction', value: '$42.5 Billion USD' },
-      { label: 'Population Displaced / Evacuated', value: '385,000 coastal residents' },
+      { label: 'Total Displaced Residents', value: '385,000 coastal residents' },
       { label: 'Subway System Offline', value: '7 under-river tunnels inundated for 6 days' },
       { label: 'Peak Recorded Surge', value: '4.82 m (15.8 ft NAVD88) at The Narrows' },
       { label: 'Total Water Pumped Out', value: '1.2 Billion gallons of seawater' }
     ],
-    scientificNote: 'Compound coastal-estuarine disaster demonstrating extreme vulnerability of underground transit, power, and telecommunication networks to high-tide hurricane surges.',
-    warningGap: 'Proves urgent necessity for regional outer-harbor storm gates (NYNJHAT Study Alternative 2/3) across the NY Bight.',
+    scientificNote: 'Sudden rapid-onset surge model: Unlike Sandy where 48-hour advance transit shutdowns kept NYC deaths to 44, a sudden unevacuated morning rush-hour deluge causes catastrophic flash-flood casualties (1,480 dead, 3,850 missing), mirroring the sudden flood catastrophe of the Nepal deluges.',
+    warningGap: 'Extreme vulnerability of sudden compound surges arriving without 48-hour advance transit shutdown; subway tunnel portals act as giant siphon conduits.',
     countermeasure: {
       status: 'Long-Term Resiliency Activated',
       action: '$52 Billion USACE NYNJHAT outer-harbor storm surge barrier plan expedited through federal approval.',
@@ -277,7 +279,7 @@ export const NEWYORK_NARRATION = [
   { tStart: 0.52, tEnd: 0.66, text: "Along the East River, 16.5-foot steel roller floodgates seal FDR Drive under the East Side Coastal Resiliency project, turning the highway into a defensive water barrier against the surging tide." },
   { tStart: 0.66, tEnd: 0.80, text: "The surge bottleneck chokes under the Gothic granite towers of the Brooklyn Bridge. DUMBO cobblestones, historic waterfront lofts, and timber piers are engulfed under 1.8 metres of raging brine." },
   { tStart: 0.80, tEnd: 0.92, text: "At 14th Street, a violent 345-kilovolt transformer arc flash explodes across the Con Edison substation, detonating transformer oil and plunging Lower Manhattan from 34th Street south into darkness." },
-  { tStart: 0.92, tEnd: 1.00, text: "385,000 residents displaced, 7 subway tubes submerged, and $42.5 billion in total economic destruction. The USACE unwatering armada mobilizes around the clock to drain the city." }
+  { tStart: 0.92, tEnd: 1.00, text: "1,480 confirmed fatalities, 3,850 missing, 385,000 displaced, and 7 subway tubes submerged in a sudden rush-hour deluge causing $42.5 billion in destruction. The USACE unwatering armada mobilizes around the clock to drain the city." }
 ];
 
 export function getNewYorkTallyValues(t, uWave = 0) {
@@ -304,23 +306,28 @@ export function getNewYorkTallyValues(t, uWave = 0) {
     };
   }
 
-  // 1. Data-backed Dynamic Fatalities (0 -> 44 official CDC / NYC Medical Examiner benchmark)
+  // 1. Sudden Catastrophic Event Fatalities & Missing (0 -> 1,480 dead, 3,850 missing, comparable to Nepal deluge)
   let dead = 0;
+  let missing = 0;
   if (uWave < 0.14) {
-    // Storm surge approaches offshore; mandatory Zone A evacuation active; 0 direct coastal flood drownings
+    // Storm surge approaches offshore; sirens sounding; outer harbor transit warning; 0 direct coastal flood drownings
     dead = 0;
+    missing = 0;
   } else if (uWave < 0.35) {
-    // Outer shoreline breach: Staten Island & Rockaways outer seawalls overtopped
+    // Outer shoreline flash breach: Staten Island & Rockaways outer seawalls suddenly overwhelmed
     const f = (uWave - 0.14) / (0.35 - 0.14);
-    dead = Math.round(f * 14); // 0 -> 14
+    dead = Math.round(f * 380); // 0 -> 380
+    missing = Math.round(f * 950); // 0 -> 950
   } else if (uWave < 0.60) {
-    // Seawall breach: The Battery & Financial District street-level / basement inundation
+    // Seawall breach: The Battery & Financial District sudden morning rush-hour transit & basement inundation
     const f = (uWave - 0.35) / (0.60 - 0.35);
-    dead = Math.round(14 + f * 18); // 14 -> 32
+    dead = Math.round(380 + f * 640); // 380 -> 1,020
+    missing = Math.round(950 + f * 1750); // 950 -> 2,700
   } else {
-    // Peak inundation, subway tunnels submerged, ConEd 14th St explosion
+    // Peak deluge, 7 subway tunnels inundated, subterranean entrapment, ConEd 14th St explosion
     const f = Math.min(1.0, (uWave - 0.60) / 0.40);
-    dead = Math.round(32 + f * 12); // 32 -> 44
+    dead = Math.round(1020 + f * 460); // 1,020 -> 1,480
+    missing = Math.round(2700 + f * 1150); // 2,700 -> 3,850
   }
 
   // 2. Population Affected & Displaced (0 -> 385,000 Zone A Mandatory Evacuees)
@@ -425,7 +432,7 @@ export function getNewYorkTallyValues(t, uWave = 0) {
 
   return {
     dead,
-    missing: evacuated, // Displaced / evacuated count
+    missing,
     evacuated,
     popAffectedMillions,
     waterOfflineMGD: floodedTubes, // Submerged subway tunnels

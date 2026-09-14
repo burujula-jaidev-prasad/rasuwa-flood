@@ -297,10 +297,10 @@ export class UIManager {
         title: 'New York: Category-4 Hurricane Surge & Harbor Deluge',
         subtitle: 'Compound Astronomical High Tide, Atlantic Funneling & Lower Manhattan Inundation',
         metrics: [
+          { label: 'Sudden Casualty Toll', val: '1,480 Fatalities', sub: '3,850 Missing / Trapped', color: 'red' },
           { label: 'Peak Surge Crest', val: '4.82 m <small>(15.8 ft)</small>', sub: 'NAVD88 High Watermark', color: 'amber' },
           { label: 'Peak Forward Speed', val: '13.2 m/s <small>(47.5 km/h)</small>', sub: 'Upper Bay Fairway', color: 'cyan' },
-          { label: 'Transit Impact', val: '7 Transit Tubes', sub: '14.5M gal Brine Influx', color: 'red' },
-          { label: 'Power Grid Failure', val: '345 kV Arc-Blast', sub: 'ConEd 14th St Substation', color: 'yellow' }
+          { label: 'Transit Paralysis', val: '7 Transit Tubes', sub: '14.5M gal Brine Influx', color: 'yellow' }
         ],
         steps: [
           {
@@ -334,7 +334,7 @@ export class UIManager {
             desc: 'East River floodwaters inundate the ConEd 14th St Substation, generating an explosive 345 kV transformer arc-flash and plunging Lower Manhattan into a total electrical blackout.'
           }
         ],
-        alert: '<strong>Core Scientific Finding:</strong> Upper New York Bay bathymetry and the East River strait funneling create severe hydrodynamic amplification. Unprotected perimeter seawalls allow seawater to rapidly overwhelm subterranean infrastructure within 90 minutes of the seawall breach.'
+        alert: '<strong>Core Scientific Finding:</strong> A sudden rapid-onset surge during morning rush hour without 48-hour advance transit shutdown creates an unevacuated subterranean entrapment disaster. Inundating 7 subway tubes and low-lying coastal basements causes sudden catastrophic mass casualties (1,480 dead, 3,850 missing), comparable to the violent flash deluges of mountain outburst floods.'
       },
       delhi: {
         tag: 'CWC / DJB MONSOON MODEL',
@@ -663,8 +663,11 @@ export class UIManager {
     // Human Toll / Evacuees
     if (this.elTallyDead) this.elTallyDead.textContent = tallies.dead.toLocaleString();
     if (this.elTallyMissing) {
-      const displayMissing = (tallies.evacuated !== undefined) ? tallies.evacuated : tallies.missing;
-      this.elTallyMissing.textContent = displayMissing.toLocaleString();
+      const isMissingUnit = (this.elTallyMissingUnit && this.elTallyMissingUnit.textContent.trim().toLowerCase() === 'missing');
+      const displayMissing = isMissingUnit
+        ? (tallies.missing !== undefined ? tallies.missing : tallies.evacuated)
+        : (tallies.evacuated !== undefined ? tallies.evacuated : tallies.missing);
+      this.elTallyMissing.textContent = (displayMissing || 0).toLocaleString();
     }
     if (this.elTallyHumanRegion) {
       if (tallies.dead === 0) {
@@ -951,9 +954,9 @@ export class UIManager {
       if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'Mentougou & Basin';
     } else if (id === 'newyork') {
       if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Subways Flooded';
-      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Coastal Impact';
+      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Sudden Deluge Toll';
       if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = 'fatalities';
-      if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = 'displaced';
+      if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = 'missing';
       if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'NYC Metro & Harbor';
     } else if (id === 'delhi') {
       if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Works Offline';
