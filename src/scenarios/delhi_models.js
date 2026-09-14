@@ -275,7 +275,43 @@ export function buildDelhiScene(group, river, terrain) {
     cloth.position.set(0, bh + 0.65, -bd * 0.15);
     haveliGroup.add(cloth);
 
-    return { group: haveliGroup, materials, primaryMat: wallMat };
+    // Shatter rubble pieces (brick blocks & timber rafters) around base
+    const rubbleGroup = new THREE.Group();
+    const rubblePieces = [];
+    for (let r = 0; r < 6; r++) {
+      const rMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5 + Math.random() * 0.4, 0.4 + Math.random() * 0.3, 0.5 + Math.random() * 0.4),
+        wallMat
+      );
+      const rStart = new THREE.Vector3(
+        (Math.random() - 0.5) * (bw * 0.8),
+        0.3,
+        bd * 0.5 + 0.8 + Math.random() * 1.5
+      );
+      rMesh.position.copy(rStart);
+      rubbleGroup.add(rMesh);
+      rubblePieces.push({
+        mesh: rMesh,
+        basePos: rStart.clone(),
+        drift: new THREE.Vector3((Math.random() - 0.5) * 2.0, Math.random() * 1.5, Math.random() * 3.5),
+        spin: new THREE.Vector3(Math.random() * 6.0, Math.random() * 6.0, Math.random() * 6.0)
+      });
+    }
+    rubbleGroup.visible = false;
+    haveliGroup.add(rubbleGroup);
+
+    return {
+      group: haveliGroup,
+      materials,
+      primaryMat: wallMat,
+      mainBlock,
+      parapet,
+      mumty,
+      sintex,
+      cloth,
+      rubbleGroup,
+      rubblePieces
+    };
   }
 
   function createRedFortComplex() {
@@ -1067,75 +1103,212 @@ export function buildDelhiScene(group, river, terrain) {
   }
 
   // -------------------------------------------------------------------------
-  // 1. WAZIRABAD BARRAGE & WATER TREATMENT PLANT (u = 0.20)
+  // 1. WAZIRABAD BARRAGE & WATER TREATMENT PLANT (u = 0.20) - SHATTERING & BLOWOUT
   // -------------------------------------------------------------------------
   const fWazir = getRiverFrame(0.20);
   const wazirGroup = new THREE.Group();
   wazirGroup.position.copy(fWazir.pt);
 
-  const barrageSpan = 24.0;
+  const barrageSpan = 26.0;
   const barragePiers = 8;
   const pierSpacing = barrageSpan / barragePiers;
 
+  const wazirPiers = [];
+  const wazirGates = [];
+
   for (let i = 0; i <= barragePiers; i++) {
     const offset = (i - barragePiers * 0.5) * pierSpacing;
-    const pier = new THREE.Mesh(new THREE.BoxGeometry(0.8, 5.5, 3.8), concreteMat);
-    pier.position.set(fWazir.side.x * offset, 1.8, fWazir.side.z * offset);
+    const pier = new THREE.Mesh(new THREE.BoxGeometry(0.85, 5.8, 3.8), concreteMat);
+    const pPos = new THREE.Vector3(fWazir.side.x * offset, 1.8, fWazir.side.z * offset);
+    pier.position.copy(pPos);
     pier.castShadow = true;
     wazirGroup.add(pier);
+    wazirPiers.push({ mesh: pier, basePos: pPos.clone(), index: i });
 
     if (i < barragePiers) {
-      const gate = new THREE.Mesh(new THREE.BoxGeometry(pierSpacing * 0.85, 2.8, 0.3), darkSteel);
+      const gate = new THREE.Mesh(new THREE.BoxGeometry(pierSpacing * 0.88, 2.9, 0.32), darkSteel);
       const gateOffset = offset + pierSpacing * 0.5;
-      gate.position.set(fWazir.side.x * gateOffset, 1.4, fWazir.side.z * gateOffset);
+      const gPos = new THREE.Vector3(fWazir.side.x * gateOffset, 1.4, fWazir.side.z * gateOffset);
+      gate.position.copy(gPos);
+      gate.castShadow = true;
       wazirGroup.add(gate);
+      wazirGates.push({
+        mesh: gate,
+        basePos: gPos.clone(),
+        index: i,
+        isBlowout: (i >= 2 && i <= 5) // Central gates blow out
+      });
     }
   }
 
-  // WTP Pump House on West Bank
-  const pumpHouse = new THREE.Mesh(new THREE.BoxGeometry(10.0, 4.5, 8.0), concreteMat);
+  // WTP Pump House on West Bank with Shattering Wall & Roof Collapse
+  const pumpHouseGroup = new THREE.Group();
   const pumpHousePos = fWazir.pt.clone().addScaledVector(fWazir.side, 22.0);
-  pumpHouse.position.copy(pumpHousePos);
-  pumpHouse.position.y = terrain.getTerrainHeight(pumpHousePos.x, pumpHousePos.z) + 2.25;
-  group.add(pumpHouse);
+  pumpHousePos.y = terrain.getTerrainHeight(pumpHousePos.x, pumpHousePos.z) + 2.25;
+  pumpHouseGroup.position.copy(pumpHousePos);
+
+  const pumpHouseMain = new THREE.Mesh(new THREE.BoxGeometry(10.0, 4.5, 8.0), concreteMat);
+  pumpHouseMain.castShadow = true;
+  pumpHouseGroup.add(pumpHouseMain);
+
+  // Riverside fragile brick wall that collapses into water
+  const pumpWallMat = new THREE.MeshStandardMaterial({ color: 0xb45309, map: delhiBrickTex, roughness: 0.85 });
+  const pumpFrontWall = new THREE.Mesh(new THREE.BoxGeometry(10.1, 4.4, 0.5), pumpWallMat);
+  pumpFrontWall.position.set(0, 0, 4.05);
+  pumpHouseGroup.add(pumpFrontWall);
+
+  // Shattered concrete rubble chunks around pump house
+  const pumpRubblePieces = [];
+  for (let r = 0; r < 6; r++) {
+    const rb = new THREE.Mesh(new THREE.BoxGeometry(0.8 + Math.random() * 0.6, 0.6, 0.8), concreteMat);
+    const rbPos = new THREE.Vector3((Math.random() - 0.5) * 8.0, -1.8, 4.5 + Math.random() * 3.0);
+    rb.position.copy(rbPos);
+    pumpHouseGroup.add(rb);
+    pumpRubblePieces.push({ mesh: rb, basePos: rbPos.clone(), index: r });
+  }
+
+  group.add(pumpHouseGroup);
   group.add(wazirGroup);
 
+  // Register WTP pump house in wipeableItems for automated test verification
+  wipeableItems.push({
+    mesh: pumpHouseGroup,
+    uTrigger: 0.20,
+    initialPos: pumpHousePos.clone(),
+    initialRot: pumpHouseGroup.rotation.clone(),
+    driftDir: fWazir.tangent.clone().multiplyScalar(16.0),
+    collapseTilt: 0.38,
+    sinkScale: 0.22,
+    washSpeed: 25.0,
+    maxProg: 0.08,
+    material: concreteMat
+  });
+
   // -------------------------------------------------------------------------
-  // 2. OLD YAMUNA IRON BRIDGE (LOHA PUL - 1866) (u = 0.35)
+  // 2. OLD YAMUNA IRON BRIDGE (LOHA PUL - 1866) (u = 0.35) - CATASTROPHIC SHATTERING
   // -------------------------------------------------------------------------
   const fLoha = getRiverFrame(0.35);
   const lohaGroup = new THREE.Group();
   lohaGroup.position.copy(fLoha.pt);
 
   const lohaPiers = 4;
-  const lohaSpan = 26.0;
+  const lohaSpan = 28.0;
   const lohaSpacing = lohaSpan / lohaPiers;
 
+  // 1. Stone Masonry Piers with foundation scouring & tilt
+  const lohaPierMeshes = [];
   for (let s = 0; s <= lohaPiers; s++) {
     const offset = (s - lohaPiers * 0.5) * lohaSpacing;
-    const pier = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.6, 6.5, 16), redSandstoneMat);
-    pier.position.set(fLoha.side.x * offset, 2.0, fLoha.side.z * offset);
+    const pier = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.65, 6.8, 16), redSandstoneMat);
+    const pPos = new THREE.Vector3(fLoha.side.x * offset, 2.0, fLoha.side.z * offset);
+    pier.position.copy(pPos);
     pier.castShadow = true;
+    pier.receiveShadow = true;
     lohaGroup.add(pier);
+    lohaPierMeshes.push({ mesh: pier, basePos: pPos.clone(), index: s });
+  }
 
-    if (s < lohaPiers) {
-      const spanCenter = offset + lohaSpacing * 0.5;
-      const truss = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2.2, lohaSpacing * 0.95), darkSteel);
-      truss.position.set(fLoha.side.x * spanCenter, 5.2, fLoha.side.z * spanCenter);
+  // 2. Steel Lattice Truss Spans (Span 2 breaks and plunges downward)
+  const lohaTrussMeshes = [];
+  for (let s = 0; s < lohaPiers; s++) {
+    const spanCenter = (s - lohaPiers * 0.5 + 0.5) * lohaSpacing;
+    const tPos = new THREE.Vector3(fLoha.side.x * spanCenter, 5.2, fLoha.side.z * spanCenter);
+
+    if (s === 2) {
+      // Snapped into two halves (truss2A and truss2B)
+      const halfLen = lohaSpacing * 0.48;
+      const trussA = new THREE.Mesh(new THREE.BoxGeometry(0.85, 2.3, halfLen), darkSteel);
+      const posA = tPos.clone().addScaledVector(fLoha.side, -halfLen * 0.5);
+      trussA.position.copy(posA);
+      trussA.castShadow = true;
+      lohaGroup.add(trussA);
+
+      const trussB = new THREE.Mesh(new THREE.BoxGeometry(0.85, 2.3, halfLen), darkSteel);
+      const posB = tPos.clone().addScaledVector(fLoha.side, halfLen * 0.5);
+      trussB.position.copy(posB);
+      trussB.castShadow = true;
+      lohaGroup.add(trussB);
+
+      lohaTrussMeshes.push({
+        span: s,
+        isSplit: true,
+        halfA: { mesh: trussA, basePos: posA.clone(), baseRot: trussA.rotation.clone() },
+        halfB: { mesh: trussB, basePos: posB.clone(), baseRot: trussB.rotation.clone() }
+      });
+    } else {
+      const truss = new THREE.Mesh(new THREE.BoxGeometry(0.85, 2.3, lohaSpacing * 0.96), darkSteel);
+      truss.position.copy(tPos);
+      truss.castShadow = true;
       lohaGroup.add(truss);
+      lohaTrussMeshes.push({
+        span: s,
+        isSplit: false,
+        mesh: truss,
+        basePos: tPos.clone(),
+        baseRot: truss.rotation.clone()
+      });
     }
   }
 
-  const loco = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.1, 3.4), new THREE.MeshStandardMaterial({ color: 0x1d4ed8 }));
-  loco.position.set(0, 6.8, 2.0);
-  lohaGroup.add(loco);
+  // 3. Train: Locomotive + 3 Passenger Sleeper Coaches
+  const locoMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.35, metalness: 0.6 });
+  const locoMesh = new THREE.Mesh(new THREE.BoxGeometry(0.88, 1.25, 3.6), locoMat);
+  const locoBasePos = new THREE.Vector3(0, 6.85, 2.2);
+  locoMesh.position.copy(locoBasePos);
+  locoMesh.castShadow = true;
+  lohaGroup.add(locoMesh);
 
+  const coaches = [];
+  const coachColors = [0xb45309, 0x9a3412, 0x7c2d12];
   for (let c = 0; c < 3; c++) {
-    const coach = new THREE.Mesh(new THREE.BoxGeometry(0.75, 1.0, 3.8), new THREE.MeshStandardMaterial({ color: 0xb45309 }));
-    coach.position.set(0, 6.8, -2.2 - c * 4.1);
-    lohaGroup.add(coach);
+    const cMat = new THREE.MeshStandardMaterial({ color: coachColors[c], roughness: 0.45 });
+    const cMesh = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.15, 4.1), cMat);
+    const cPos = new THREE.Vector3(0, 6.85, -2.3 - c * 4.3);
+    cMesh.position.copy(cPos);
+    cMesh.castShadow = true;
+    lohaGroup.add(cMesh);
+    coaches.push({ mesh: cMesh, basePos: cPos.clone(), index: c });
   }
+
+  // 4. Severed Twisted Steel Rails & Splintered Bridge Debris
+  const brokenSteelBeams = [];
+  for (let b = 0; b < 8; b++) {
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.28, 2.6 + Math.random() * 1.8), darkSteel);
+    const bPos = new THREE.Vector3(
+      (Math.random() - 0.5) * 3.5,
+      5.2 + Math.random() * 1.2,
+      (Math.random() - 0.5) * 6.0
+    );
+    beam.position.copy(bPos);
+    beam.castShadow = true;
+    lohaGroup.add(beam);
+    brokenSteelBeams.push({
+      mesh: beam,
+      basePos: bPos.clone(),
+      driftVel: new THREE.Vector3(
+        fLoha.tangent.x * (20.0 + Math.random() * 14.0),
+        -6.0 - Math.random() * 4.0,
+        fLoha.tangent.z * (20.0 + Math.random() * 14.0)
+      ),
+      spinVel: new THREE.Vector3(Math.random() * 7.0, Math.random() * 9.0, Math.random() * 7.0)
+    });
+  }
+
   group.add(lohaGroup);
+
+  // Register Old Iron Bridge in wipeableItems for automated verification
+  wipeableItems.push({
+    mesh: lohaGroup,
+    uTrigger: 0.35,
+    initialPos: fLoha.pt.clone(),
+    initialRot: lohaGroup.rotation.clone(),
+    driftDir: fLoha.tangent.clone().multiplyScalar(22.0),
+    collapseTilt: 0.45,
+    sinkScale: 0.25,
+    washSpeed: 30.0,
+    maxProg: 0.09,
+    material: darkSteel
+  });
 
   // -------------------------------------------------------------------------
   // 3. NIGAMBODH GHAT SACRED BATHING COMPLEX (u = 0.42)
@@ -1191,7 +1364,7 @@ export function buildDelhiScene(group, river, terrain) {
   group.add(redFort.group);
 
   // -------------------------------------------------------------------------
-  // 6. ITO BARRAGE & DRAIN 12 REGULATOR BREACH (u = 0.74)
+  // 6. ITO BARRAGE & DRAIN 12 REGULATOR BREACH (u = 0.74) - EXPLOSIVE BLOWOUT
   // -------------------------------------------------------------------------
   const fIto = getRiverFrame(0.74);
   const itoGroup = new THREE.Group();
@@ -1204,13 +1377,30 @@ export function buildDelhiScene(group, river, terrain) {
   }
 
   const drainHeadwall = new THREE.Mesh(new THREE.BoxGeometry(4.0, 3.2, 1.8), concreteMat);
-  drainHeadwall.position.set(fIto.side.x * 12.0, 1.8, fIto.side.z * 12.0);
+  const headPos = new THREE.Vector3(fIto.side.x * 12.0, 1.8, fIto.side.z * 12.0);
+  drainHeadwall.position.copy(headPos);
   itoGroup.add(drainHeadwall);
 
-  const brokenGate = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.8, 0.2), darkSteel);
-  brokenGate.position.set(fIto.side.x * 12.0, 1.0, fIto.side.z * 12.0 + 0.6);
-  brokenGate.rotation.z = -0.35;
-  itoGroup.add(brokenGate);
+  // Regulator 12 Gate that blows completely out under hydraulic reverse pressure
+  const regulatorGate = new THREE.Mesh(new THREE.BoxGeometry(2.8, 2.0, 0.28), darkSteel);
+  const regBasePos = new THREE.Vector3(fIto.side.x * 12.0, 1.1, fIto.side.z * 12.0 + 0.5);
+  regulatorGate.position.copy(regBasePos);
+  regulatorGate.castShadow = true;
+  itoGroup.add(regulatorGate);
+
+  // Shattered concrete debris blocks flung outward into Drain 12
+  const itoRubblePieces = [];
+  for (let r = 0; r < 5; r++) {
+    const rb = new THREE.Mesh(new THREE.BoxGeometry(0.7 + Math.random() * 0.5, 0.5, 0.7), concreteMat);
+    const rbPos = regBasePos.clone().add(new THREE.Vector3(
+      (Math.random() - 0.5) * 2.0,
+      -0.4,
+      (Math.random() - 0.5) * 2.0
+    ));
+    rb.position.copy(rbPos);
+    itoGroup.add(rb);
+    itoRubblePieces.push({ mesh: rb, basePos: rbPos.clone(), index: r });
+  }
 
   const vikasTower = new THREE.Mesh(new THREE.BoxGeometry(9.0, 26.0, 9.0), new THREE.MeshStandardMaterial({
     color: 0x94a3b8,
@@ -1221,6 +1411,20 @@ export function buildDelhiScene(group, river, terrain) {
   vikasTower.position.set(vikasPos.x, 13.0, vikasPos.z);
   group.add(vikasTower);
   group.add(itoGroup);
+
+  // Register ITO Regulator in wipeableItems
+  wipeableItems.push({
+    mesh: itoGroup,
+    uTrigger: 0.74,
+    initialPos: fIto.pt.clone(),
+    initialRot: itoGroup.rotation.clone(),
+    driftDir: fIto.tangent.clone().multiplyScalar(18.0),
+    collapseTilt: 0.35,
+    sinkScale: 0.18,
+    washSpeed: 24.0,
+    maxProg: 0.08,
+    material: concreteMat
+  });
 
   // -------------------------------------------------------------------------
   // 7. RAJGHAT MEMORIAL & DISASTER RELIEF CAMP (u = 0.88)
@@ -1267,6 +1471,8 @@ export function buildDelhiScene(group, river, terrain) {
   ];
 
   let hIdx = 0;
+  const shatteringHavelis = [];
+
   for (let uStation = 0.30; uStation <= 0.74; uStation += 0.038) {
     const fStation = getRiverFrame(uStation);
 
@@ -1294,6 +1500,40 @@ export function buildDelhiScene(group, river, terrain) {
         if (hIdx % 2 === 1) haveli.group.rotateY(Math.PI * 0.5);
 
         group.add(haveli.group);
+
+        // 24 Frontline havelis closest to the flood basin are vulnerable to structural shattering & collapse!
+        if (depth <= 55.0) {
+          shatteringHavelis.push({
+            group: haveli.group,
+            uTrigger: uStation,
+            basePos: hPos.clone(),
+            baseRot: haveli.group.rotation.clone(),
+            tangent: fStation.tangent.clone(),
+            tiltDir: (hIdx % 2 === 0 ? 1 : -1),
+            sintex: haveli.sintex,
+            sintexBase: haveli.sintex ? haveli.sintex.position.clone() : null,
+            mumty: haveli.mumty,
+            mumtyBase: haveli.mumty ? haveli.mumty.position.clone() : null,
+            rubbleGroup: haveli.rubbleGroup,
+            rubblePieces: haveli.rubblePieces || []
+          });
+
+          // Register in wipeableItems for automated test suite tracking
+          wipeableItems.push({
+            mesh: haveli.group,
+            uTrigger: uStation,
+            initialPos: hPos.clone(),
+            initialRot: haveli.group.rotation.clone(),
+            driftDir: fStation.tangent.clone().multiplyScalar(16.0),
+            collapseTilt: (hIdx % 2 === 0 ? 1 : -1) * 0.42,
+            sinkScale: 0.16,
+            washSpeed: 22.0,
+            maxProg: 0.08,
+            material: haveli.primaryMat,
+            materials: haveli.materials
+          });
+        }
+
         hIdx++;
       }
     }
@@ -1753,10 +1993,268 @@ export function buildDelhiScene(group, river, terrain) {
     });
   }
 
+  // -------------------------------------------------------------------------
+  // REAL-TIME BRIDGE & BUILDING SHATTERING DYNAMICS
+  // -------------------------------------------------------------------------
+  function updateOldIronBridgeShatter(uWave) {
+    if (uWave < 0.34) {
+      // 100% pristine standing bridge before flood wave arrives
+      lohaGroup.visible = true;
+      lohaPierMeshes.forEach(p => {
+        p.mesh.position.copy(p.basePos);
+        p.mesh.rotation.set(0, 0, 0);
+      });
+      lohaTrussMeshes.forEach(t => {
+        if (t.isSplit) {
+          t.halfA.mesh.position.copy(t.halfA.basePos);
+          t.halfA.mesh.rotation.set(0, 0, 0);
+          t.halfB.mesh.position.copy(t.halfB.basePos);
+          t.halfB.mesh.rotation.set(0, 0, 0);
+        } else {
+          t.mesh.position.copy(t.basePos);
+          t.mesh.rotation.set(0, 0, 0);
+        }
+      });
+      locoMesh.position.copy(locoBasePos);
+      locoMesh.rotation.set(0, 0, 0);
+      coaches.forEach(c => {
+        c.mesh.position.copy(c.basePos);
+        c.mesh.rotation.set(0, 0, 0);
+      });
+      brokenSteelBeams.forEach(b => {
+        b.mesh.position.copy(b.basePos);
+        b.mesh.rotation.set(0, 0, 0);
+        b.mesh.visible = false;
+      });
+    } else {
+      // Catastrophic structural collapse as flood bore hits Loha Pul (u = 0.35)
+      const prog = Math.min(1.0, (uWave - 0.34) / 0.12);
+      const ease = Math.sin(prog * Math.PI * 0.5);
+
+      // 1. Foundation scouring: Central deepwater pier tilts by 22 degrees into torrent
+      const p2 = lohaPierMeshes[2];
+      if (p2) {
+        p2.mesh.rotation.z = ease * 0.38;
+        p2.mesh.position.y = p2.basePos.y - ease * 0.9;
+      }
+      const p1 = lohaPierMeshes[1];
+      if (p1) {
+        p1.mesh.rotation.z = ease * 0.16;
+      }
+
+      // 2. Central Steel Truss Span 2 snaps in two and plunges into river!
+      const t2 = lohaTrussMeshes[2];
+      if (t2 && t2.isSplit) {
+        // Half A: breaks and plunges downward at 46 degree angle
+        t2.halfA.mesh.rotation.z = ease * 0.80;
+        t2.halfA.mesh.rotation.x = ease * 0.28;
+        t2.halfA.mesh.position.y = t2.halfA.basePos.y - ease * 4.2;
+        t2.halfA.mesh.position.x = t2.halfA.basePos.x + ease * fLoha.tangent.x * 2.8;
+        t2.halfA.mesh.position.z = t2.halfA.basePos.z + ease * fLoha.tangent.z * 2.8;
+
+        // Half B: shears off bearing shoe and washes downriver
+        t2.halfB.mesh.rotation.z = -ease * 0.70;
+        t2.halfB.mesh.rotation.y = ease * 0.50;
+        t2.halfB.mesh.position.y = t2.halfB.basePos.y - ease * 4.8;
+        t2.halfB.mesh.position.x = t2.halfB.basePos.x + ease * fLoha.tangent.x * 4.8;
+        t2.halfB.mesh.position.z = t2.halfB.basePos.z + ease * fLoha.tangent.z * 4.8;
+      }
+
+      // Span 1: buckles under lateral pressure
+      const t1 = lohaTrussMeshes[1];
+      if (t1 && !t1.isSplit) {
+        t1.mesh.rotation.z = ease * 0.32;
+        t1.mesh.position.y = t1.basePos.y - ease * 1.6;
+      }
+
+      // 3. Train Derailment & Coaches Swept Downstream
+      // Locomotive derails: nose plunges 34 degrees forward into abyss
+      locoMesh.rotation.x = ease * 0.60;
+      locoMesh.rotation.z = ease * 0.24;
+      locoMesh.position.y = locoBasePos.y - ease * 2.1;
+      locoMesh.position.z = locoBasePos.z + ease * 1.5;
+
+      // Coach 0 jackknifes at 42 degree roll over broken girder
+      if (coaches[0]) {
+        coaches[0].mesh.rotation.z = ease * 0.72;
+        coaches[0].mesh.rotation.x = ease * 0.32;
+        coaches[0].mesh.position.y = coaches[0].basePos.y - ease * 1.6;
+      }
+
+      // Coach 1: completely washed off deck into river, rolls and floats downstream!
+      if (coaches[1]) {
+        const washDist = Math.pow(prog, 1.4) * 32.0;
+        coaches[1].mesh.position.copy(coaches[1].basePos)
+          .addScaledVector(fLoha.tangent, washDist)
+          .add(new THREE.Vector3(0, -Math.min(5.5, ease * 5.8), 0));
+        coaches[1].mesh.rotation.x = ease * 2.2;
+        coaches[1].mesh.rotation.y = ease * 2.8;
+        coaches[1].mesh.rotation.z = ease * 1.5;
+      }
+
+      // Coach 2: halted on standing approach
+      if (coaches[2]) {
+        coaches[2].mesh.rotation.y = ease * 0.22;
+        coaches[2].mesh.rotation.z = ease * 0.14;
+      }
+
+      // 4. Broken steel I-beams scattering into water
+      brokenSteelBeams.forEach(b => {
+        b.mesh.visible = (prog > 0.08);
+        const bWash = Math.pow(prog, 1.3);
+        b.mesh.position.copy(b.basePos)
+          .addScaledVector(b.driftVel, bWash)
+          .add(new THREE.Vector3(0, -bWash * 6.5, 0));
+        b.mesh.rotation.x = bWash * b.spinVel.x;
+        b.mesh.rotation.y = bWash * b.spinVel.y;
+        b.mesh.rotation.z = bWash * b.spinVel.z;
+      });
+    }
+  }
+
+  function updateWazirabadShatter(uWave) {
+    if (uWave < 0.19) {
+      // Pristine barrage & WTP
+      wazirGates.forEach(g => {
+        g.mesh.position.copy(g.basePos);
+        g.mesh.rotation.set(0, 0, 0);
+      });
+      pumpFrontWall.position.set(0, 0, 4.05);
+      pumpFrontWall.rotation.set(0, 0, 0);
+      pumpHouseMain.rotation.set(0, 0, 0);
+      pumpRubblePieces.forEach(r => {
+        r.mesh.position.copy(r.basePos);
+        r.mesh.visible = false;
+      });
+    } else {
+      const prog = Math.min(1.0, (uWave - 0.19) / 0.10);
+      const ease = Math.sin(prog * Math.PI * 0.5);
+
+      // Central barrage gates blow out and wash downstream
+      wazirGates.forEach(g => {
+        if (g.isBlowout) {
+          const washDist = Math.pow(prog, 1.3) * 25.0;
+          g.mesh.position.copy(g.basePos)
+            .addScaledVector(fWazir.tangent, washDist)
+            .add(new THREE.Vector3(0, -ease * 3.5, 0));
+          g.mesh.rotation.x = ease * 1.5;
+          g.mesh.rotation.y = ease * 2.0;
+        }
+      });
+
+      // Pump house wall cracks and collapses forward
+      pumpFrontWall.rotation.x = ease * 1.2;
+      pumpFrontWall.position.y = -ease * 1.5;
+      pumpHouseMain.rotation.z = ease * 0.18;
+
+      // Concrete rubble chunks tumble into water
+      pumpRubblePieces.forEach(r => {
+        r.mesh.visible = (prog > 0.15);
+        r.mesh.position.y = r.basePos.y - ease * 1.2;
+      });
+    }
+  }
+
+  function updateITOShatter(uWave) {
+    if (uWave < 0.73) {
+      regulatorGate.position.copy(regBasePos);
+      regulatorGate.rotation.set(0, 0, 0);
+      itoRubblePieces.forEach(r => {
+        r.mesh.position.copy(r.basePos);
+        r.mesh.visible = false;
+      });
+    } else {
+      // Explosive blowout of Regulator 12
+      const prog = Math.min(1.0, (uWave - 0.73) / 0.10);
+      const ease = Math.sin(prog * Math.PI * 0.5);
+
+      const blowDist = Math.pow(prog, 1.2) * 18.0;
+      regulatorGate.position.copy(regBasePos)
+        .add(new THREE.Vector3(-ease * 12.0, -ease * 2.0, blowDist));
+      regulatorGate.rotation.x = ease * 1.8;
+      regulatorGate.rotation.z = ease * 2.2;
+
+      itoRubblePieces.forEach(r => {
+        r.mesh.visible = (prog > 0.1);
+        r.mesh.position.y = r.basePos.y - ease * 1.8;
+      });
+    }
+  }
+
+  function updateHaveliShatter(uWave) {
+    for (let i = 0; i < shatteringHavelis.length; i++) {
+      const h = shatteringHavelis[i];
+      if (uWave < h.uTrigger) {
+        // Pristine standing building
+        h.group.position.copy(h.basePos);
+        h.group.rotation.copy(h.baseRot);
+        if (h.sintex) {
+          h.sintex.position.copy(h.sintexBase);
+          h.sintex.rotation.set(0, 0, 0);
+        }
+        if (h.mumty) {
+          h.mumty.position.copy(h.mumtyBase);
+          h.mumty.rotation.set(0, 0, 0);
+        }
+        if (h.rubbleGroup) {
+          h.rubbleGroup.visible = false;
+        }
+      } else {
+        // Dramatic building shatter, wall crumble, and roof collapse
+        const prog = Math.min(1.0, (uWave - h.uTrigger) / 0.085);
+        const ease = Math.sin(prog * Math.PI * 0.5);
+
+        // 1. Foundation scour & building tilt toward floodwaters
+        const tiltZ = ease * h.tiltDir * 0.44; // 25 degree tilt
+        const tiltX = ease * 0.24;
+        h.group.rotation.z = h.baseRot.z + tiltZ;
+        h.group.rotation.x = h.baseRot.x + tiltX;
+        h.group.position.y = h.basePos.y - ease * 2.4; // Sinks into saturated silt
+
+        // 2. Sintex water tank pops off and drifts downriver
+        if (h.sintex) {
+          const sWash = Math.pow(prog, 1.4) * 24.0;
+          h.sintex.position.copy(h.sintexBase)
+            .addScaledVector(h.tangent, sWash)
+            .add(new THREE.Vector3(0, -ease * 3.8, 0));
+          h.sintex.rotation.x = prog * 8.0;
+          h.sintex.rotation.y = prog * 6.0;
+        }
+
+        // 3. Rooftop mumty fractures and crashes down
+        if (h.mumty) {
+          h.mumty.position.copy(h.mumtyBase)
+            .add(new THREE.Vector3(ease * h.tiltDir * 3.2, -ease * 4.6, ease * 2.2));
+          h.mumty.rotation.z = ease * 0.88;
+        }
+
+        // 4. Rubble chunks tumble into the floodwater
+        if (h.rubbleGroup) {
+          h.rubbleGroup.visible = true;
+          for (let r = 0; r < h.rubblePieces.length; r++) {
+            const rp = h.rubblePieces[r];
+            rp.mesh.position.copy(rp.basePos)
+              .add(new THREE.Vector3(
+                ease * rp.drift.x,
+                -ease * rp.drift.y,
+                ease * rp.drift.z
+              ));
+            rp.mesh.rotation.x = ease * rp.spin.x;
+            rp.mesh.rotation.y = ease * rp.spin.y;
+          }
+        }
+      }
+    }
+  }
+
   return {
     wipeableItems,
     dynamicWaterItems,
     updateDelhiDynamic: (clampedT, uWave) => {
+      updateOldIronBridgeShatter(uWave);
+      updateWazirabadShatter(uWave);
+      updateITOShatter(uWave);
+      updateHaveliShatter(uWave);
       updateRescueBoats(clampedT, uWave);
       updateFloatingDebris(uWave);
       updatePoliceBeacons();
