@@ -13,8 +13,8 @@
     }
   }
   </script>
-  <script type="module" crossorigin src="./assets/index-MRRqXgbe.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-DRLEPLai.css">
+  <script type="module" crossorigin src="./assets/index-BpuloVhr.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-CuaiRLaq.css">
 </head>
 <body>
   <!-- 3D WebGL Canvas Container -->
@@ -64,6 +64,10 @@
       <button class="incident-flyer-btn disaster-map-btn" id="disaster-map-btn" title="Toggle CWC Flood Risk Hazard GIS Heatmap / 3D Orthophoto">
         <span class="flyer-btn-icon">🗺️</span>
         <span>Disaster Map</span>
+      </button>
+      <button class="incident-flyer-btn flowchart-btn" id="open-flowchart-btn" title="View 7-Stage Disaster Flowchart">
+        <span class="flyer-btn-icon">📊</span>
+        <span>Flowchart</span>
       </button>
     </nav>
 
@@ -287,6 +291,17 @@
           <span class="fmc-label">Power Grid Failure</span>
           <span class="fmc-val yellow" id="fmc-grid">345 kV Arc-Blast</span>
           <span class="fmc-sub">ConEd 14th St Substation</span>
+        </div>
+      </div>
+
+      <!-- 7-Stage Disaster Flowchart Cascade -->
+      <div class="flyer-section" id="flyer-flowchart-section">
+        <div class="flyer-section-title">
+          <span>📊</span>
+          <span id="flyer-flowchart-title">DISASTER CASCADE FLOWCHART • HYDRODYNAMIC CAUSAL CHAIN</span>
+        </div>
+        <div class="disaster-flowchart-container" id="disaster-flowchart-container">
+          <!-- Populated dynamically by UIManager -->
         </div>
       </div>
 
