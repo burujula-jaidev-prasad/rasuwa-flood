@@ -767,26 +767,35 @@ export function buildNewYorkScene(group, river, terrain) {
     });
 
     // 5. Twin Classic Orange Funnels (Smokestacks)
+    const funnels = [];
     [-2.0, 2.0].forEach(zPos => {
+      const funnelGroup = new THREE.Group();
+      funnelGroup.position.set(0, 6.1, zPos);
       const funnel = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.55, 1.8, 12), funnelMat);
-      funnel.position.set(0, 6.1, zPos);
       funnel.scale.set(1.3, 1.0, 0.85);
-      ferryGroup.add(funnel);
+      funnelGroup.add(funnel);
 
       const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.35, 12), blackCapMat);
-      cap.position.set(0, 7.05, zPos);
+      cap.position.y = 0.95;
       cap.scale.set(1.3, 1.0, 0.85);
-      ferryGroup.add(cap);
+      funnelGroup.add(cap);
+
+      ferryGroup.add(funnelGroup);
+      funnels.push(funnelGroup);
     });
 
     // 6. Navigation Radar Mast & Running Lights
+    const mastGroup = new THREE.Group();
+    mastGroup.position.set(0, 6.6, 0);
+
     const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 2.8, 8), railingMat);
-    mast.position.set(0, 6.6, 0);
-    ferryGroup.add(mast);
+    mastGroup.add(mast);
 
     const radarBar = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.1, 0.22), darkDeckMat);
-    radarBar.position.set(0, 8.0, 0);
-    ferryGroup.add(radarBar);
+    radarBar.position.set(0, 1.4, 0);
+    mastGroup.add(radarBar);
+
+    ferryGroup.add(mastGroup);
 
     // Red & Green Navigation Running Lights
     const portLight = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
@@ -797,7 +806,7 @@ export function buildNewYorkScene(group, river, terrain) {
     stbdLight.position.set(2.1, 6.0, 0);
     ferryGroup.add(stbdLight);
 
-    return { group: ferryGroup, materials, primaryMat: orangeHullMat };
+    return { group: ferryGroup, materials, primaryMat: orangeHullMat, mastGroup, funnels };
   }
 
   // -------------------------------------------------------------------------
@@ -1980,7 +1989,19 @@ export function buildNewYorkScene(group, river, terrain) {
 
     libertyGroup.add(ferryGroup);
 
-    return { group: libertyGroup, materials, primaryMat: copperPatinaMat };
+    return {
+      group: libertyGroup,
+      materials,
+      primaryMat: copperPatinaMat,
+      libertyFerry: {
+        group: ferryGroup,
+        mast: fMast,
+        basePos: ferryGroup.position.clone(),
+        baseRot: ferryGroup.rotation.clone(),
+        mastBasePos: fMast.position.clone(),
+        mastBaseRot: fMast.rotation.clone()
+      }
+    };
   }
 
   /**
@@ -2700,8 +2721,10 @@ export function buildNewYorkScene(group, river, terrain) {
   // STATUE OF LIBERTY NATIONAL MONUMENT & LIBERTY ISLAND (Upper New York Bay at u = 0.32)
   // Placed directly in the open water of Upper New York Bay, completely surrounded by harbor water
   // -------------------------------------------------------------------------
+  let ladyLibertyObj = null;
   {
     const ladyLiberty = createStatueOfLiberty();
+    ladyLibertyObj = ladyLiberty;
     const fLib = getRiverFrame(0.32);
     // Placed at side = -13.0m in the western waters of Upper New York Bay
     const libPos = fLib.pt.clone().addScaledVector(fLib.side, -13.0);
@@ -2883,7 +2906,9 @@ export function buildNewYorkScene(group, river, terrain) {
       group: siFerryObj.group,
       basePos: whitehallSlips.berth1Pos.clone(),
       baseRot: new THREE.Euler(0, 0, 0),
-      materials: siFerryObj.materials
+      materials: siFerryObj.materials,
+      mastGroup: siFerryObj.mastGroup,
+      funnels: siFerryObj.funnels
     },
     catamaran: {
       group: catamaranObj.group,
@@ -2909,7 +2934,15 @@ export function buildNewYorkScene(group, river, terrain) {
       apron2: whitehallSlips.apron2,
       baseApron1Y: whitehallSlips.apron1 ? whitehallSlips.apron1.position.y : 1.8,
       baseApron2Y: whitehallSlips.apron2 ? whitehallSlips.apron2.position.y : 1.8
-    }
+    },
+    libertyFerry: (ladyLibertyObj && ladyLibertyObj.libertyFerry) ? {
+      group: ladyLibertyObj.libertyFerry.group,
+      mast: ladyLibertyObj.libertyFerry.mast,
+      basePos: ladyLibertyObj.libertyFerry.basePos.clone(),
+      baseRot: ladyLibertyObj.libertyFerry.baseRot.clone(),
+      mastBasePos: ladyLibertyObj.libertyFerry.mastBasePos.clone(),
+      mastBaseRot: ladyLibertyObj.libertyFerry.mastBaseRot.clone()
+    } : null
   };
 
   // -------------------------------------------------------------------------
@@ -4515,36 +4548,107 @@ export function buildNewYorkScene(group, river, terrain) {
   }
 
   // -------------------------------------------------------------------------
-  // UPDATE STATEN ISLAND FERRY, NYC CATAMARAN & ADRIFT TANKER BARGE
+  // UPDATE STATEN ISLAND FERRY, NYC CATAMARAN, LIBERTY FERRY & ADRIFT BARGE
+  // Dynamic disaster physics: mooring cable snap, hull listing, mast & funnel collapse,
+  // slip apron plunge, waterlogged sinking, and pristine restoration at t = 0
   // -------------------------------------------------------------------------
   function updateFerryTerminalVessels(t, uWave) {
     if (!vesselsObj) return;
-    const { siFerry, catamaran, tankerBarge, uscgCutter, slipAprons } = vesselsObj;
+    const { siFerry, catamaran, tankerBarge, uscgCutter, slipAprons, libertyFerry } = vesselsObj;
 
     if (t <= 0.0001 || uWave <= 0.0001) {
-      // Pristine baseline reset
+      // Pristine baseline reset for all vessels and terminal structures
       siFerry.group.position.copy(siFerry.basePos);
-      siFerry.group.rotation.copy(siFerry.baseRot);
+      siFerry.group.rotation.set(0, 0, 0);
+      if (siFerry.mastGroup) {
+        siFerry.mastGroup.position.set(0, 6.6, 0);
+        siFerry.mastGroup.rotation.set(0, 0, 0);
+      }
+      if (siFerry.funnels && siFerry.funnels.length >= 2) {
+        siFerry.funnels[0].position.set(0, 6.1, -2.0);
+        siFerry.funnels[0].rotation.set(0, 0, 0);
+        siFerry.funnels[1].position.set(0, 6.1, 2.0);
+        siFerry.funnels[1].rotation.set(0, 0, 0);
+      }
+
       catamaran.group.position.copy(catamaran.basePos);
-      catamaran.group.rotation.copy(catamaran.baseRot);
+      catamaran.group.rotation.set(0, 0, 0);
+
       tankerBarge.group.position.copy(tankerBarge.basePos);
       tankerBarge.group.rotation.copy(tankerBarge.baseRot);
+
       if (uscgCutter) {
         uscgCutter.group.position.copy(uscgCutter.basePos);
         uscgCutter.group.rotation.copy(uscgCutter.baseRot);
         if (uscgCutter.strobeLight) uscgCutter.strobeLight.intensity = 1.5;
       }
+
       if (slipAprons && slipAprons.apron1) {
-        slipAprons.apron1.position.y = slipAprons.baseApron1Y;
-        slipAprons.apron1.rotation.x = 0.12;
+        slipAprons.apron1.position.set(0, slipAprons.baseApron1Y, -1.8);
+        slipAprons.apron1.rotation.set(0.12, 0, 0);
       }
       if (slipAprons && slipAprons.apron2) {
-        slipAprons.apron2.position.y = slipAprons.baseApron2Y;
-        slipAprons.apron2.rotation.x = 0.14;
+        slipAprons.apron2.position.set(0, slipAprons.baseApron2Y, -1.6);
+        slipAprons.apron2.rotation.set(0.14, 0, 0);
+      }
+
+      if (libertyFerry) {
+        libertyFerry.group.position.copy(libertyFerry.basePos);
+        libertyFerry.group.rotation.copy(libertyFerry.baseRot);
+        if (libertyFerry.mast) {
+          libertyFerry.mast.position.copy(libertyFerry.mastBasePos);
+          libertyFerry.mast.rotation.copy(libertyFerry.mastBaseRot);
+        }
       }
       return;
     }
 
+    // 0. LIBERTY ISLAND FERRY ("MISS LIBERTY" AT u = 0.32)
+    if (libertyFerry) {
+      if (uWave < 0.26) {
+        // Calm harbor rocking alongside the pier
+        const calmF = t * 6.5;
+        libertyFerry.group.position.copy(libertyFerry.basePos);
+        libertyFerry.group.position.y = libertyFerry.basePos.y + Math.sin(calmF) * 0.04;
+        libertyFerry.group.rotation.copy(libertyFerry.baseRot);
+        libertyFerry.group.rotation.z = libertyFerry.baseRot.z + Math.cos(calmF * 0.8) * 0.009;
+        if (libertyFerry.mast) {
+          libertyFerry.mast.position.copy(libertyFerry.mastBasePos);
+          libertyFerry.mast.rotation.copy(libertyFerry.mastBaseRot);
+        }
+      } else {
+        const libSurge = Math.min(1.0, (uWave - 0.26) / 0.12);
+        const libBreakProg = Math.min(1.0, Math.max(0.0, (uWave - 0.30) / 0.16));
+
+        const libHeave = Math.sin(t * 15.0) * 0.28 * libSurge;
+        const libDriftX = libBreakProg * 10.5 + Math.sin(t * 7.5) * 0.45 * libBreakProg;
+        const libDriftZ = libBreakProg * 5.8 + Math.cos(t * 6.5) * 0.4 * libBreakProg;
+        const libWaterlogSink = libBreakProg * 1.1;
+
+        libertyFerry.group.position.x = libertyFerry.basePos.x + libDriftX;
+        libertyFerry.group.position.y = libertyFerry.basePos.y + libSurge * 2.2 - libWaterlogSink + libHeave;
+        libertyFerry.group.position.z = libertyFerry.basePos.z + libDriftZ;
+
+        // Severe list, pitch & yaw as storm surge sweeps over the island pier
+        const libRoll = libBreakProg * 0.72 + Math.cos(t * 11.0) * (0.06 + libBreakProg * 0.08);
+        const libPitch = -libBreakProg * 0.32 + Math.sin(t * 9.5) * (0.04 + libBreakProg * 0.05);
+        const libYaw = libBreakProg * 0.48;
+
+        libertyFerry.group.rotation.x = libertyFerry.baseRot.x + libPitch;
+        libertyFerry.group.rotation.y = libertyFerry.baseRot.y + libYaw;
+        libertyFerry.group.rotation.z = libertyFerry.baseRot.z + libRoll;
+
+        // Snapping mast over cabin roof
+        if (libertyFerry.mast) {
+          libertyFerry.mast.rotation.z = libertyFerry.mastBaseRot.z - libBreakProg * 1.3;
+          libertyFerry.mast.rotation.x = libertyFerry.mastBaseRot.x + libBreakProg * 0.25;
+          libertyFerry.mast.position.y = libertyFerry.mastBasePos.y - libBreakProg * 0.55;
+          libertyFerry.mast.position.x = libertyFerry.mastBasePos.x - libBreakProg * 0.3;
+        }
+      }
+    }
+
+    // WHITEHALL TERMINAL VESSELS & APRONS
     if (uWave < 0.42) {
       // Normal harbor state with gentle water rocking
       const calmPhase = t * 7.0;
@@ -4553,6 +4657,17 @@ export function buildNewYorkScene(group, river, terrain) {
       siFerry.group.position.x = siFerry.basePos.x + Math.sin(calmPhase * 0.5) * 0.04;
       siFerry.group.rotation.copy(siFerry.baseRot);
       siFerry.group.rotation.z = siFerry.baseRot.z + Math.cos(calmPhase * 0.8) * 0.008;
+
+      if (siFerry.mastGroup) {
+        siFerry.mastGroup.position.set(0, 6.6, 0);
+        siFerry.mastGroup.rotation.set(0, 0, 0);
+      }
+      if (siFerry.funnels && siFerry.funnels.length >= 2) {
+        siFerry.funnels[0].position.set(0, 6.1, -2.0);
+        siFerry.funnels[0].rotation.set(0, 0, 0);
+        siFerry.funnels[1].position.set(0, 6.1, 2.0);
+        siFerry.funnels[1].rotation.set(0, 0, 0);
+      }
 
       catamaran.group.position.copy(catamaran.basePos);
       catamaran.group.position.y = catamaran.basePos.y + Math.sin(calmPhase * 1.2 + 0.5) * 0.05;
@@ -4577,47 +4692,112 @@ export function buildNewYorkScene(group, river, terrain) {
       }
 
       if (slipAprons && slipAprons.apron1) {
-        slipAprons.apron1.position.y = slipAprons.baseApron1Y;
-        slipAprons.apron1.rotation.x = 0.12;
+        slipAprons.apron1.position.set(0, slipAprons.baseApron1Y, -1.8);
+        slipAprons.apron1.rotation.set(0.12, 0, 0);
       }
       if (slipAprons && slipAprons.apron2) {
-        slipAprons.apron2.position.y = slipAprons.baseApron2Y;
-        slipAprons.apron2.rotation.x = 0.14;
+        slipAprons.apron2.position.set(0, slipAprons.baseApron2Y, -1.6);
+        slipAprons.apron2.rotation.set(0.14, 0, 0);
       }
     } else {
-      // Storm Surge Inundation at South Ferry (u = 0.42 - 1.0)
+      // Storm Surge Inundation at South Ferry (uWave >= 0.42)
       const surgeLocal = Math.min(1.0, (uWave - 0.42) / 0.12);
       const surgeRise = surgeLocal * 2.85; // 2.85m surge crest (~14.9 ft NAVD88)
 
-      // 1. Staten Island Ferry dynamic storm reaction (within slip fender clearance)
-      const stormPhase = t * 18.0;
-      const stormHeave = Math.sin(stormPhase) * 0.24 * surgeLocal;
-      const stormPitch = Math.sin(stormPhase * 0.8) * 0.04 * surgeLocal;
-      const stormRoll = Math.cos(stormPhase * 0.9) * 0.055 * surgeLocal;
-      const surgeSway = Math.sin(stormPhase * 0.7) * 0.12 * surgeLocal; // Max 0.12m sway (well within 0.7m clearance)
+      // Ferries break free as storm surge breaches the seawall (uWave >= 0.45)
+      const breakProg = Math.min(1.0, Math.max(0.0, (uWave - 0.45) / 0.16));
 
-      siFerry.group.position.copy(siFerry.basePos);
-      siFerry.group.position.y = siFerry.basePos.y + surgeRise + stormHeave;
-      siFerry.group.position.x = siFerry.basePos.x + surgeSway;
-      siFerry.group.rotation.copy(siFerry.baseRot);
-      siFerry.group.rotation.x = siFerry.baseRot.x + stormPitch;
-      siFerry.group.rotation.z = siFerry.baseRot.z + stormRoll;
+      // 1. STATEN ISLAND FERRY: BREAKS MOORING, DRIFTS OUT, LISTS, MAST SNAPS, FUNNELS COLLAPSE, FLOODED/SINKING
+      if (breakProg <= 0.0) {
+        // Moored in slip, pitching and rolling heavily before lines snap
+        const stormPhase = t * 18.0;
+        const stormHeave = Math.sin(stormPhase) * 0.24 * surgeLocal;
+        const stormPitch = Math.sin(stormPhase * 0.8) * 0.04 * surgeLocal;
+        const stormRoll = Math.cos(stormPhase * 0.9) * 0.055 * surgeLocal;
+        const surgeSway = Math.sin(stormPhase * 0.7) * 0.12 * surgeLocal;
 
-      // 2. NYC Fast Catamaran dynamic storm reaction
-      const catStormPhase = t * 22.0;
-      const catHeave = Math.sin(catStormPhase + 1.2) * 0.26 * surgeLocal;
-      const catPitch = Math.cos(catStormPhase * 0.85) * 0.05 * surgeLocal;
-      const catRoll = Math.sin(catStormPhase * 0.95) * 0.075 * surgeLocal;
-      const catSway = Math.cos(catStormPhase * 0.75) * 0.14 * surgeLocal; // Max 0.14m sway (within 0.8m clearance)
+        siFerry.group.position.copy(siFerry.basePos);
+        siFerry.group.position.y = siFerry.basePos.y + surgeRise + stormHeave;
+        siFerry.group.position.x = siFerry.basePos.x + surgeSway;
+        siFerry.group.rotation.set(stormPitch, 0, stormRoll);
 
-      catamaran.group.position.copy(catamaran.basePos);
-      catamaran.group.position.y = catamaran.basePos.y + surgeRise + catHeave;
-      catamaran.group.position.x = catamaran.basePos.x + catSway;
-      catamaran.group.rotation.copy(catamaran.baseRot);
-      catamaran.group.rotation.x = catamaran.baseRot.x + catPitch;
-      catamaran.group.rotation.z = catamaran.baseRot.z + catRoll;
+        if (siFerry.mastGroup) {
+          siFerry.mastGroup.position.set(0, 6.6, 0);
+          siFerry.mastGroup.rotation.set(0, 0, 0);
+        }
+        if (siFerry.funnels && siFerry.funnels.length >= 2) {
+          siFerry.funnels[0].position.set(0, 6.1, -2.0);
+          siFerry.funnels[0].rotation.set(0, 0, 0);
+          siFerry.funnels[1].position.set(0, 6.1, 2.0);
+          siFerry.funnels[1].rotation.set(0, 0, 0);
+        }
+      } else {
+        // Mooring cables snap under surge tension! Ferry breaks loose and is carried into the bay
+        const stormPhase = t * 16.0;
+        const heave = Math.sin(stormPhase) * 0.38;
+        const driftZ = -breakProg * 19.5; // drifts forward out of slip towards open bay (-Z)
+        const driftX = breakProg * 6.5 + Math.sin(t * 8.0) * 0.45 * breakProg; // swings starboard across berth entrance
+        const waterloggedSink = breakProg * 1.65; // car deck flooded, settles 1.65m deeper into water
 
-      // 3. Adrift Industrial Tanker Barge (Sandy "John B. Caddell" Benchmark)
+        siFerry.group.position.x = siFerry.basePos.x + driftX;
+        siFerry.group.position.y = siFerry.basePos.y + surgeRise - waterloggedSink + heave;
+        siFerry.group.position.z = siFerry.basePos.z + driftZ;
+
+        // Severe list (heeling over by up to ~44 degrees)
+        const rollList = breakProg * 0.76 + Math.cos(t * 9.5) * (0.07 + breakProg * 0.08);
+        const bowPlunge = -breakProg * 0.28 + Math.sin(t * 11.5) * (0.05 + breakProg * 0.05);
+        const yawSwing = breakProg * 0.38;
+
+        siFerry.group.rotation.set(bowPlunge, yawSwing, rollList);
+
+        // Radar Mast snaps and collapses across hurricane deck
+        if (siFerry.mastGroup) {
+          siFerry.mastGroup.rotation.z = -breakProg * 1.38;
+          siFerry.mastGroup.rotation.x = breakProg * 0.32;
+          siFerry.mastGroup.position.set(-breakProg * 0.55, 6.6 - breakProg * 0.95, 0);
+        }
+
+        // Twin Smokestacks dislodge and tilt haphazardly
+        if (siFerry.funnels && siFerry.funnels.length >= 2) {
+          siFerry.funnels[0].rotation.z = breakProg * 0.52;
+          siFerry.funnels[0].rotation.x = breakProg * 0.25;
+          siFerry.funnels[0].position.set(breakProg * 0.28, 6.1 - breakProg * 0.30, -2.0);
+
+          siFerry.funnels[1].rotation.z = -breakProg * 0.46;
+          siFerry.funnels[1].rotation.x = -breakProg * 0.22;
+          siFerry.funnels[1].position.set(-breakProg * 0.24, 6.1 - breakProg * 0.25, 2.0);
+        }
+      }
+
+      // 2. NYC FAST CATAMARAN: BREAKS FREE, ROLLS 53° ON PORT PONTOON, PARTIALLY CAPSIZES
+      if (breakProg <= 0.0) {
+        const catStormPhase = t * 22.0;
+        const catHeave = Math.sin(catStormPhase + 1.2) * 0.26 * surgeLocal;
+        const catPitch = Math.cos(catStormPhase * 0.85) * 0.05 * surgeLocal;
+        const catRoll = Math.sin(catStormPhase * 0.95) * 0.075 * surgeLocal;
+        const catSway = Math.cos(catStormPhase * 0.75) * 0.14 * surgeLocal;
+
+        catamaran.group.position.copy(catamaran.basePos);
+        catamaran.group.position.y = catamaran.basePos.y + surgeRise + catHeave;
+        catamaran.group.position.x = catamaran.basePos.x + catSway;
+        catamaran.group.rotation.set(catPitch, 0, catRoll);
+      } else {
+        const catDriftZ = -breakProg * 16.0;
+        const catDriftX = breakProg * 5.2 + Math.cos(t * 10.0) * 0.35 * breakProg;
+        const catHeave = Math.sin(t * 18.0) * 0.32;
+        const catSink = breakProg * 1.15;
+
+        catamaran.group.position.x = catamaran.basePos.x + catDriftX;
+        catamaran.group.position.y = catamaran.basePos.y + surgeRise - catSink + catHeave;
+        catamaran.group.position.z = catamaran.basePos.z + catDriftZ;
+
+        const catRoll = breakProg * 0.92 + Math.sin(t * 13.0) * 0.09; // ~53° list onto port pontoon
+        const catPitch = -breakProg * 0.24 + Math.cos(t * 14.0) * 0.07;
+        const catYaw = -breakProg * 0.34;
+        catamaran.group.rotation.set(catPitch, catYaw, catRoll);
+      }
+
+      // 3. ADRIFT INDUSTRIAL TANKER BARGE (Sandy "John B. Caddell" Benchmark)
       if (uWave < 0.48) {
         tankerBarge.group.position.copy(tankerBarge.basePos);
         tankerBarge.group.position.y = tankerBarge.basePos.y + surgeRise * 0.5 + Math.sin(t * 12.0) * 0.15;
@@ -4639,7 +4819,7 @@ export function buildNewYorkScene(group, river, terrain) {
         tankerBarge.group.rotation.x += pitchAngle;
       }
 
-      // 4. US Coast Guard RB-M Cutter in storm conditions
+      // 4. US COAST GUARD RB-M CUTTER IN STORM CONDITIONS
       if (uscgCutter) {
         uscgCutter.group.position.copy(uscgCutter.basePos);
         uscgCutter.group.position.y = uscgCutter.basePos.y + surgeRise * 0.9 + Math.sin(t * 14.0) * 0.22;
@@ -4651,14 +4831,29 @@ export function buildNewYorkScene(group, river, terrain) {
         }
       }
 
-      // 5. Loading aprons ride up with ferry deck
+      // 5. HYDRAULIC BOARDING APRONS: COLLAPSE & CRASH DOWNWARD ONCE FERRY BREAKS
       if (slipAprons && slipAprons.apron1) {
-        slipAprons.apron1.position.y = slipAprons.baseApron1Y + surgeRise * 0.82;
-        slipAprons.apron1.rotation.x = 0.12 - surgeLocal * 0.20;
+        if (breakProg <= 0.0) {
+          slipAprons.apron1.position.y = slipAprons.baseApron1Y + surgeRise * 0.82;
+          slipAprons.apron1.rotation.x = 0.12 - surgeLocal * 0.20;
+          slipAprons.apron1.rotation.z = 0;
+        } else {
+          // Ferry has broken away; apron loses hull support and plunges downward into surging water
+          slipAprons.apron1.position.y = Math.max(-0.6, slipAprons.baseApron1Y - breakProg * 2.3);
+          slipAprons.apron1.rotation.x = 0.12 - breakProg * 0.82;
+          slipAprons.apron1.rotation.z = breakProg * 0.16;
+        }
       }
       if (slipAprons && slipAprons.apron2) {
-        slipAprons.apron2.position.y = slipAprons.baseApron2Y + surgeRise * 0.82;
-        slipAprons.apron2.rotation.x = 0.14 - surgeLocal * 0.20;
+        if (breakProg <= 0.0) {
+          slipAprons.apron2.position.y = slipAprons.baseApron2Y + surgeRise * 0.82;
+          slipAprons.apron2.rotation.x = 0.14 - surgeLocal * 0.20;
+          slipAprons.apron2.rotation.z = 0;
+        } else {
+          slipAprons.apron2.position.y = Math.max(-0.5, slipAprons.baseApron2Y - breakProg * 2.1);
+          slipAprons.apron2.rotation.x = 0.14 - breakProg * 0.72;
+          slipAprons.apron2.rotation.z = -breakProg * 0.12;
+        }
       }
     }
   }
