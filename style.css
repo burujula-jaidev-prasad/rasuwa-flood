@@ -202,6 +202,27 @@ html, body {
   line-height: 1;
 }
 
+.disaster-map-btn {
+  background: rgba(14, 165, 233, 0.16);
+  border-color: rgba(14, 165, 233, 0.5);
+  color: #bae6fd;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
+}
+
+.disaster-map-btn:hover {
+  background: rgba(14, 165, 233, 0.32);
+  border-color: #38bdf8;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+}
+
+.disaster-map-btn.active {
+  background: rgba(220, 38, 38, 0.35);
+  border-color: #ef4444;
+  color: #fef2f2;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+}
+
 /* Dual-Tab View in Analytics Panel */
 .panel-tabs {
   display: flex;

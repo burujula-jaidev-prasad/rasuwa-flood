@@ -27,6 +27,8 @@ export class UIManager {
     this.elIntroOrbitBtn = document.getElementById('intro-orbit-btn');
     this.elFlyerCloseBtn = document.getElementById('flyer-close-btn');
     this.elOpenFlyerBtn = document.getElementById('open-flyer-btn');
+    this.elDisasterMapBtn = document.getElementById('disaster-map-btn');
+    this.isDisasterMapMode = false;
 
     this.elFlyerTag = document.getElementById('flyer-tag');
     this.elFlyerDocId = document.getElementById('flyer-doc-id');
@@ -142,6 +144,16 @@ export class UIManager {
     if (this.elOpenFlyerBtn) {
       this.elOpenFlyerBtn.addEventListener('click', () => {
         this.showIntroCard();
+      });
+    }
+
+    if (this.elDisasterMapBtn) {
+      this.elDisasterMapBtn.addEventListener('click', () => {
+        this.isDisasterMapMode = !this.isDisasterMapMode;
+        this.elDisasterMapBtn.classList.toggle('active', this.isDisasterMapMode);
+        if (this.options.onToggleDisasterMap) {
+          this.options.onToggleDisasterMap(this.isDisasterMapMode);
+        }
       });
     }
 
@@ -1163,6 +1175,10 @@ export class UIManager {
   setScenario(id) {
     this.currentScenario = getScenario(id);
     this.activeWaypointId = null;
+    this.isDisasterMapMode = false;
+    if (this.elDisasterMapBtn) {
+      this.elDisasterMapBtn.classList.remove('active');
+    }
 
     if (this.elBrandTitle) {
       this.elBrandTitle.textContent = this.currentScenario.config.name + ': ' + this.currentScenario.config.hazard;

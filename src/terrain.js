@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { PEAKS, getScenario } from './data.js';
 import { getNYCAerialSatelliteTexture } from './scenarios/newyork_textures.js';
+import { getDelhiAerialDisasterMapTexture, getDelhiDisasterHeatmapTexture } from './scenarios/delhi_textures.js';
 
 // Deterministic 2D noise generator
 function hash2D(x, z) {
@@ -144,7 +145,14 @@ export function createTerrain(riverSystem, scenarioId = null) {
 
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-    const material = new THREE.MeshStandardMaterial({
+    const disasterMapTex = getDelhiAerialDisasterMapTexture();
+
+    const material = disasterMapTex ? new THREE.MeshStandardMaterial({
+      map: disasterMapTex,
+      roughness: 0.72,
+      metalness: 0.10,
+      flatShading: false
+    }) : new THREE.MeshStandardMaterial({
       vertexColors: true,
       roughness: 0.85,
       metalness: 0.08,
@@ -177,7 +185,16 @@ export function createTerrain(riverSystem, scenarioId = null) {
       return h;
     }
 
-    return { mesh: terrainMesh, geometry, getTerrainHeight };
+    function setDisasterMapMode(enabled) {
+      if (!material) return;
+      const tex = enabled ? getDelhiDisasterHeatmapTexture() : getDelhiAerialDisasterMapTexture();
+      if (tex) {
+        material.map = tex;
+        material.needsUpdate = true;
+      }
+    }
+
+    return { mesh: terrainMesh, geometry, getTerrainHeight, setDisasterMapMode };
   }
 
   const isNewYork = (activeScenarioId === 'newyork');

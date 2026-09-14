@@ -259,6 +259,11 @@ class ExplainerApp {
       },
       onStartSimulation: () => {
         this.dismissIntro(true);
+      },
+      onToggleDisasterMap: (enabled) => {
+        if (this.terrainSystem && typeof this.terrainSystem.setDisasterMapMode === 'function') {
+          this.terrainSystem.setDisasterMapMode(enabled);
+        }
       }
     });
 

@@ -11,12 +11,26 @@ import {
  * Procedural 3D Landmarks, Bridges, Floodplain Settlements, Vehicles & Countermeasures
  * for Delhi, India (Yamuna River Catastrophic Inundation Scenario)
  * 
- * Features 60+ dynamic collapsing structures, basti shanties, vehicles, and breached bunds
- * that physically fail, tilt, and wash down the Yamuna torrent as the flood crest advances.
+ * Features:
+ * - Authentic Imperial Red Fort (Lal Qila): Lahori Gate grand portal with 7 white marble
+ *   cupolas, twin octagonal bastions, chhatris, Indian Tricolor flag mast, 18m sandstone
+ *   curtain ramparts, Salimgarh causeway bridge, and perimeter defensive moat with dynamic
+ *   water rising when Yamuna crest breaches the outer bund.
+ * - Old Delhi (Shahjahanabad) Dense World-Building: 110+ 3- to 5-story haveli tenement blocks
+ *   with ground-floor shops (rolling shutters, signboards, awnings), rooftop Sintex black
+ *   water tanks, AC units, balconies, and alleyways.
+ * - Kashmere Gate ISBT & Submerged Ring Road: Multi-level terminal concourse, bus bays, ramps.
+ * - Elevated Delhi Metro Viaduct: Concrete piers, catenary masts, and modern 4-coach train.
+ * - Nigambodh Ghat: Historic stone bathing stairs and riverside prayer pavilions.
+ * - 65+ Dynamic Vehicles: DTC Green CNG and Blue Electric buses, Bajaj auto-rickshaws,
+ *   white Delhi Police Gypsys with strobing lightbars, yellow/black steel police barricades,
+ *   delivery tempos, and passenger cars.
+ * - 90+ Floodplain Basti Shanties & NDRF Motorized Rescue Boat Patrol Fleet.
  */
 export function buildDelhiScene(group, river, terrain) {
   const wipeableItems = [];
   const dynamicWaterItems = [];
+  const flashingBeacons = [];
 
   // Procedural canvas textures for Delhi
   const redSandstoneTex = getRedSandstoneTexture();
@@ -24,6 +38,26 @@ export function buildDelhiScene(group, river, terrain) {
   const tinRoofTex = getTinRoofTexture();
   const tarpRoofTex = getTarpRoofTexture();
   const asphaltRoadTex = getAsphaltRoadTexture();
+
+  // Shared reusable materials
+  const concreteMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.75, metalness: 0.1 });
+  const darkSteel = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5, metalness: 0.6 });
+  const redSandstoneMat = new THREE.MeshStandardMaterial({
+    color: 0x991b1b,
+    map: redSandstoneTex || null,
+    roughness: 0.85
+  });
+  const whiteMarbleMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.25, metalness: 0.05 });
+  const goldBrassMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.25, metalness: 0.85 });
+  const sintexBlackMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.6 });
+  const acWhiteMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.4 });
+  const shutterMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.6, metalness: 0.4 });
+  const glassDark = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.15, metalness: 0.8 });
+  const tarmacMat = new THREE.MeshStandardMaterial({
+    color: 0x18181b,
+    map: asphaltRoadTex || null,
+    roughness: 0.9
+  });
 
   // Helper to place objects on river tangents & bank normals
   function getRiverFrame(u) {
@@ -35,40 +69,34 @@ export function buildDelhiScene(group, river, terrain) {
   }
 
   // -------------------------------------------------------------------------
-  // PROCEDURAL BUILDERS FOR DETAILED COLLAPSING ARCHITECTURE & VEHICLES
+  // PROCEDURAL BUILDERS
   // -------------------------------------------------------------------------
 
   /**
    * Authentic Delhi Yamuna Floodplain Jhuggi / Basti Shanty Dwelling
-   * Brick masonry / mud-plaster walls, sloped CGI tin / blue-orange tarpaulin roof,
-   * wooden support poles, rooftop water tank / terracotta pots, door & window apertures.
    */
   function createBastiHut(bw = 3.2, bh = 2.4, bd = 3.6, wallHex = 0xb45309, roofHex = 0x64748b, roofType = 'cgi') {
     const hutGroup = new THREE.Group();
     const materials = [];
 
-    // Walls with brick texture
     const wallMat = new THREE.MeshStandardMaterial({
       color: wallHex,
       map: delhiBrickTex || null,
       roughness: 0.85
     });
     materials.push(wallMat);
-    const wallGeo = new THREE.BoxGeometry(bw, bh, bd);
-    const wallMesh = new THREE.Mesh(wallGeo, wallMat);
+    const wallMesh = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), wallMat);
     wallMesh.position.y = bh * 0.5;
     wallMesh.castShadow = true;
     wallMesh.receiveShadow = true;
     hutGroup.add(wallMesh);
 
-    // Door cutout panel (dark recessed wood)
     const doorMat = new THREE.MeshStandardMaterial({ color: 0x3e2723, roughness: 0.9 });
     materials.push(doorMat);
     const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.4, 0.1), doorMat);
     doorMesh.position.set(0, 0.7, bd * 0.5 + 0.02);
     hutGroup.add(doorMesh);
 
-    // Window aperture
     const windowMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.6 });
     materials.push(windowMat);
     const winMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.1), windowMat);
@@ -76,7 +104,6 @@ export function buildDelhiScene(group, river, terrain) {
     winMesh.rotation.y = Math.PI * 0.5;
     hutGroup.add(winMesh);
 
-    // Corner timber poles
     const poleMat = new THREE.MeshStandardMaterial({ color: 0x5d4037, roughness: 0.9 });
     materials.push(poleMat);
     [
@@ -90,7 +117,6 @@ export function buildDelhiScene(group, river, terrain) {
       hutGroup.add(pole);
     });
 
-    // Roof construction with CGI tin or blue/orange tarpaulin texture
     const roofTex = (roofType === 'cgi') ? tinRoofTex : ((roofType === 'tarp') ? tarpRoofTex : null);
     const roofMat = new THREE.MeshStandardMaterial({
       color: roofHex,
@@ -129,14 +155,757 @@ export function buildDelhiScene(group, river, terrain) {
       slabMesh.position.set(0, bh + 0.1, 0);
       hutGroup.add(slabMesh);
 
-      const tankMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 });
-      materials.push(tankMat);
-      const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.7, 10), tankMat);
+      const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.7, 10), sintexBlackMat);
       tank.position.set(-bw * 0.25, bh + 0.55, -bd * 0.25);
       hutGroup.add(tank);
     }
 
     return { group: hutGroup, materials, primaryMat: wallMat };
+  }
+
+  /**
+   * Detailed Old Delhi Haveli Block (3-5 Storey Tenement)
+   * Ground-floor bazaar shops with shutters & signboards, upper jharokha balconies,
+   * split AC units, rooftop parapet, Sintex black tanks, and clotheslines.
+   */
+  function createDelhiHaveliBlock(bw = 6.5, bh = 11.5, bd = 7.0, wallHex = 0xb45309, hasShops = true, floors = 4) {
+    const haveliGroup = new THREE.Group();
+    const materials = [];
+
+    // Main masonry block
+    const wallMat = new THREE.MeshStandardMaterial({
+      color: wallHex,
+      map: (wallHex === 0xb45309 || wallHex === 0x991b1b) ? delhiBrickTex : null,
+      roughness: 0.85
+    });
+    materials.push(wallMat);
+
+    const mainBlock = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), wallMat);
+    mainBlock.position.y = bh * 0.5;
+    mainBlock.castShadow = true;
+    mainBlock.receiveShadow = true;
+    haveliGroup.add(mainBlock);
+
+    // Ground Floor Bazaar / Retail Shutters
+    if (hasShops) {
+      const numShops = Math.max(1, Math.floor(bw / 2.2));
+      const shopW = (bw - 0.6) / numShops;
+      const signColors = [0xdc2626, 0x2563eb, 0x16a34a, 0xd97706, 0x7c3aed];
+
+      for (let s = 0; s < numShops; s++) {
+        const sx = -bw * 0.5 + 0.3 + (s + 0.5) * shopW;
+
+        // Rolling shutter recess
+        const shutter = new THREE.Mesh(new THREE.BoxGeometry(shopW * 0.88, 2.2, 0.08), shutterMat);
+        shutter.position.set(sx, 1.15, bd * 0.5 + 0.04);
+        haveliGroup.add(shutter);
+
+        // Shop signboard
+        const signMat = new THREE.MeshStandardMaterial({
+          color: signColors[(s + Math.floor(bw)) % signColors.length],
+          roughness: 0.4
+        });
+        materials.push(signMat);
+        const sign = new THREE.Mesh(new THREE.BoxGeometry(shopW * 0.92, 0.45, 0.12), signMat);
+        sign.position.set(sx, 2.5, bd * 0.5 + 0.06);
+        haveliGroup.add(sign);
+
+        // Projecting fabric awning (on alternating shops)
+        if (s % 2 === 0) {
+          const awningMat = new THREE.MeshStandardMaterial({
+            color: (s === 0) ? 0x0284c7 : 0xea580c,
+            roughness: 0.7
+          });
+          materials.push(awningMat);
+          const awning = new THREE.Mesh(new THREE.BoxGeometry(shopW * 0.95, 0.08, 0.9), awningMat);
+          awning.rotation.x = 0.22;
+          awning.position.set(sx, 2.3, bd * 0.5 + 0.45);
+          haveliGroup.add(awning);
+        }
+      }
+    }
+
+    // Upper Floors: Windows & Cantilevered Jharokha Balconies
+    const floorH = (bh - 2.8) / Math.max(1, floors - 1);
+    for (let f = 1; f < floors; f++) {
+      const fy = 2.8 + (f - 0.5) * floorH;
+
+      // Front windows
+      const numWin = Math.max(1, Math.floor(bw / 1.8));
+      const winW = (bw - 0.8) / numWin;
+      for (let w = 0; w < numWin; w++) {
+        const wx = -bw * 0.5 + 0.4 + (w + 0.5) * winW;
+        const win = new THREE.Mesh(new THREE.BoxGeometry(winW * 0.55, floorH * 0.5, 0.08), glassDark);
+        win.position.set(wx, fy, bd * 0.5 + 0.04);
+        haveliGroup.add(win);
+
+        // Window sun-shade lintel
+        const lintel = new THREE.Mesh(new THREE.BoxGeometry(winW * 0.65, 0.08, 0.25), concreteMat);
+        lintel.position.set(wx, fy + floorH * 0.28, bd * 0.5 + 0.12);
+        haveliGroup.add(lintel);
+      }
+
+      // Cantilevered Jharokha Balcony on select floors
+      if (f === 2 || f === 3) {
+        const balcW = bw * 0.45;
+        const balcGroup = new THREE.Group();
+        balcGroup.position.set(0, fy - floorH * 0.25, bd * 0.5 + 0.45);
+
+        // Balcony slab
+        const balcSlab = new THREE.Mesh(new THREE.BoxGeometry(balcW, 0.14, 0.85), concreteMat);
+        balcGroup.add(balcSlab);
+
+        // Decorative supporting brackets
+        [-balcW * 0.38, balcW * 0.38].forEach(bx => {
+          const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.35, 0.7), wallMat);
+          bracket.position.set(bx, -0.22, -0.05);
+          balcGroup.add(bracket);
+        });
+
+        // Balcony railing
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(balcW, 0.65, 0.06), darkSteel);
+        rail.position.set(0, 0.35, 0.38);
+        balcGroup.add(rail);
+
+        haveliGroup.add(balcGroup);
+      }
+
+      // Wall-mounted split AC outdoor unit
+      if (f === 1 || f === 2) {
+        const ac = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.42, 0.3), acWhiteMat);
+        ac.position.set(bw * 0.38, fy, bd * 0.5 + 0.18);
+        haveliGroup.add(ac);
+      }
+    }
+
+    // Rooftop Construction
+    // Perimeter parapet
+    const parapet = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.15, 0.75, bd + 0.15), wallMat);
+    parapet.position.set(0, bh + 0.35, 0);
+    haveliGroup.add(parapet);
+
+    // Rooftop stairwell enclosure (mumty)
+    const mumty = new THREE.Mesh(new THREE.BoxGeometry(bw * 0.35, 2.0, bd * 0.35), concreteMat);
+    mumty.position.set(-bw * 0.25, bh + 1.0, -bd * 0.25);
+    haveliGroup.add(mumty);
+
+    // Sintex Black Water Tank
+    const sintex = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.95, 12), sintexBlackMat);
+    sintex.position.set(bw * 0.25, bh + 0.55, bd * 0.22);
+    haveliGroup.add(sintex);
+
+    // Rooftop clothesline / laundry
+    const clMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.8 });
+    const cloth = new THREE.Mesh(new THREE.BoxGeometry(bw * 0.3, 0.5, 0.05), clMat);
+    cloth.position.set(0, bh + 0.65, -bd * 0.15);
+    haveliGroup.add(cloth);
+
+    return { group: haveliGroup, materials, primaryMat: wallMat };
+  }
+
+  /**
+   * Authentic Imperial Red Fort (Lal Qila) Complex
+   * Lahori Gate with 7 white marble cupolas, twin octagonal bastions, chhatris,
+   * central Indian Tricolor flag mast, 18m red sandstone rampart curtain walls,
+   * Salimgarh stone causeway bridge, and perimeter defensive moat with dynamic water mesh.
+   */
+  function createRedFortComplex() {
+    const complexGroup = new THREE.Group();
+
+    // 1. Lahori Gate Grand Portal
+    const gateGroup = new THREE.Group();
+    gateGroup.position.set(0, 0, 0);
+
+    // Central gate portal structure (3 storeys)
+    const gateBlock = new THREE.Mesh(new THREE.BoxGeometry(16.0, 11.5, 7.5), redSandstoneMat);
+    gateBlock.position.y = 5.75;
+    gateBlock.castShadow = true;
+    gateBlock.receiveShadow = true;
+    gateGroup.add(gateBlock);
+
+    // Deep arched portal recess (Mughal cusped arch / Iwan)
+    const archRecessMat = new THREE.MeshStandardMaterial({ color: 0x450a0a, roughness: 0.9 });
+    const archRecess = new THREE.Mesh(new THREE.BoxGeometry(5.2, 7.2, 3.2), archRecessMat);
+    archRecess.position.set(0, 3.6, 2.3);
+    gateGroup.add(archRecess);
+
+    // Inner heavy timber gates with brass stud bolts
+    const timberGateMat = new THREE.MeshStandardMaterial({ color: 0x271711, roughness: 0.8 });
+    const gateDoorL = new THREE.Mesh(new THREE.BoxGeometry(2.3, 5.5, 0.2), timberGateMat);
+    gateDoorL.position.set(-1.2, 2.75, 1.2);
+    gateGroup.add(gateDoorL);
+
+    const gateDoorR = new THREE.Mesh(new THREE.BoxGeometry(2.3, 5.5, 0.2), timberGateMat);
+    gateDoorR.position.set(1.2, 2.75, 1.2);
+    gateGroup.add(gateDoorR);
+
+    // Continuous decorative bracketed cornice (chhajja)
+    const cornice = new THREE.Mesh(new THREE.BoxGeometry(16.8, 0.45, 8.2), redSandstoneMat);
+    cornice.position.set(0, 11.6, 0);
+    gateGroup.add(cornice);
+
+    // 7 Iconic White Marble Onion Cupolas (Chhatris) across central parapet
+    const numCupolas = 7;
+    const cupolaSpacing = 13.5 / (numCupolas - 1);
+    for (let c = 0; c < numCupolas; c++) {
+      const cx = -6.75 + c * cupolaSpacing;
+      const cupolaGroup = new THREE.Group();
+      cupolaGroup.position.set(cx, 11.8, 3.2);
+
+      // 4 slender pillars
+      [-0.25, 0.25].forEach(px => {
+        [-0.25, 0.25].forEach(pz => {
+          const col = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.1, 8), whiteMarbleMat);
+          col.position.set(px, 0.55, pz);
+          cupolaGroup.add(col);
+        });
+      });
+
+      // White marble onion dome
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(0.48, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.75), whiteMarbleMat);
+      dome.position.y = 1.35;
+      cupolaGroup.add(dome);
+
+      // Golden brass finial (kalash)
+      const finial = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.45, 8), goldBrassMat);
+      finial.position.y = 1.95;
+      cupolaGroup.add(finial);
+
+      gateGroup.add(cupolaGroup);
+    }
+
+    // Central Flag Mast & Indian National Tricolor (Tiranga)
+    const flagMast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 10.5, 12), goldBrassMat);
+    flagMast.position.set(0, 16.5, 2.8);
+    gateGroup.add(flagMast);
+
+    // Indian National Flag (Saffron, White, Green horizontal stripes)
+    const flagGroup = new THREE.Group();
+    flagGroup.position.set(1.4, 20.2, 2.8);
+
+    const saffron = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.45, 0.04), new THREE.MeshBasicMaterial({ color: 0xff9933 }));
+    saffron.position.y = 0.45;
+    flagGroup.add(saffron);
+
+    const white = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.45, 0.04), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    flagGroup.add(white);
+
+    // Ashoka Chakra center circle
+    const chakra = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.06, 16), new THREE.MeshBasicMaterial({ color: 0x000080 }));
+    chakra.rotation.x = Math.PI * 0.5;
+    flagGroup.add(chakra);
+
+    const green = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.45, 0.04), new THREE.MeshBasicMaterial({ color: 0x138808 }));
+    green.position.y = -0.45;
+    flagGroup.add(green);
+    gateGroup.add(flagGroup);
+
+    // Prime Minister's Dais / Rostrum with podium & bulletproof glass panel
+    const podium = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.85, 1.4), redSandstoneMat);
+    podium.position.set(0, 12.1, 2.2);
+    gateGroup.add(podium);
+
+    const glassPanel = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.1, 0.06), new THREE.MeshStandardMaterial({
+      color: 0xe0f2fe,
+      roughness: 0.1,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.6
+    }));
+    glassPanel.position.set(0, 12.95, 2.8);
+    gateGroup.add(glassPanel);
+
+    // 2. Twin Octagonal Bastions Flanking Lahori Gate
+    [-11.5, 11.5].forEach(bastionX => {
+      const bastionGroup = new THREE.Group();
+      bastionGroup.position.set(bastionX, 0, 0);
+
+      // Octagonal bastion body (15.5m high)
+      const bastionBody = new THREE.Mesh(new THREE.CylinderGeometry(3.6, 4.0, 15.0, 8), redSandstoneMat);
+      bastionBody.position.y = 7.5;
+      bastionBody.castShadow = true;
+      bastionGroup.add(bastionBody);
+
+      // Stepped battlements / crenellations
+      for (let m = 0; m < 8; m++) {
+        const ang = (m / 8) * Math.PI * 2;
+        const merlon = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.9, 0.6), redSandstoneMat);
+        merlon.position.set(Math.cos(ang) * 3.4, 15.4, Math.sin(ang) * 3.4);
+        merlon.rotation.y = -ang;
+        bastionGroup.add(merlon);
+      }
+
+      // Grand Octagonal Chhatri on top of each bastion
+      const chhatriGroup = new THREE.Group();
+      chhatriGroup.position.set(0, 15.5, 0);
+
+      for (let p = 0; p < 8; p++) {
+        const ang = (p / 8) * Math.PI * 2;
+        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.2, 8), whiteMarbleMat);
+        pillar.position.set(Math.cos(ang) * 2.1, 1.1, Math.sin(ang) * 2.1);
+        chhatriGroup.add(pillar);
+      }
+
+      // White marble onion dome
+      const bDome = new THREE.Mesh(new THREE.SphereGeometry(2.4, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.72), whiteMarbleMat);
+      bDome.position.y = 2.6;
+      chhatriGroup.add(bDome);
+
+      // Golden kalash finial
+      const bFinial = new THREE.Mesh(new THREE.ConeGeometry(0.24, 1.2, 8), goldBrassMat);
+      bFinial.position.y = 4.6;
+      chhatriGroup.add(bFinial);
+
+      bastionGroup.add(chhatriGroup);
+      gateGroup.add(bastionGroup);
+    });
+
+    complexGroup.add(gateGroup);
+
+    // 3. 18m High Red Sandstone Curtain Rampart Walls
+    // North Curtain Wall & South Curtain Wall extending along the Yamuna bank
+    const wallHeight = 10.0;
+    const wallThick = 3.2;
+    const wallSpan = 38.0;
+
+    [-1, 1].forEach(dir => {
+      const wallGroup = new THREE.Group();
+      const wx = dir * (15.0 + wallSpan * 0.5);
+      wallGroup.position.set(wx, 0, -2.5);
+
+      const wallMesh = new THREE.Mesh(new THREE.BoxGeometry(wallSpan, wallHeight, wallThick), redSandstoneMat);
+      wallMesh.position.y = wallHeight * 0.5;
+      wallMesh.castShadow = true;
+      wallGroup.add(wallMesh);
+
+      // Machicolation parapet along top
+      for (let b = 0; b < 18; b++) {
+        const merlon = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.85, 0.6), redSandstoneMat);
+        merlon.position.set(-wallSpan * 0.5 + 1.0 + b * 2.1, wallHeight + 0.42, 1.4);
+        wallGroup.add(merlon);
+      }
+
+      // Corner Watchtower (Burj) at wall terminus
+      const burj = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.8, wallHeight + 2.5, 8), redSandstoneMat);
+      burj.position.set(dir * wallSpan * 0.5, (wallHeight + 2.5) * 0.5, 0);
+      wallGroup.add(burj);
+
+      const burjDome = new THREE.Mesh(new THREE.SphereGeometry(1.6, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.7), whiteMarbleMat);
+      burjDome.position.set(dir * wallSpan * 0.5, wallHeight + 3.0, 0);
+      wallGroup.add(burjDome);
+
+      complexGroup.add(wallGroup);
+    });
+
+    // 4. Salimgarh Fort Causeway & 5-Arch Stone Bridge
+    const causewayGroup = new THREE.Group();
+    causewayGroup.position.set(38.0, 0, -18.0);
+
+    const bridgeDeck = new THREE.Mesh(new THREE.BoxGeometry(6.0, 1.4, 24.0), redSandstoneMat);
+    bridgeDeck.position.set(0, 4.2, 0);
+    causewayGroup.add(bridgeDeck);
+
+    // 5 stone flood arches
+    for (let a = 0; a < 5; a++) {
+      const az = -9.6 + a * 4.8;
+      const pier = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.6, 4.2, 12), redSandstoneMat);
+      pier.position.set(0, 2.1, az);
+      causewayGroup.add(pier);
+    }
+    complexGroup.add(causewayGroup);
+
+    // 5. Perimeter Defensive Moat & Dynamic Moat Water Mesh
+    // Trench surrounding the front ramparts
+    const moatOuterWall = new THREE.Mesh(new THREE.BoxGeometry(105.0, 1.4, 0.8), redSandstoneMat);
+    moatOuterWall.position.set(0, 1.8, 9.5);
+    complexGroup.add(moatOuterWall);
+
+    // Dynamic moat water plane (rises from y=1.2 to y=3.6 when flood wave reaches sector)
+    const moatWaterMat = new THREE.MeshStandardMaterial({
+      color: 0x784c1f,
+      roughness: 0.25,
+      metalness: 0.15,
+      transparent: true,
+      opacity: 0.88
+    });
+    const moatWaterMesh = new THREE.Mesh(new THREE.BoxGeometry(104.0, 0.2, 14.0), moatWaterMat);
+    moatWaterMesh.position.set(0, 1.2, 3.5);
+    complexGroup.add(moatWaterMesh);
+
+    return {
+      group: complexGroup,
+      moatWaterMesh,
+      updateMoat: (uWave) => {
+        // Moat fills as Yamuna reaches u >= 0.50 (breaching Ring Road outer bund)
+        if (uWave < 0.50) {
+          moatWaterMesh.position.y = 1.2;
+          moatWaterMat.opacity = 0.45;
+        } else {
+          const fillRatio = Math.min(1.0, (uWave - 0.50) / 0.15);
+          moatWaterMesh.position.y = 1.2 + fillRatio * 2.4; // Rises up to 3.6m!
+          moatWaterMat.opacity = 0.88;
+        }
+      }
+    };
+  }
+
+  /**
+   * Kashmere Gate Inter-State Bus Terminal (ISBT) Hub
+   * Multi-level terminal concourse with blue glass facade, bus bays, and ramps.
+   */
+  function createISBTTerminal() {
+    const isbtGroup = new THREE.Group();
+
+    // Main concourse building
+    const concourseMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.2, metalness: 0.6 });
+    const terminalBuilding = new THREE.Mesh(new THREE.BoxGeometry(26.0, 8.5, 12.0), concreteMat);
+    terminalBuilding.position.y = 4.25;
+    terminalBuilding.castShadow = true;
+    isbtGroup.add(terminalBuilding);
+
+    // Blue glass curtain wall facade
+    const glassFacade = new THREE.Mesh(new THREE.BoxGeometry(25.0, 6.0, 0.2), concourseMat);
+    glassFacade.position.set(0, 4.5, 6.05);
+    isbtGroup.add(glassFacade);
+
+    // Terminal signage board
+    const signMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.5 });
+    const signBoard = new THREE.Mesh(new THREE.BoxGeometry(18.0, 1.2, 0.3), signMat);
+    signBoard.position.set(0, 8.2, 6.2);
+    isbtGroup.add(signBoard);
+
+    // Sawtooth bus departure bays with corrugated canopies
+    for (let b = -2; b <= 2; b++) {
+      const bayX = b * 4.8;
+      const canopy = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.2, 8.5), darkSteel);
+      canopy.position.set(bayX, 3.8, 10.5);
+      canopy.rotation.x = -0.08;
+      isbtGroup.add(canopy);
+
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 3.8, 8), concreteMat);
+      col.position.set(bayX, 1.9, 14.5);
+      isbtGroup.add(col);
+    }
+
+    return { group: isbtGroup };
+  }
+
+  /**
+   * Elevated Delhi Metro Red/Violet Line Viaduct & Halted 4-Coach Train
+   */
+  function createDelhiMetroViaduct() {
+    const viaductGroup = new THREE.Group();
+
+    const spanLen = 65.0;
+    const numPiers = 6;
+    const pierSpacing = spanLen / (numPiers - 1);
+
+    // Elevated concrete piers & hammerhead crossheads
+    for (let p = 0; p < numPiers; p++) {
+      const pz = -spanLen * 0.5 + p * pierSpacing;
+
+      // Heavy cylindrical pier
+      const pier = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.85, 7.5, 12), concreteMat);
+      pier.position.set(0, 3.75, pz);
+      pier.castShadow = true;
+      viaductGroup.add(pier);
+
+      // Hammerhead cross-girder
+      const hammerhead = new THREE.Mesh(new THREE.BoxGeometry(5.8, 1.2, 1.8), concreteMat);
+      hammerhead.position.set(0, 7.8, pz);
+      viaductGroup.add(hammerhead);
+
+      // Overhead Catenary System (OCS) mast
+      const ocsMast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 3.2, 6), darkSteel);
+      ocsMast.position.set(2.6, 9.8, pz);
+      viaductGroup.add(ocsMast);
+
+      const ocsArm = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.08, 0.08), darkSteel);
+      ocsArm.position.set(1.4, 11.2, pz);
+      viaductGroup.add(ocsArm);
+    }
+
+    // Concrete U-girder twin-track deck
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.9, spanLen + 4.0), concreteMat);
+    deck.position.set(0, 8.7, 0);
+    deck.castShadow = true;
+    viaductGroup.add(deck);
+
+    // Steel tracks
+    [-1.2, 1.2].forEach(tx => {
+      const rail1 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, spanLen + 4.0), darkSteel);
+      rail1.position.set(tx - 0.4, 9.2, 0);
+      viaductGroup.add(rail1);
+
+      const rail2 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, spanLen + 4.0), darkSteel);
+      rail2.position.set(tx + 0.4, 9.2, 0);
+      viaductGroup.add(rail2);
+    });
+
+    // Modern 4-Coach Delhi Metro Stainless Steel Train
+    const trainGroup = new THREE.Group();
+    trainGroup.position.set(-1.2, 9.2, 0);
+
+    const coachLen = 7.5;
+    const coachW = 1.6;
+    const coachH = 1.7;
+    const metroSteelMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.25, metalness: 0.85 });
+    const metroRedMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.4 });
+    const metroWindowMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.9 });
+
+    for (let c = 0; c < 4; c++) {
+      const cz = -12.0 + c * (coachLen + 0.5);
+      const coach = new THREE.Group();
+      coach.position.set(0, 0, cz);
+
+      // Coach body
+      const body = new THREE.Mesh(new THREE.BoxGeometry(coachW, coachH, coachLen), metroSteelMat);
+      body.position.y = coachH * 0.5;
+      body.castShadow = true;
+      coach.add(body);
+
+      // Red line livery stripe along waist
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(coachW + 0.04, 0.22, coachLen), metroRedMat);
+      stripe.position.y = coachH * 0.45;
+      coach.add(stripe);
+
+      // Window band
+      const winBand = new THREE.Mesh(new THREE.BoxGeometry(coachW + 0.06, 0.55, coachLen * 0.88), metroWindowMat);
+      winBand.position.y = coachH * 0.65;
+      coach.add(winBand);
+
+      // Aerodynamic cab front on end coaches
+      if (c === 0 || c === 3) {
+        const noseDir = (c === 0) ? -1 : 1;
+        const cabNose = new THREE.Mesh(new THREE.ConeGeometry(0.9, 1.2, 4), metroSteelMat);
+        cabNose.rotation.x = noseDir * Math.PI * 0.5;
+        cabNose.position.set(0, coachH * 0.5, noseDir * (coachLen * 0.5 + 0.5));
+        coach.add(cabNose);
+
+        // Headlights
+        const headLampMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xfef08a, emissiveIntensity: 1.0 });
+        [-0.45, 0.45].forEach(hx => {
+          const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), headLampMat);
+          lamp.position.set(hx, coachH * 0.35, noseDir * (coachLen * 0.5 + 0.9));
+          coach.add(lamp);
+        });
+      }
+
+      // Roof HVAC units
+      const hvac = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.28, 2.2), darkSteel);
+      hvac.position.set(0, coachH + 0.14, 0);
+      coach.add(hvac);
+
+      // Pantograph on coach 1
+      if (c === 1) {
+        const pantograph = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.45, 0.8), darkSteel);
+        pantograph.position.set(0, coachH + 0.35, 0);
+        coach.add(pantograph);
+      }
+
+      trainGroup.add(coach);
+    }
+
+    viaductGroup.add(trainGroup);
+    return { group: viaductGroup };
+  }
+
+  /**
+   * Nigambodh Ghat Historic Bathing Stairs & Riverside Chhatris
+   */
+  function createNigambodhGhat() {
+    const ghatGroup = new THREE.Group();
+
+    // 6 wide sandstone tiers descending into the Yamuna
+    const stepCount = 6;
+    const stepDepth = 1.4;
+    const stepHeight = 0.5;
+    const ghatWidth = 32.0;
+
+    for (let s = 0; s < stepCount; s++) {
+      const stepMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(ghatWidth, stepHeight, (stepCount - s) * stepDepth),
+        redSandstoneMat
+      );
+      stepMesh.position.set(0, s * stepHeight, s * stepDepth * 0.5);
+      stepMesh.castShadow = true;
+      stepMesh.receiveShadow = true;
+      ghatGroup.add(stepMesh);
+    }
+
+    // Riverside prayer chhatris along upper terrace
+    [-ghatWidth * 0.35, 0, ghatWidth * 0.35].forEach(cx => {
+      const chhatri = new THREE.Group();
+      chhatri.position.set(cx, stepCount * stepHeight, 0);
+
+      for (let p = 0; p < 4; p++) {
+        const col = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.2, 8), redSandstoneMat);
+        col.position.set((p % 2 === 0 ? -0.8 : 0.8), 1.1, (p > 1 ? 0.8 : -0.8));
+        chhatri.add(col);
+      }
+
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(1.2, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.65), redSandstoneMat);
+      dome.position.y = 2.4;
+      chhatri.add(dome);
+
+      ghatGroup.add(chhatri);
+    });
+
+    return { group: ghatGroup };
+  }
+
+  /**
+   * Delhi Police Maruti Suzuki Gypsy 4x4 with Strobing Beacon Lightbar
+   */
+  function createDelhiPoliceGypsy() {
+    const gypsyGroup = new THREE.Group();
+    const materials = [];
+
+    const policeWhite = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3, metalness: 0.2 });
+    const policeBlue = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.5 });
+    const canvasMat = new THREE.MeshStandardMaterial({ color: 0x3f4f2c, roughness: 0.85 });
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.9 });
+    const redLight = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xef4444, emissiveIntensity: 1.2 });
+    const blueLight = new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x3b82f6, emissiveIntensity: 1.2 });
+    materials.push(policeWhite, policeBlue, canvasMat, wheelMat, redLight, blueLight);
+
+    // Body chassis
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.65, 3.2), policeWhite);
+    body.position.y = 0.55;
+    body.castShadow = true;
+    gypsyGroup.add(body);
+
+    // Navy blue side stripe
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.18, 2.8), policeBlue);
+    stripe.position.y = 0.6;
+    gypsyGroup.add(stripe);
+
+    // Front bullbar bumper
+    const bullbar = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.45, 0.15), darkSteel);
+    bullbar.position.set(0, 0.45, 1.65);
+    gypsyGroup.add(bullbar);
+
+    // Soft canvas cabin
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.75, 1.8), canvasMat);
+    cabin.position.set(0, 1.15, -0.4);
+    gypsyGroup.add(cabin);
+
+    // Windshield
+    const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.55, 0.08), glassDark);
+    windshield.position.set(0, 1.05, 0.55);
+    windshield.rotation.x = -0.22;
+    gypsyGroup.add(windshield);
+
+    // Emergency Roof Lightbar (Red and Blue Strobe)
+    const lightbarBase = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.1, 0.22), darkSteel);
+    lightbarBase.position.set(0, 1.58, 0.35);
+    gypsyGroup.add(lightbarBase);
+
+    const rBeacon = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.15, 0.18), redLight);
+    rBeacon.position.set(-0.24, 1.68, 0.35);
+    gypsyGroup.add(rBeacon);
+
+    const bBeacon = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.15, 0.18), blueLight);
+    bBeacon.position.set(0.24, 1.68, 0.35);
+    gypsyGroup.add(bBeacon);
+
+    flashingBeacons.push({ red: redLight, blue: blueLight });
+
+    // Wheels
+    const wGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.2, 10);
+    wGeo.rotateZ(Math.PI * 0.5);
+    [-0.75, 0.75].forEach(wx => {
+      [-0.95, 0.95].forEach(wz => {
+        const wheel = new THREE.Mesh(wGeo, wheelMat);
+        wheel.position.set(wx, 0.32, wz);
+        gypsyGroup.add(wheel);
+      });
+    });
+
+    // Spare tire mounted on rear
+    const spare = new THREE.Mesh(wGeo, wheelMat);
+    spare.position.set(0, 0.65, -1.68);
+    spare.rotation.y = Math.PI * 0.5;
+    gypsyGroup.add(spare);
+
+    return { group: gypsyGroup, materials, primaryMat: policeWhite };
+  }
+
+  /**
+   * Delhi Police Welded Steel Road Barricade with Yellow/Black Diagonal Hazard Stripes
+   */
+  function createPoliceBarricade() {
+    const barGroup = new THREE.Group();
+    const barYellow = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.5 });
+    const barBlack = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.8 });
+
+    // Main steel frame
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.2, 0.1), barYellow);
+    frame.position.y = 0.75;
+    frame.castShadow = true;
+    barGroup.add(frame);
+
+    // Hazard warning stripes
+    for (let s = -2; s <= 2; s++) {
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.22, 1.0, 0.12), barBlack);
+      stripe.position.set(s * 0.45, 0.75, 0);
+      stripe.rotation.z = 0.35;
+      barGroup.add(stripe);
+    }
+
+    // Triangular foot supports
+    [-1.0, 1.0].forEach(fx => {
+      const foot = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.35, 0.9), darkSteel);
+      foot.position.set(fx, 0.18, 0);
+      barGroup.add(foot);
+    });
+
+    return { group: barGroup, primaryMat: barYellow, materials: [barYellow, barBlack] };
+  }
+
+  /**
+   * Detailed Delhi Transport Corporation (DTC) Bus
+   * Supports both Green CNG (#15803d) and Electric Blue (#0284c7) liveries.
+   */
+  function createDTCBus(isElectric = false) {
+    const busGroup = new THREE.Group();
+    const materials = [];
+
+    const bodyCol = isElectric ? 0x0284c7 : 0x15803d;
+    const busMat = new THREE.MeshStandardMaterial({ color: bodyCol, roughness: 0.5 });
+    const whiteRoof = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.6 });
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.9 });
+    const ledAmber = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.3 });
+    materials.push(busMat, whiteRoof, glassDark, wheelMat, ledAmber);
+
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.2, 5.6), busMat);
+    body.position.y = 0.8;
+    body.castShadow = true;
+    busGroup.add(body);
+
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.25, 5.5), whiteRoof);
+    roof.position.y = 1.5;
+    busGroup.add(roof);
+
+    const win = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.48, 5.0), glassDark);
+    win.position.y = 1.15;
+    busGroup.add(win);
+
+    const dest = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.2, 0.08), ledAmber);
+    dest.position.set(0, 1.45, 2.81);
+    busGroup.add(dest);
+
+    const wGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.22, 10);
+    wGeo.rotateZ(Math.PI * 0.5);
+    [-0.9, 0.9].forEach(wx => {
+      [-1.7, 1.7].forEach(wz => {
+        const wheel = new THREE.Mesh(wGeo, wheelMat);
+        wheel.position.set(wx, 0.35, wz);
+        busGroup.add(wheel);
+      });
+    });
+
+    return { group: busGroup, materials, primaryMat: busMat };
   }
 
   /**
@@ -187,66 +956,21 @@ export function buildDelhiScene(group, river, terrain) {
   }
 
   /**
-   * Detailed Delhi Transport Corporation (DTC) Low-Floor Green Bus
-   */
-  function createDTCBus() {
-    const busGroup = new THREE.Group();
-    const materials = [];
-
-    const busGreen = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.5 });
-    const whiteRoof = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.6 });
-    const glassDark = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.2, metalness: 0.7 });
-    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.9 });
-    const ledAmber = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.3 });
-    materials.push(busGreen, whiteRoof, glassDark, wheelMat, ledAmber);
-
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.2, 5.4), busGreen);
-    body.position.y = 0.8;
-    body.castShadow = true;
-    busGroup.add(body);
-
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.25, 5.3), whiteRoof);
-    roof.position.y = 1.5;
-    busGroup.add(roof);
-
-    const win = new THREE.Mesh(new THREE.BoxGeometry(1.82, 0.45, 4.8), glassDark);
-    win.position.y = 1.15;
-    busGroup.add(win);
-
-    const dest = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.2, 0.08), ledAmber);
-    dest.position.set(0, 1.45, 2.71);
-    busGroup.add(dest);
-
-    const wGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.22, 10);
-    wGeo.rotateZ(Math.PI * 0.5);
-    [-0.9, 0.9].forEach(wx => {
-      [-1.6, 1.6].forEach(wz => {
-        const wheel = new THREE.Mesh(wGeo, wheelMat);
-        wheel.position.set(wx, 0.35, wz);
-        busGroup.add(wheel);
-      });
-    });
-
-    return { group: busGroup, materials, primaryMat: busGreen };
-  }
-
-  /**
-   * Compact Passenger Car / Delivery Tempo
+   * Passenger Car / Delivery Tempo
    */
   function createPassengerCar(colorHex = 0xe2e8f0) {
     const carGroup = new THREE.Group();
     const materials = [];
 
     const carMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.4, metalness: 0.3 });
-    const glassMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.8 });
     const wheelMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.9 });
-    materials.push(carMat, glassMat, wheelMat);
+    materials.push(carMat, glassDark, wheelMat);
 
     const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.55, 2.8), carMat);
     body.position.y = 0.45;
     carGroup.add(body);
 
-    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.5, 1.5), glassMat);
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.5, 1.5), glassDark);
     cabin.position.set(0, 0.85, -0.2);
     carGroup.add(cabin);
 
@@ -268,10 +992,7 @@ export function buildDelhiScene(group, river, terrain) {
    */
   function createCountryBoat() {
     const boatGroup = new THREE.Group();
-    const materials = [];
-
     const woodMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.85 });
-    materials.push(woodMat);
 
     const hull = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.45, 3.4), woodMat);
     hull.position.y = 0.25;
@@ -289,20 +1010,17 @@ export function buildDelhiScene(group, river, terrain) {
     oar.position.set(0.6, 0.5, 0.3);
     boatGroup.add(oar);
 
-    return { group: boatGroup, materials, primaryMat: woodMat };
+    return { group: boatGroup, materials: [woodMat], primaryMat: woodMat };
   }
 
   /**
-   * Roadside Tea Stall / Dhaba with Tarpaulin Awning
+   * Roadside Tea Stall / Dhaba with Awning
    */
   function createTeaStall() {
     const stallGroup = new THREE.Group();
-    const materials = [];
-
     const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 });
     const tarpMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.7 });
     const metalMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.3, metalness: 0.8 });
-    materials.push(woodMat, tarpMat, metalMat);
 
     const counter = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.85, 0.9), woodMat);
     counter.position.y = 0.42;
@@ -324,23 +1042,16 @@ export function buildDelhiScene(group, river, terrain) {
     kettle.position.set(0.4, 0.95, 0);
     stallGroup.add(kettle);
 
-    const bench = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.4, 0.35), woodMat);
-    bench.position.set(0, 0.2, 0.85);
-    stallGroup.add(bench);
-
-    return { group: stallGroup, materials, primaryMat: woodMat };
+    return { group: stallGroup, materials: [woodMat, tarpMat, metalMat], primaryMat: woodMat };
   }
 
   /**
-   * Indo-Gangetic Brick Kiln (Bhatta) with Terracotta Chimney
+   * Indo-Gangetic Brick Kiln (Bhatta)
    */
   function createBrickKiln() {
     const kilnGroup = new THREE.Group();
-    const materials = [];
-
     const brickMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.9 });
     const earthMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.95 });
-    materials.push(brickMat, earthMat);
 
     const base = new THREE.Mesh(new THREE.CylinderGeometry(3.6, 4.4, 1.8, 16), earthMat);
     base.position.y = 0.9;
@@ -353,24 +1064,15 @@ export function buildDelhiScene(group, river, terrain) {
     chimney.castShadow = true;
     kilnGroup.add(chimney);
 
-    for (let p = 0; p < 4; p++) {
-      const pallet = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.6, 0.9), brickMat);
-      pallet.position.set(3.5 + (p % 2) * 1.5, 0.3, (p > 1 ? 1 : -1) * 1.2);
-      kilnGroup.add(pallet);
-    }
-
-    return { group: kilnGroup, materials, primaryMat: brickMat };
+    return { group: kilnGroup, materials: [brickMat, earthMat], primaryMat: brickMat };
   }
 
   /**
-   * Dynamic Breachable Sandbag Embankment Bund Segment
+   * Sandbag Bund Segment
    */
   function createSandbagBundSegment(length = 3.6) {
     const bundGroup = new THREE.Group();
-    const materials = [];
-
     const sandbagMat = new THREE.MeshStandardMaterial({ color: 0xd4b996, roughness: 0.95 });
-    materials.push(sandbagMat);
 
     const cols = Math.floor(length / 0.7);
     for (let row = 0; row < 3; row++) {
@@ -380,14 +1082,11 @@ export function buildDelhiScene(group, river, terrain) {
         bundGroup.add(bag);
       }
     }
-
-    return { group: bundGroup, materials, primaryMat: sandbagMat };
+    return { group: bundGroup, materials: [sandbagMat], primaryMat: sandbagMat };
   }
 
   /**
-   * High-Fidelity National Disaster Response Force (NDRF) Motorized Rescue Boat
-   * Inflatable Zodiac dinghy with heavy-duty orange pontoon sponsons, rigid hull floor,
-   * outboard Yamaha motor with propeller cowl, bow searchlight, lifebuoys, and 2 relief personnel.
+   * NDRF Motorized Rescue Boat
    */
   function createNDRFRescueBoat() {
     const boatGroup = new THREE.Group();
@@ -403,117 +1102,40 @@ export function buildDelhiScene(group, river, terrain) {
     const spotlightMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xfef08a, emissiveIntensity: 0.8 });
     materials.push(orangePontoons, rubberBlack, deckMat, motorMat, ndrfBlue, lifeVestOrange, helmetWhite, spotlightMat);
 
-    // Rigid deck base
     const deck = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.15, 3.4), deckMat);
     deck.position.y = 0.15;
     boatGroup.add(deck);
 
-    // Port & Starboard inflatable tubes (cylinders with conical ends)
     [-0.8, 0.8].forEach(sideX => {
       const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 3.2, 12), orangePontoons);
       tube.rotation.x = Math.PI * 0.5;
       tube.position.set(sideX, 0.32, 0);
       boatGroup.add(tube);
-
-      // Black rub-strake bumper
-      const bumper = new THREE.Mesh(new THREE.CylinderGeometry(0.33, 0.33, 3.2, 12), rubberBlack);
-      bumper.rotation.x = Math.PI * 0.5;
-      bumper.scale.set(1.02, 1.0, 0.15);
-      bumper.position.set(sideX * 1.01, 0.32, 0);
-      boatGroup.add(bumper);
-
-      // Conical cone ends at stern
-      const cone = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.6, 12), orangePontoons);
-      cone.rotation.x = -Math.PI * 0.5;
-      cone.position.set(sideX, 0.32, -1.9);
-      boatGroup.add(cone);
     });
 
-    // Bow curved pontoon cross-section
     const bowTube = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 1.6, 12), orangePontoons);
     bowTube.rotation.z = Math.PI * 0.5;
     bowTube.position.set(0, 0.38, 1.6);
     boatGroup.add(bowTube);
 
-    // Bow spray splash guard
-    const bowNose = new THREE.Mesh(new THREE.ConeGeometry(0.7, 0.8, 4), orangePontoons);
-    bowNose.rotation.x = Math.PI * 0.5;
-    bowNose.position.set(0, 0.38, 1.9);
-    boatGroup.add(bowNose);
-
-    // Stern Transom Board
-    const transom = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.6, 0.15), rubberBlack);
-    transom.position.set(0, 0.45, -1.55);
-    boatGroup.add(transom);
-
-    // Outboard Motor Assembly
     const motorGroup = new THREE.Group();
     motorGroup.position.set(0, 0.6, -1.75);
     const motorCowling = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.55, 0.5), motorMat);
     motorCowling.position.y = 0.2;
     motorGroup.add(motorCowling);
-
-    const motorShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.9, 8), motorMat);
-    motorShaft.position.set(0, -0.3, -0.05);
-    motorGroup.add(motorShaft);
-
-    const prop = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.15, 0.06), rubberBlack);
-    prop.position.set(0, -0.7, -0.05);
-    motorGroup.add(prop);
-
-    const tiller = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.6, 6), rubberBlack);
-    tiller.rotation.x = Math.PI * 0.4;
-    tiller.position.set(0.15, 0.35, 0.25);
-    motorGroup.add(tiller);
     boatGroup.add(motorGroup);
 
-    // Bow Searchlight & Spotlight
     const spotlight = new THREE.Group();
     spotlight.position.set(0, 0.72, 1.55);
-    const lightHousing = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.25, 10), rubberBlack);
-    lightHousing.rotation.x = Math.PI * 0.5;
-    spotlight.add(lightHousing);
-
     const lightLens = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.05, 10), spotlightMat);
     lightLens.rotation.x = Math.PI * 0.5;
-    lightLens.position.set(0, 0, 0.13);
     spotlight.add(lightLens);
     boatGroup.add(spotlight);
 
-    // Lifebuoy ring attached to starboard tube
-    const buoyMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5 });
-    materials.push(buoyMat);
-    const buoy = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.08, 8, 16), buoyMat);
-    buoy.rotation.y = Math.PI * 0.5;
-    buoy.position.set(0.85, 0.5, 0.4);
-    boatGroup.add(buoy);
-
-    // 2 NDRF Personnel (Coxswain at motor + Spotter with binoculars)
     [-0.2, 0.2].forEach((xOff, pIdx) => {
-      const personGroup = new THREE.Group();
-      personGroup.position.set(xOff, 0.25, (pIdx === 0 ? -1.1 : 0.6));
-
-      // Legs / Seated Lower Body
-      const legs = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.35, 0.45), ndrfBlue);
-      legs.position.y = 0.2;
-      personGroup.add(legs);
-
-      // Torso with NDRF Lifejacket
-      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.48, 0.32), lifeVestOrange);
-      torso.position.y = 0.58;
-      personGroup.add(torso);
-
-      // Head
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), new THREE.MeshStandardMaterial({ color: 0x8d5b4c }));
-      head.position.y = 0.92;
-      personGroup.add(head);
-
-      // White Rescue Helmet
-      const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8, 0, Math.PI * 2, 0, Math.PI * 0.6), helmetWhite);
-      helmet.position.y = 0.94;
-      personGroup.add(helmet);
-
-      boatGroup.add(personGroup);
+      const person = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.75, 0.35), lifeVestOrange);
+      person.position.set(xOff, 0.55, (pIdx === 0 ? -1.0 : 0.6));
+      boatGroup.add(person);
     });
 
     boatGroup.castShadow = true;
@@ -521,42 +1143,30 @@ export function buildDelhiScene(group, river, terrain) {
   }
 
   /**
-   * Floating Urban Chemical / Fuel Barrels
+   * Floating Barrels & Timber Rafts
    */
   function createFloatingBarrelCluster() {
     const cluster = new THREE.Group();
-    const materials = [];
-
     const barrelColors = [0x0284c7, 0xdc2626, 0xeab308];
     const drumGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.9, 10);
-
     for (let b = 0; b < 3; b++) {
       const mat = new THREE.MeshStandardMaterial({ color: barrelColors[b % barrelColors.length], roughness: 0.5, metalness: 0.4 });
-      materials.push(mat);
       const drum = new THREE.Mesh(drumGeo, mat);
       drum.position.set((b - 1) * 0.45, 0.2, (b % 2 === 0 ? 0.2 : -0.2));
-      drum.rotation.z = (Math.random() - 0.5) * 0.4;
       cluster.add(drum);
     }
-    return { group: cluster, materials, primaryMat: materials[0] };
+    return { group: cluster };
   }
 
-  /**
-   * Floating Timber Planks & Bamboo Raft Debris
-   */
   function createFloatingTimberRaft() {
     const raft = new THREE.Group();
-    const materials = [];
-
     const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 });
-    materials.push(woodMat);
-
     for (let p = 0; p < 5; p++) {
       const plank = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.12, 2.8), woodMat);
       plank.position.set((p - 2) * 0.38, 0.1, (Math.random() - 0.5) * 0.3);
       raft.add(plank);
     }
-    return { group: raft, materials, primaryMat: woodMat };
+    return { group: raft };
   }
 
   // Helper to register dynamic wipeable collapsing item
@@ -584,17 +1194,12 @@ export function buildDelhiScene(group, river, terrain) {
     });
   }
 
-  // ----------------------------------------------------
+  // -------------------------------------------------------------------------
   // 1. WAZIRABAD BARRAGE & WATER TREATMENT PLANT (u = 0.20)
-  // ----------------------------------------------------
+  // -------------------------------------------------------------------------
   const fWazir = getRiverFrame(0.20);
   const wazirGroup = new THREE.Group();
   wazirGroup.position.copy(fWazir.pt);
-
-  const concreteMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.7, metalness: 0.1 });
-  const darkSteel = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5, metalness: 0.6 });
-  const siltMat = new THREE.MeshStandardMaterial({ color: 0x785336, roughness: 0.9 });
-  const pipeMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.4, metalness: 0.4 });
 
   const barrageSpan = 24.0;
   const barragePiers = 8;
@@ -615,44 +1220,253 @@ export function buildDelhiScene(group, river, terrain) {
     }
   }
 
-  const gantry = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, barrageSpan + 2), darkSteel);
-  gantry.rotation.y = Math.atan2(fWazir.side.x, fWazir.side.z);
-  gantry.position.set(0, 4.8, 0);
-  wazirGroup.add(gantry);
-
-  // WTP Pump House on Western Bank
-  const pumpHouse = new THREE.Group();
-  const pumpBuilding = new THREE.Mesh(new THREE.BoxGeometry(10.0, 4.5, 8.0), concreteMat);
-  pumpBuilding.castShadow = true;
-  pumpHouse.add(pumpBuilding);
-
-  for (let p = 0; p < 3; p++) {
-    const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 6.0, 12), pipeMat);
-    pipe.rotation.z = Math.PI * 0.35;
-    pipe.position.set(3.5 + p * 1.5, -1.0, 0);
-    pumpHouse.add(pipe);
-  }
-
-  const siltMound = new THREE.Mesh(new THREE.ConeGeometry(4.0, 1.8, 16), siltMat);
-  siltMound.position.set(4.0, -1.2, 0);
-  pumpHouse.add(siltMound);
-
+  // WTP Pump House
+  const pumpHouse = new THREE.Mesh(new THREE.BoxGeometry(10.0, 4.5, 8.0), concreteMat);
   pumpHouse.position.set(-fWazir.side.x * 16.0, 2.2, -fWazir.side.z * 16.0);
   wazirGroup.add(pumpHouse);
   group.add(wazirGroup);
 
-  // ----------------------------------------------------
-  // CLUSTER 1: WAZIRABAD & MAJNU KA TILA FLOODPLAIN BASTI (u = 0.22 - 0.29)
-  // ----------------------------------------------------
+  // -------------------------------------------------------------------------
+  // 2. OLD YAMUNA IRON BRIDGE (LOHA PUL - 1866) (u = 0.35)
+  // -------------------------------------------------------------------------
+  const fLoha = getRiverFrame(0.35);
+  const lohaGroup = new THREE.Group();
+  lohaGroup.position.copy(fLoha.pt);
+
+  const lohaPiers = 4;
+  const lohaSpan = 26.0;
+  const lohaSpacing = lohaSpan / lohaPiers;
+
+  for (let s = 0; s <= lohaPiers; s++) {
+    const offset = (s - lohaPiers * 0.5) * lohaSpacing;
+    const pier = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.6, 6.5, 16), redSandstoneMat);
+    pier.position.set(fLoha.side.x * offset, 2.0, fLoha.side.z * offset);
+    pier.castShadow = true;
+    lohaGroup.add(pier);
+
+    if (s < lohaPiers) {
+      const spanCenter = offset + lohaSpacing * 0.5;
+      const truss = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2.2, lohaSpacing * 0.95), darkSteel);
+      truss.position.set(fLoha.side.x * spanCenter, 5.2, fLoha.side.z * spanCenter);
+      lohaGroup.add(truss);
+    }
+  }
+
+  // WAP-7 Locomotive on Bridge
+  const loco = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.1, 3.4), new THREE.MeshStandardMaterial({ color: 0x1d4ed8 }));
+  loco.position.set(0, 6.8, 2.0);
+  lohaGroup.add(loco);
+
+  for (let c = 0; c < 3; c++) {
+    const coach = new THREE.Mesh(new THREE.BoxGeometry(0.75, 1.0, 3.8), new THREE.MeshStandardMaterial({ color: 0xb45309 }));
+    coach.position.set(0, 6.8, -2.2 - c * 4.1);
+    lohaGroup.add(coach);
+  }
+  group.add(lohaGroup);
+
+  // -------------------------------------------------------------------------
+  // 3. NIGAMBODH GHAT SACRED BATHING COMPLEX (u = 0.42)
+  // -------------------------------------------------------------------------
+  const fGhat = getRiverFrame(0.42);
+  const ghatObj = createNigambodhGhat();
+  const ghatPos = fGhat.pt.clone().addScaledVector(fGhat.side, -11.5);
+  ghatPos.y = terrain.getTerrainHeight(ghatPos.x, ghatPos.z) + 0.1;
+  ghatObj.group.position.copy(ghatPos);
+  ghatObj.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fGhat.tangent);
+  group.add(ghatObj.group);
+
+  // -------------------------------------------------------------------------
+  // 4. KASHMERE GATE ISBT & SUBMERGED RING ROAD (u = 0.48)
+  // -------------------------------------------------------------------------
+  const fKash = getRiverFrame(0.48);
+  const isbt = createISBTTerminal();
+  const isbtPos = fKash.pt.clone().addScaledVector(fKash.side, -24.0).addScaledVector(fKash.tangent, -4.0);
+  isbtPos.y = terrain.getTerrainHeight(isbtPos.x, isbtPos.z);
+  isbt.group.position.copy(isbtPos);
+  isbt.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fKash.tangent);
+  group.add(isbt.group);
+
+  // Submerged Ring Road Viaduct
+  const ringRoad = new THREE.Mesh(new THREE.BoxGeometry(6.5, 0.6, 52.0), tarmacMat);
+  ringRoad.position.set(-fKash.side.x * 12.0, 2.8, -fKash.side.z * 12.0);
+  ringRoad.castShadow = true;
+  group.add(ringRoad);
+
+  // Elevated Delhi Metro Viaduct running overhead across Kashmere Gate corridor
+  const metroViaduct = createDelhiMetroViaduct();
+  const metroPos = fKash.pt.clone().addScaledVector(fKash.side, -18.0);
+  metroViaduct.group.position.copy(metroPos);
+  metroViaduct.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fKash.tangent);
+  group.add(metroViaduct.group);
+
+  // -------------------------------------------------------------------------
+  // 5. AUTHENTIC RED FORT (LAL QILA) COMPLEX & DYNAMIC MOAT (u = 0.60)
+  // -------------------------------------------------------------------------
+  const fFort = getRiverFrame(0.60);
+  const redFort = createRedFortComplex();
+  const fortPos = fFort.pt.clone().addScaledVector(fFort.side, -19.5);
+  fortPos.y = terrain.getTerrainHeight(fortPos.x, fortPos.z) + 0.1;
+  redFort.group.position.copy(fortPos);
+  redFort.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fFort.tangent);
+  group.add(redFort.group);
+
+  // -------------------------------------------------------------------------
+  // 6. ITO BARRAGE & DRAIN 12 REGULATOR BREACH (u = 0.74)
+  // -------------------------------------------------------------------------
+  const fIto = getRiverFrame(0.74);
+  const itoGroup = new THREE.Group();
+  itoGroup.position.copy(fIto.pt);
+
+  for (let i = -5; i <= 5; i++) {
+    const pier = new THREE.Mesh(new THREE.BoxGeometry(0.7, 4.8, 3.2), concreteMat);
+    pier.position.set(fIto.side.x * i * 2.2, 1.5, fIto.side.z * i * 2.2);
+    itoGroup.add(pier);
+  }
+
+  const drainHeadwall = new THREE.Mesh(new THREE.BoxGeometry(4.0, 3.2, 1.8), concreteMat);
+  drainHeadwall.position.set(-fIto.side.x * 12.0, 1.8, 0);
+  itoGroup.add(drainHeadwall);
+
+  const brokenGate = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.8, 0.2), darkSteel);
+  brokenGate.position.set(-fIto.side.x * 12.0, 1.0, 0.6);
+  brokenGate.rotation.z = -0.35;
+  itoGroup.add(brokenGate);
+
+  // Vikas Minar Multi-Storey Headquarters at ITO
+  const vikasTower = new THREE.Mesh(new THREE.BoxGeometry(9.0, 26.0, 9.0), new THREE.MeshStandardMaterial({
+    color: 0x94a3b8,
+    roughness: 0.35,
+    metalness: 0.4
+  }));
+  vikasTower.position.set(-fIto.side.x * 28.0, 13.0, -12.0);
+  itoGroup.add(vikasTower);
+  group.add(itoGroup);
+
+  // -------------------------------------------------------------------------
+  // 7. RAJGHAT MEMORIAL & DISASTER RELIEF CAMP (u = 0.88)
+  // -------------------------------------------------------------------------
+  const fRaj = getRiverFrame(0.88);
+  const rajGroup = new THREE.Group();
+  rajGroup.position.copy(fRaj.pt);
+
+  const rajWall = new THREE.Mesh(new THREE.BoxGeometry(14.0, 1.8, 14.0), concreteMat);
+  rajWall.position.set(-fRaj.side.x * 16.0, 2.2, 0);
+  rajGroup.add(rajWall);
+
+  const rajLawn = new THREE.Mesh(new THREE.BoxGeometry(12.0, 0.4, 12.0), new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.9 }));
+  rajLawn.position.set(-fRaj.side.x * 16.0, 2.3, 0);
+  rajGroup.add(rajLawn);
+
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.6, 2.4), new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.2 }));
+  plinth.position.set(-fRaj.side.x * 16.0, 2.8, 0);
+  rajGroup.add(plinth);
+
+  // Dewatering Heavy Pump Sets
+  for (let p = 0; p < 3; p++) {
+    const pumpUnit = new THREE.Group();
+    const pumpEngine = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.2, 1.8), new THREE.MeshStandardMaterial({ color: 0x16a34a }));
+    pumpEngine.position.y = 0.6;
+    pumpUnit.add(pumpEngine);
+    pumpUnit.position.set(-fRaj.side.x * 11.0, 2.4, -5.0 + p * 4.5);
+    rajGroup.add(pumpUnit);
+  }
+  group.add(rajGroup);
+
+  // -------------------------------------------------------------------------
+  // 8. DENSE OLD DELHI (SHAHJAHANABAD) URBAN HAVELIS (110+ Blocks)
+  // -------------------------------------------------------------------------
+  const haveliWallColors = [
+    0x991b1b, // Terracotta red brick
+    0xb45309, // Ochre brick
+    0xd97706, // Weathered amber
+    0x78350f, // Deep earthen brown
+    0x4b5563, // Plaster grey
+    0x94a3b8, // Dusty sandstone
+    0x1e3a8a, // Indigo blue haveli accent
+    0x047857  // Emerald green haveli accent
+  ];
+
+  // Grid 1: Chandni Chowk Commercial Spine (Leading West from Red Fort Lahori Gate)
+  for (let c = 0; c < 32; c++) {
+    const cx = 5.0 - (c % 8) * 9.5;
+    const cz = 6.0 + Math.floor(c / 8) * 11.0 + ((c % 2) * 2.5);
+    const haveli = createDelhiHaveliBlock(
+      6.2 + (c % 3) * 0.8,
+      10.0 + (c % 4) * 1.8,
+      6.5 + (c % 2) * 1.0,
+      haveliWallColors[c % haveliWallColors.length],
+      true, // has shops
+      3 + (c % 3)
+    );
+    haveli.group.position.set(cx, terrain.getTerrainHeight(cx, cz), cz);
+    haveli.group.rotation.y = (c % 2 === 0 ? 0 : Math.PI * 0.5);
+    group.add(haveli.group);
+  }
+
+  // Grid 2: Dariba Kalan & Kinari Bazar Dense Alleys (South of Chandni Chowk)
+  for (let k = 0; k < 36; k++) {
+    const kx = -15.0 - (k % 6) * 9.0;
+    const kz = 26.0 + Math.floor(k / 6) * 8.5;
+    const haveli = createDelhiHaveliBlock(
+      5.5 + (k % 3) * 0.6,
+      9.0 + (k % 3) * 1.5,
+      5.8 + (k % 2) * 0.8,
+      haveliWallColors[(k + 3) % haveliWallColors.length],
+      (k % 3 !== 0),
+      3 + (k % 2)
+    );
+    haveli.group.position.set(kx, terrain.getTerrainHeight(kx, kz), kz);
+    haveli.group.rotation.y = ((k * 0.4) % Math.PI);
+    group.add(haveli.group);
+  }
+
+  // Grid 3: Netaji Subhash Marg / Lal Qila Maidan Frontage (North-South Axis)
+  for (let n = 0; n < 26; n++) {
+    const nx = -12.0 + (n % 2) * 11.0;
+    const nz = -32.0 + n * 3.2;
+    const haveli = createDelhiHaveliBlock(
+      7.0 + (n % 2) * 0.8,
+      11.5 + (n % 3) * 1.6,
+      6.8 + (n % 2) * 0.6,
+      haveliWallColors[(n + 1) % haveliWallColors.length],
+      true,
+      4
+    );
+    haveli.group.position.set(nx, terrain.getTerrainHeight(nx, nz), nz);
+    haveli.group.rotation.y = Math.PI * 0.5;
+    group.add(haveli.group);
+  }
+
+  // Grid 4: Daryaganj Publishing & Commercial Blocks (South of Delhi Gate)
+  for (let d = 0; d < 22; d++) {
+    const dx = 16.0 + (d % 4) * 8.0;
+    const dz = 30.0 + Math.floor(d / 4) * 7.5;
+    const haveli = createDelhiHaveliBlock(
+      6.5 + (d % 2) * 0.5,
+      10.5 + (d % 3) * 1.2,
+      6.2 + (d % 2) * 0.7,
+      haveliWallColors[(d + 5) % haveliWallColors.length],
+      true,
+      3 + (d % 2)
+    );
+    haveli.group.position.set(dx, terrain.getTerrainHeight(dx, dz), dz);
+    haveli.group.rotation.y = (d % 2 === 0 ? 0 : Math.PI * 0.5);
+    group.add(haveli.group);
+  }
+
+  // -------------------------------------------------------------------------
+  // 9. FLOODPLAIN BASTI SHANTIES & COLLAPSING STRUCTURES (90+ Units)
+  // -------------------------------------------------------------------------
   const hutWallColors = [0x991b1b, 0xb45309, 0xd97706, 0x4b5563, 0x78350f, 0xa16207];
   const hutRoofColors = [0x475569, 0x0284c7, 0xea580c, 0x64748b, 0x0f766e];
   const roofTypes = ['cgi', 'tarp', 'flat'];
 
-  for (let i = 0; i < 10; i++) {
-    const uHut = 0.22 + i * 0.007;
+  // Cluster A: Wazirabad & Majnu Ka Tila (u = 0.21 - 0.29) - 18 Huts
+  for (let i = 0; i < 18; i++) {
+    const uHut = 0.21 + i * 0.005;
     const fHut = getRiverFrame(uHut);
     const bankDir = (i % 2 === 0) ? -1 : 1;
-    const dist = 7.5 + (i % 3) * 2.2;
+    const dist = 7.0 + (i % 4) * 1.8;
 
     const hut = createBastiHut(
       3.0 + (i % 3) * 0.4,
@@ -676,126 +1490,9 @@ export function buildDelhiScene(group, river, terrain) {
     });
   }
 
-  // Country boats moored at Majnu Ka Tila ghats
-  [0.23, 0.26].forEach((uBoat, bIdx) => {
-    const fBoat = getRiverFrame(uBoat);
-    const boat = createCountryBoat();
-    const pos = fBoat.pt.clone().addScaledVector(fBoat.side, (bIdx === 0 ? 4.2 : -4.2));
-    pos.y = fBoat.pt.y + 0.2;
-    boat.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fBoat.tangent);
-
-    registerWipeable(boat.group, uBoat, pos, fBoat.tangent, fBoat.side, {
-      primaryMat: boat.primaryMat,
-      materials: boat.materials,
-      driftSpeed: 30.0,
-      tumbleScale: 8.0
-    });
-  });
-
-  // Tea stall on floodplain edge
-  {
-    const fChai = getRiverFrame(0.25);
-    const chai = createTeaStall();
-    const pos = fChai.pt.clone().addScaledVector(fChai.side, -8.0);
-    pos.y = terrain.getTerrainHeight(pos.x, pos.z) + 0.1;
-    chai.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fChai.tangent);
-
-    registerWipeable(chai.group, 0.25, pos, fChai.tangent, fChai.side, {
-      primaryMat: chai.primaryMat,
-      materials: chai.materials,
-      driftSpeed: 26.0
-    });
-  }
-
-  // Brick Kiln (Bhatta) on East Bank sandbar
-  {
-    const fKiln = getRiverFrame(0.27);
-    const kiln = createBrickKiln();
-    const pos = fKiln.pt.clone().addScaledVector(fKiln.side, 14.5);
-    pos.y = terrain.getTerrainHeight(pos.x, pos.z);
-    kiln.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fKiln.tangent);
-
-    registerWipeable(kiln.group, 0.27, pos, fKiln.tangent, fKiln.side, {
-      primaryMat: kiln.primaryMat,
-      materials: kiln.materials,
-      driftSpeed: 18.0,
-      tumbleScale: 3.0,
-      collapseTilt: 0.4
-    });
-  }
-
-  // ----------------------------------------------------
-  // 2. OLD YAMUNA IRON BRIDGE (LOHA PUL - 1866) (u = 0.35)
-  // ----------------------------------------------------
-  const fLoha = getRiverFrame(0.35);
-  const lohaGroup = new THREE.Group();
-  lohaGroup.position.copy(fLoha.pt);
-
-  const brickPierMat = new THREE.MeshStandardMaterial({
-    color: 0x991b1b,
-    map: delhiBrickTex || null,
-    roughness: 0.85
-  });
-  const ironTrussMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.6, metalness: 0.7 });
-  const locoMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.5 });
-  const coachMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.6 });
-
-  const bridgeSpan = 26.0;
-  const numSpans = 4;
-  const spanLength = bridgeSpan / numSpans;
-
-  for (let s = 0; s <= numSpans; s++) {
-    const offset = (s - numSpans * 0.5) * spanLength;
-    const pier = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.6, 6.5, 16), brickPierMat);
-    pier.scale.set(1.4, 1.0, 0.8);
-    pier.position.set(fLoha.side.x * offset, 2.0, fLoha.side.z * offset);
-    pier.castShadow = true;
-    lohaGroup.add(pier);
-
-    if (s < numSpans) {
-      const spanCenter = offset + spanLength * 0.5;
-      const trussGroup = new THREE.Group();
-      trussGroup.position.set(fLoha.side.x * spanCenter, 5.2, fLoha.side.z * spanCenter);
-
-      const lowerDeck = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, spanLength * 0.95), ironTrussMat);
-      lowerDeck.position.y = -1.2;
-      trussGroup.add(lowerDeck);
-
-      const upperDeck = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, spanLength * 0.95), ironTrussMat);
-      upperDeck.position.y = 1.2;
-      trussGroup.add(upperDeck);
-
-      const trussSide1 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 2.4, spanLength * 0.92), ironTrussMat);
-      trussSide1.position.x = 0.4;
-      trussGroup.add(trussSide1);
-
-      const trussSide2 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 2.4, spanLength * 0.92), ironTrussMat);
-      trussSide2.position.x = -0.4;
-      trussGroup.add(trussSide2);
-
-      lohaGroup.add(trussGroup);
-    }
-  }
-
-  // WAP-7 Locomotive & Passenger Train halted on bridge upper deck
-  const trainGroup = new THREE.Group();
-  const loco = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.9, 3.2), locoMat);
-  loco.position.set(0, 7.0, 2.0);
-  trainGroup.add(loco);
-
-  for (let c = 0; c < 3; c++) {
-    const coach = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.85, 3.8), coachMat);
-    coach.position.set(0, 6.95, -2.2 - c * 4.1);
-    trainGroup.add(coach);
-  }
-  lohaGroup.add(trainGroup);
-  group.add(lohaGroup);
-
-  // ----------------------------------------------------
-  // CLUSTER 2: YAMUNA BAZAR & LOHA PUL RIVERBED BASTI (u = 0.36 - 0.44)
-  // ----------------------------------------------------
-  for (let i = 0; i < 12; i++) {
-    const uBasti = 0.36 + i * 0.0065;
+  // Cluster B: Yamuna Bazar & Loha Pul Riverbed (u = 0.36 - 0.46) - 22 Huts
+  for (let i = 0; i < 22; i++) {
+    const uBasti = 0.36 + i * 0.0045;
     const fBasti = getRiverFrame(uBasti);
     const bankDir = (i % 3 === 0) ? 1 : -1;
     const dist = 6.8 + (i % 4) * 1.8;
@@ -822,174 +1519,9 @@ export function buildDelhiScene(group, river, terrain) {
     });
   }
 
-  // Moored Yamuna Bazar country boats & roadside dhabas
-  [0.37, 0.41].forEach((uB, bIdx) => {
-    const fBoat = getRiverFrame(uB);
-    const boat = createCountryBoat();
-    const pos = fBoat.pt.clone().addScaledVector(fBoat.side, (bIdx === 0 ? -4.5 : 4.5));
-    pos.y = fBoat.pt.y + 0.2;
-    boat.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fBoat.tangent);
-
-    registerWipeable(boat.group, uB, pos, fBoat.tangent, fBoat.side, {
-      primaryMat: boat.primaryMat,
-      materials: boat.materials,
-      driftSpeed: 28.0
-    });
-  });
-
-  [0.39, 0.43].forEach((uChai, cIdx) => {
-    const fChai = getRiverFrame(uChai);
-    const chai = createTeaStall();
-    const pos = fChai.pt.clone().addScaledVector(fChai.side, (cIdx === 0 ? -7.8 : 7.2));
-    pos.y = terrain.getTerrainHeight(pos.x, pos.z) + 0.1;
-    chai.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fChai.tangent);
-
-    registerWipeable(chai.group, uChai, pos, fChai.tangent, fChai.side, {
-      primaryMat: chai.primaryMat,
-      materials: chai.materials,
-      driftSpeed: 24.0
-    });
-  });
-
-  // ----------------------------------------------------
-  // 3. KASHMERE GATE & SUBMERGED RING ROAD (u = 0.48)
-  // ----------------------------------------------------
-  const fKash = getRiverFrame(0.48);
-  const kashGroup = new THREE.Group();
-  kashGroup.position.copy(fKash.pt);
-
-  const tarmacMat = new THREE.MeshStandardMaterial({
-    color: 0x18181b,
-    map: asphaltRoadTex || null,
-    roughness: 0.9
-  });
-
-  const roadLength = 38.0;
-  const ringRoad = new THREE.Mesh(new THREE.BoxGeometry(5.5, 0.5, roadLength), tarmacMat);
-  ringRoad.position.set(-fKash.side.x * 12.0, 3.2, -fKash.side.z * 12.0);
-  ringRoad.castShadow = true;
-  kashGroup.add(ringRoad);
-
-  for (let p = -3; p <= 3; p++) {
-    const col = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 3.0, 12), concreteMat);
-    col.position.set(-fKash.side.x * 12.0, 1.5, -fKash.side.z * 12.0 + p * 5.5);
-    kashGroup.add(col);
-  }
-  group.add(kashGroup);
-
-  // ----------------------------------------------------
-  // CLUSTER 3: KASHMERE GATE COLLAPSING VEHICLES & MARKET (u = 0.47 - 0.50)
-  // ----------------------------------------------------
-  // DTC Bus on low-lying Ring Road ramp that floats and washes away
-  {
-    const bus = createDTCBus();
-    const pos = fKash.pt.clone().addScaledVector(fKash.side, -9.5).addScaledVector(fKash.tangent, 3.0);
-    pos.y = 2.4;
-    bus.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fKash.tangent);
-    bus.group.rotation.z = 0.14;
-
-    registerWipeable(bus.group, 0.48, pos, fKash.tangent, fKash.side, {
-      primaryMat: bus.primaryMat,
-      materials: bus.materials,
-      driftSpeed: 30.0,
-      tumbleScale: 6.0,
-      sinkScale: 0.22
-    });
-  }
-
-  // Auto-rickshaws drifting in floodwaters
-  [-2.5, 6.5].forEach((zOff, aIdx) => {
-    const auto = createAutoRickshaw();
-    const pos = fKash.pt.clone().addScaledVector(fKash.side, -8.2 + aIdx * 1.5).addScaledVector(fKash.tangent, zOff);
-    pos.y = 2.1;
-    auto.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fKash.tangent);
-    auto.group.rotation.x = -0.18;
-
-    registerWipeable(auto.group, 0.475 + aIdx * 0.01, pos, fKash.tangent, fKash.side, {
-      primaryMat: auto.primaryMat,
-      materials: auto.materials,
-      driftSpeed: 32.0,
-      tumbleScale: 9.0
-    });
-  });
-
-  // Stranded cars on flooded Ring Road ramp
-  [0xe2e8f0, 0xdc2626].forEach((carCol, cIdx) => {
-    const car = createPassengerCar(carCol);
-    const pos = fKash.pt.clone().addScaledVector(fKash.side, -11.0 + cIdx * 2.0).addScaledVector(fKash.tangent, -6.0 + cIdx * 4.5);
-    pos.y = 2.3;
-    car.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fKash.tangent);
-
-    registerWipeable(car.group, 0.485 + cIdx * 0.008, pos, fKash.tangent, fKash.side, {
-      primaryMat: car.primaryMat,
-      materials: car.materials,
-      driftSpeed: 28.0,
-      tumbleScale: 7.0
-    });
-  });
-
-  // Tibetan Monastery Market Stalls
-  for (let m = 0; m < 5; m++) {
-    const stall = createTeaStall();
-    const pos = fKash.pt.clone().addScaledVector(fKash.side, -16.0 + (m % 2) * 2.5).addScaledVector(fKash.tangent, -8.0 + m * 3.6);
-    pos.y = terrain.getTerrainHeight(pos.x, pos.z) + 0.1;
-    stall.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fKash.tangent);
-
-    registerWipeable(stall.group, 0.475 + m * 0.005, pos, fKash.tangent, fKash.side, {
-      primaryMat: stall.primaryMat,
-      materials: stall.materials,
-      driftSpeed: 27.0,
-      tumbleScale: 8.0
-    });
-  }
-
-  // ----------------------------------------------------
-  // 4. RED FORT (LAL QILA) & SALIMGARH RAMPARTS (u = 0.60)
-  // ----------------------------------------------------
-  const fFort = getRiverFrame(0.60);
-  const fortGroup = new THREE.Group();
-  fortGroup.position.copy(fFort.pt);
-
-  const redSandstoneMat = new THREE.MeshStandardMaterial({
-    color: 0x991b1b,
-    map: redSandstoneTex || null,
-    roughness: 0.85
-  });
-  const whiteMarbleMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.3 });
-
-  const wallLength = 48.0;
-  const wallHeight = 7.5;
-  const rampart = new THREE.Mesh(new THREE.BoxGeometry(2.4, wallHeight, wallLength), redSandstoneMat);
-  rampart.position.set(-fFort.side.x * 18.0, 4.2, -fFort.side.z * 18.0);
-  rampart.castShadow = true;
-  fortGroup.add(rampart);
-
-  for (let c = 0; c < 24; c++) {
-    const battlement = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.8, 1.2), redSandstoneMat);
-    battlement.position.set(-fFort.side.x * 18.0, wallHeight + 1.0, -wallLength * 0.5 + c * 2.0);
-    fortGroup.add(battlement);
-  }
-
-  for (const end of [-wallLength * 0.5, wallLength * 0.5]) {
-    const burj = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.4, wallHeight + 2.0, 8), redSandstoneMat);
-    burj.position.set(-fFort.side.x * 18.0, 5.0, end);
-    fortGroup.add(burj);
-
-    const chhatriDome = new THREE.Mesh(new THREE.SphereGeometry(1.4, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.5), whiteMarbleMat);
-    chhatriDome.position.set(-fFort.side.x * 18.0, wallHeight + 6.2, end);
-    fortGroup.add(chhatriDome);
-  }
-
-  const salimBridge = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.2, 12.0), redSandstoneMat);
-  salimBridge.position.set(-fFort.side.x * 12.0, 3.2, 14.0);
-  fortGroup.add(salimBridge);
-  group.add(fortGroup);
-
-  // ----------------------------------------------------
-  // CLUSTER 4: BELA ESTATE & GEETA COLONY FLOODPLAIN (u = 0.62 - 0.70)
-  // ----------------------------------------------------
-  for (let i = 0; i < 12; i++) {
-    const uBela = 0.62 + i * 0.0065;
+  // Cluster C: Bela Estate & Geeta Colony (u = 0.61 - 0.71) - 20 Huts
+  for (let i = 0; i < 20; i++) {
+    const uBela = 0.61 + i * 0.005;
     const fBela = getRiverFrame(uBela);
     const bankDir = (i % 2 === 0) ? 1 : -1;
     const dist = 7.0 + (i % 3) * 2.0;
@@ -1016,176 +1548,235 @@ export function buildDelhiScene(group, river, terrain) {
     });
   }
 
-  // Country boats at Bela Estate
-  [0.64, 0.68].forEach((uB, bIdx) => {
-    const fBoat = getRiverFrame(uB);
-    const boat = createCountryBoat();
-    const pos = fBoat.pt.clone().addScaledVector(fBoat.side, (bIdx === 0 ? 4.5 : -4.5));
-    pos.y = fBoat.pt.y + 0.2;
-    boat.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fBoat.tangent);
+  // Cluster D: South Floodplain (u = 0.82 - 0.94) - 15 Huts
+  for (let i = 0; i < 15; i++) {
+    const uSouth = 0.82 + i * 0.008;
+    const fSouth = getRiverFrame(uSouth);
+    const dist = 8.0 + (i % 3) * 1.5;
 
-    registerWipeable(boat.group, uB, pos, fBoat.tangent, fBoat.side, {
-      primaryMat: boat.primaryMat,
-      materials: boat.materials,
-      driftSpeed: 28.0
+    const hut = createBastiHut(
+      3.0, 2.2, 3.2,
+      hutWallColors[(i + 4) % hutWallColors.length],
+      hutRoofColors[i % hutRoofColors.length],
+      'cgi'
+    );
+    const pos = fSouth.pt.clone().addScaledVector(fSouth.side, dist);
+    pos.y = terrain.getTerrainHeight(pos.x, pos.z) + 0.1;
+    hut.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fSouth.tangent);
+
+    registerWipeable(hut.group, uSouth, pos, fSouth.tangent, fSouth.side, {
+      primaryMat: hut.primaryMat,
+      materials: hut.materials,
+      driftSpeed: 24.0
+    });
+  }
+
+  // Riverbed Tea Stalls & Country Boats
+  [0.24, 0.38, 0.44, 0.65, 0.72].forEach((uChai, idx) => {
+    const fChai = getRiverFrame(uChai);
+    const chai = createTeaStall();
+    const pos = fChai.pt.clone().addScaledVector(fChai.side, (idx % 2 === 0 ? -7.5 : 7.5));
+    pos.y = terrain.getTerrainHeight(pos.x, pos.z) + 0.1;
+    chai.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fChai.tangent);
+
+    registerWipeable(chai.group, uChai, pos, fChai.tangent, fChai.side, {
+      primaryMat: chai.primaryMat,
+      materials: chai.materials,
+      driftSpeed: 25.0
     });
   });
 
-  // ----------------------------------------------------
-  // 5. ITO BARRAGE & DRAIN 12 REGULATOR BREACH (u = 0.74)
-  // ----------------------------------------------------
-  const fIto = getRiverFrame(0.74);
-  const itoGroup = new THREE.Group();
-  itoGroup.position.copy(fIto.pt);
+  [0.23, 0.27, 0.37, 0.43, 0.64, 0.68].forEach((uBoat, bIdx) => {
+    const fBoat = getRiverFrame(uBoat);
+    const boat = createCountryBoat();
+    const pos = fBoat.pt.clone().addScaledVector(fBoat.side, (bIdx % 2 === 0 ? -4.2 : 4.2));
+    pos.y = fBoat.pt.y + 0.2;
+    boat.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fBoat.tangent);
 
-  const armyGreenMat = new THREE.MeshStandardMaterial({ color: 0x3f4f2c, roughness: 0.7 });
-  const steelSheetMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5, metalness: 0.7 });
+    registerWipeable(boat.group, uBoat, pos, fBoat.tangent, fBoat.side, {
+      primaryMat: boat.primaryMat,
+      materials: boat.materials,
+      driftSpeed: 29.0
+    });
+  });
 
-  for (let i = -5; i <= 5; i++) {
-    const pier = new THREE.Mesh(new THREE.BoxGeometry(0.7, 4.8, 3.2), concreteMat);
-    pier.position.set(fIto.side.x * i * 2.2, 1.5, fIto.side.z * i * 2.2);
-    itoGroup.add(pier);
-  }
+  // Brick Kilns on East Bank
+  [0.28, 0.66].forEach(uK => {
+    const fK = getRiverFrame(uK);
+    const kiln = createBrickKiln();
+    const pos = fK.pt.clone().addScaledVector(fK.side, 14.5);
+    pos.y = terrain.getTerrainHeight(pos.x, pos.z);
+    kiln.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fK.tangent);
 
-  const drainHeadwall = new THREE.Mesh(new THREE.BoxGeometry(4.0, 3.2, 1.8), concreteMat);
-  drainHeadwall.position.set(-fIto.side.x * 12.0, 1.8, 0);
-  itoGroup.add(drainHeadwall);
+    registerWipeable(kiln.group, uK, pos, fK.tangent, fK.side, {
+      primaryMat: kiln.primaryMat,
+      materials: kiln.materials,
+      driftSpeed: 18.0,
+      collapseTilt: 0.4
+    });
+  });
 
-  const brokenGate = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.8, 0.2), darkSteel);
-  brokenGate.position.set(-fIto.side.x * 12.0, 1.0, 0.6);
-  brokenGate.rotation.z = -0.35;
-  itoGroup.add(brokenGate);
-
-  const armyTruck = new THREE.Group();
-  const truckBody = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.5, 4.8), armyGreenMat);
-  armyTruck.add(truckBody);
-  const craneArm = new THREE.Mesh(new THREE.BoxGeometry(0.4, 2.8, 0.4), steelSheetMat);
-  craneArm.rotation.x = 0.5;
-  craneArm.position.set(0, 1.8, -1.0);
-  armyTruck.add(craneArm);
-  armyTruck.position.set(-fIto.side.x * 17.5, 3.5, -4.0);
-  itoGroup.add(armyTruck);
-
-  const vikasTower = new THREE.Mesh(new THREE.BoxGeometry(8.0, 22.0, 8.0), new THREE.MeshStandardMaterial({
-    color: 0x94a3b8,
-    roughness: 0.4,
-    metalness: 0.3
-  }));
-  vikasTower.position.set(-fIto.side.x * 28.0, 11.0, -12.0);
-  itoGroup.add(vikasTower);
-  group.add(itoGroup);
-
-  // ----------------------------------------------------
-  // CLUSTER 5: DYNAMIC BREACHING SANDBAG BUNDS AT ITO DRAIN 12 (u = 0.73 - 0.76)
-  // ----------------------------------------------------
-  for (let s = 0; s < 3; s++) {
+  // Sandbag Embankment Bunds at ITO & Rajghat
+  for (let s = 0; s < 4; s++) {
     const bund = createSandbagBundSegment(4.2);
-    const pos = fIto.pt.clone().addScaledVector(fIto.side, -14.0).addScaledVector(fIto.tangent, (s - 1) * 4.2);
+    const pos = fIto.pt.clone().addScaledVector(fIto.side, -14.0).addScaledVector(fIto.tangent, (s - 1.5) * 4.2);
     pos.y = 1.4;
     bund.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fIto.tangent);
 
-    registerWipeable(bund.group, 0.735 + s * 0.01, pos, fIto.tangent, fIto.side, {
+    registerWipeable(bund.group, 0.735 + s * 0.008, pos, fIto.tangent, fIto.side, {
       primaryMat: bund.primaryMat,
       materials: bund.materials,
       driftSpeed: 22.0,
-      tumbleScale: 5.0,
-      sinkScale: 0.25,
       collapseTilt: 0.6
     });
   }
 
-  // Overturned delivery tempo near Drain 12 breach
+  // -------------------------------------------------------------------------
+  // 10. 65+ VEHICLES: DTC BUSES, AUTOS, POLICE GYPSYS, BARRICADES & CARS
+  // -------------------------------------------------------------------------
+
+  // A. DTC Low-Floor Buses (Green CNG & Electric Blue)
+  // 1. Stranded on Kashmere Gate Ring Road ramp (floats & drifts)
   {
-    const tempo = createPassengerCar(0xd97706);
-    const pos = fIto.pt.clone().addScaledVector(fIto.side, -12.5).addScaledVector(fIto.tangent, 2.5);
-    pos.y = 1.8;
-    tempo.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fIto.tangent);
-    tempo.group.rotation.z = 0.45;
+    const bus1 = createDTCBus(false); // Green CNG
+    const pos = fKash.pt.clone().addScaledVector(fKash.side, -9.5).addScaledVector(fKash.tangent, 3.0);
+    pos.y = 2.4;
+    bus1.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fKash.tangent);
+    bus1.group.rotation.z = 0.14;
 
-    registerWipeable(tempo.group, 0.745, pos, fIto.tangent, fIto.side, {
-      primaryMat: tempo.primaryMat,
-      materials: tempo.materials,
+    registerWipeable(bus1.group, 0.48, pos, fKash.tangent, fKash.side, {
+      primaryMat: bus1.primaryMat,
+      materials: bus1.materials,
+      driftSpeed: 30.0,
+      sinkScale: 0.22
+    });
+  }
+
+  // 2. Electric Blue DTC Bus submerged at Kashmere Gate underpass
+  {
+    const bus2 = createDTCBus(true); // Blue Electric
+    const pos = fKash.pt.clone().addScaledVector(fKash.side, -13.0).addScaledVector(fKash.tangent, -6.5);
+    pos.y = 2.2;
+    bus2.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fKash.tangent);
+    bus2.group.rotation.x = -0.12;
+
+    registerWipeable(bus2.group, 0.485, pos, fKash.tangent, fKash.side, {
+      primaryMat: bus2.primaryMat,
+      materials: bus2.materials,
       driftSpeed: 28.0,
-      tumbleScale: 7.5
+      sinkScale: 0.25
     });
   }
 
-  // ----------------------------------------------------
-  // 6. RAJGHAT MEMORIAL & DISASTER RELIEF CAMP (u = 0.88)
-  // ----------------------------------------------------
-  const fRaj = getRiverFrame(0.88);
-  const rajGroup = new THREE.Group();
-  rajGroup.position.copy(fRaj.pt);
+  // 3-6. Buses parked at ISBT bays and along Ring Road
+  [
+    { x: -18.0, z: -10.0, electric: false },
+    { x: -22.0, z: -12.0, electric: true },
+    { x: -14.0, z: 12.0, electric: false },
+    { x: -16.0, z: 22.0, electric: true }
+  ].forEach(bDef => {
+    const bus = createDTCBus(bDef.electric);
+    bus.group.position.set(bDef.x, terrain.getTerrainHeight(bDef.x, bDef.z) + 0.1, bDef.z);
+    bus.group.rotation.y = Math.PI * 0.5;
+    group.add(bus.group);
+  });
 
-  const blackMarbleMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.2, metalness: 0.2 });
-  const grassMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.9 });
-  const pumpGreenMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.5 });
-  const trailerYellowMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 });
-  const tentOrangeMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.8 });
-  const tentBlueMat = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.8 });
+  // B. Bajaj Auto-Rickshaws (18 Units)
+  // Dynamic floating rickshaws caught in surging currents
+  [-3.0, 1.5, 6.0, 10.5, -7.5].forEach((zOff, aIdx) => {
+    const auto = createAutoRickshaw();
+    const pos = fKash.pt.clone().addScaledVector(fKash.side, -8.5 + (aIdx % 3) * 1.5).addScaledVector(fKash.tangent, zOff);
+    pos.y = 2.1;
+    auto.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fKash.tangent);
+    auto.group.rotation.x = -0.18;
+    auto.group.rotation.z = (aIdx % 2 === 0 ? 0.2 : -0.2);
 
-  const rajWall = new THREE.Mesh(new THREE.BoxGeometry(14.0, 1.8, 14.0), concreteMat);
-  rajWall.position.set(-fRaj.side.x * 16.0, 2.2, 0);
-  rajGroup.add(rajWall);
+    registerWipeable(auto.group, 0.475 + aIdx * 0.008, pos, fKash.tangent, fKash.side, {
+      primaryMat: auto.primaryMat,
+      materials: auto.materials,
+      driftSpeed: 32.0,
+      tumbleScale: 9.0
+    });
+  });
 
-  const rajLawn = new THREE.Mesh(new THREE.BoxGeometry(12.0, 0.4, 12.0), grassMat);
-  rajLawn.position.set(-fRaj.side.x * 16.0, 2.3, 0);
-  rajGroup.add(rajLawn);
-
-  const plinth = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.6, 2.4), blackMarbleMat);
-  plinth.position.set(-fRaj.side.x * 16.0, 2.8, 0);
-  rajGroup.add(plinth);
-
-  for (let p = 0; p < 3; p++) {
-    const pumpUnit = new THREE.Group();
-    const trailer = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.6, 2.4), trailerYellowMat);
-    const pumpEngine = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.1, 1.8), pumpGreenMat);
-    pumpEngine.position.y = 0.85;
-    pumpUnit.add(trailer);
-    pumpUnit.add(pumpEngine);
-
-    const hose = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 7.5, 12), new THREE.MeshStandardMaterial({ color: 0x14532d }));
-    hose.rotation.z = Math.PI * 0.42;
-    hose.position.set(3.5, 0.5, 0);
-    pumpUnit.add(hose);
-
-    pumpUnit.position.set(-fRaj.side.x * 11.0, 2.5, -5.0 + p * 4.5);
-    rajGroup.add(pumpUnit);
+  // Static / parked rickshaws along Chandni Chowk and Old Delhi streets
+  for (let a = 0; a < 13; a++) {
+    const auto = createAutoRickshaw();
+    const ax = -5.0 - (a % 5) * 12.0;
+    const az = 4.0 + (a % 3) * 14.0;
+    auto.group.position.set(ax, terrain.getTerrainHeight(ax, az), az);
+    auto.group.rotation.y = (a * 0.7) % (Math.PI * 2);
+    group.add(auto.group);
   }
 
-  const tentFlyover = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.6, 24.0), tarmacMat);
-  tentFlyover.position.set(fRaj.side.x * 16.0, 4.2, 0);
-  rajGroup.add(tentFlyover);
+  // C. Delhi Police Gypsys (6 Units) & Steel Barricades (8 Units)
+  const policeLocations = [
+    { x: -10.0, z: -14.0, rot: 0.3 },
+    { x: -12.0, z: -2.0,  rot: -0.2 },
+    { x: -8.0,  z: 14.0,  rot: 0.5 },
+    { x: -15.0, z: 28.0,  rot: -0.4 },
+    { x: 2.0,   z: -8.0,  rot: 1.2 },
+    { x: 8.0,   z: 18.0,  rot: -1.0 }
+  ];
 
-  for (let t = 0; t < 8; t++) {
-    const tentGeo = new THREE.ConeGeometry(1.1, 1.4, 4);
-    const tentMat = (t % 2 === 0) ? tentOrangeMat : tentBlueMat;
-    const tent = new THREE.Mesh(tentGeo, tentMat);
-    tent.rotation.y = Math.PI * 0.25;
-    tent.position.set(fRaj.side.x * 16.0 + ((t % 2) - 0.5) * 1.5, 5.2, -10.0 + t * 2.8);
-    rajGroup.add(tent);
-  }
-  group.add(rajGroup);
+  policeLocations.forEach((pLoc, pIdx) => {
+    const gypsy = createDelhiPoliceGypsy();
+    gypsy.group.position.set(pLoc.x, terrain.getTerrainHeight(pLoc.x, pLoc.z), pLoc.z);
+    gypsy.group.rotation.y = pLoc.rot;
+    group.add(gypsy.group);
 
-  for (let r = 0; r < 3; r++) {
-    const bund = createSandbagBundSegment(3.5);
-    const pos = fRaj.pt.clone().addScaledVector(fRaj.side, -10.5).addScaledVector(fRaj.tangent, (r - 1) * 3.8);
-    pos.y = 1.6;
-    bund.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fRaj.tangent);
+    // Pair with yellow/black steel barricade
+    const barricade = createPoliceBarricade();
+    barricade.group.position.set(pLoc.x + 2.2, terrain.getTerrainHeight(pLoc.x + 2.2, pLoc.z), pLoc.z + 1.2);
+    barricade.group.rotation.y = pLoc.rot + Math.PI * 0.5;
+    group.add(barricade.group);
+  });
 
-    registerWipeable(bund.group, 0.86 + r * 0.01, pos, fRaj.tangent, fRaj.side, {
-      primaryMat: bund.primaryMat,
-      materials: bund.materials,
-      driftSpeed: 20.0,
-      tumbleScale: 4.5
+  // Extra barricades cordoning off flooded low-lying ramps
+  [
+    { x: -11.0, z: -22.0 },
+    { x: -13.0, z: 8.0 }
+  ].forEach(bLoc => {
+    const barricade = createPoliceBarricade();
+    barricade.group.position.set(bLoc.x, terrain.getTerrainHeight(bLoc.x, bLoc.z), bLoc.z);
+    group.add(barricade.group);
+  });
+
+  // D. Passenger Cars & Commercial Delivery Tempos (24 Units)
+  const carColors = [0xf8fafc, 0xe2e8f0, 0x94a3b8, 0xdc2626, 0xd97706, 0x2563eb];
+
+  // Dynamic cars washing away on flooded ramps
+  for (let c = 0; c < 8; c++) {
+    const car = createPassengerCar(carColors[c % carColors.length]);
+    const uCar = 0.48 + c * 0.006;
+    const fCar = getRiverFrame(uCar);
+    const pos = fCar.pt.clone().addScaledVector(fCar.side, -11.0 + (c % 3) * 1.8).addScaledVector(fCar.tangent, (c - 3.5) * 3.5);
+    pos.y = 2.2;
+    car.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fCar.tangent);
+    car.group.rotation.z = (c % 2 === 0 ? 0.35 : -0.25);
+
+    registerWipeable(car.group, uCar, pos, fCar.tangent, fCar.side, {
+      primaryMat: car.primaryMat,
+      materials: car.materials,
+      driftSpeed: 28.0,
+      tumbleScale: 7.0
     });
   }
 
-  // ----------------------------------------------------
-  // 7. NDRF MOTORIZED RESCUE BOATS PATROL FLEET
-  // ----------------------------------------------------
+  // Parked cars along Old Delhi streets
+  for (let c = 0; c < 16; c++) {
+    const car = createPassengerCar(carColors[(c + 2) % carColors.length]);
+    const cx = -20.0 - (c % 4) * 12.0;
+    const cz = -15.0 + Math.floor(c / 4) * 16.0;
+    car.group.position.set(cx, terrain.getTerrainHeight(cx, cz), cz);
+    car.group.rotation.y = (c % 2 === 0 ? 0 : Math.PI * 0.5);
+    group.add(car.group);
+  }
+
+  // -------------------------------------------------------------------------
+  // 11. NDRF MOTORIZED RESCUE BOATS PATROL FLEET (6 Boats)
+  // -------------------------------------------------------------------------
   const ndrfRescueFleet = [];
-
   const boatDefs = [
     { u: 0.24, side: -6.8, patrolSpan: 8.0, desc: 'Wazirabad & Majnu Ka Tila Floodplain Rescue' },
     { u: 0.38, side: 5.5, patrolSpan: 10.0, desc: 'Loha Pul & Yamuna Bazar Evacuation Patrol' },
@@ -1222,20 +1813,15 @@ export function buildDelhiScene(group, river, terrain) {
     for (let i = 0; i < ndrfRescueFleet.length; i++) {
       const boat = ndrfRescueFleet[i];
       if (uWave < boat.uTrigger) {
-        // Moored on standby prior to flood crest reaching sector
         boat.group.position.copy(boat.basePos);
         const f = getRiverFrame(boat.uCenter);
         boat.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f.tangent);
-        if (boat.spotlight) boat.spotlight.rotation.y = 0;
-        if (boat.motorGroup) boat.motorGroup.rotation.y = 0;
       } else {
-        // Active flood response: navigate dynamic floodwaters
         const waveIntensity = Math.min(1.0, (uWave - boat.uTrigger) / 0.15);
         const patrol = Math.sin(timeSec * 0.75 + boat.phase) * boat.patrolSpan * 0.002;
         const currentU = Math.min(0.96, Math.max(0.05, boat.uCenter + patrol));
         const f = getRiverFrame(currentU);
 
-        // Water level elevation
         const waterHeight = Math.max(terrain.getTerrainHeight(f.pt.x, f.pt.z) + 0.3, f.pt.y + 0.5 + waveIntensity * 1.8);
         const heave = Math.sin(timeSec * 2.8 + boat.phase) * 0.14;
         const roll = Math.cos(timeSec * 2.2 + boat.phase) * 0.10;
@@ -1249,7 +1835,6 @@ export function buildDelhiScene(group, river, terrain) {
         boat.group.rotateZ(roll);
         boat.group.rotateX(pitch);
 
-        // Dynamic tiller & searchlight sweeping
         if (boat.motorGroup) {
           boat.motorGroup.rotation.y = Math.sin(timeSec * 2.2 + boat.phase) * 0.28;
         }
@@ -1261,9 +1846,9 @@ export function buildDelhiScene(group, river, terrain) {
     }
   }
 
-  // ----------------------------------------------------
-  // 8. FLOATING URBAN DEBRIS FLOTILLA (Chemical Drums, Timber Rafts)
-  // ----------------------------------------------------
+  // -------------------------------------------------------------------------
+  // 12. FLOATING DEBRIS FLOTILLA (Chemical Drums & Timber Rafts)
+  // -------------------------------------------------------------------------
   const floatingFlotilla = [];
   const debrisDefs = [
     { type: 'barrels', u: 0.23, side: 3.5, driftRate: 0.25 },
@@ -1318,10 +1903,18 @@ export function buildDelhiScene(group, river, terrain) {
 
         item.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f.tangent);
         item.mesh.rotateY(prog * 8.0 + item.phase);
-        item.mesh.rotateX(Math.sin(timeSec * 2.5 + item.phase) * 0.2);
-        item.mesh.rotateZ(Math.cos(timeSec * 2.0 + item.phase) * 0.15);
       }
     }
+  }
+
+  // Police Emergency Lightbar Strobing
+  function updatePoliceBeacons() {
+    const timeSec = Date.now() * 0.001;
+    const strobe = (Math.sin(timeSec * 16.0) > 0);
+    flashingBeacons.forEach(b => {
+      if (b.red) b.red.emissiveIntensity = strobe ? 1.5 : 0.2;
+      if (b.blue) b.blue.emissiveIntensity = strobe ? 0.2 : 1.5;
+    });
   }
 
   return {
@@ -1330,6 +1923,10 @@ export function buildDelhiScene(group, river, terrain) {
     updateDelhiDynamic: (clampedT, uWave) => {
       updateRescueBoats(clampedT, uWave);
       updateFloatingDebris(uWave);
+      updatePoliceBeacons();
+      if (redFort && redFort.updateMoat) {
+        redFort.updateMoat(uWave);
+      }
     }
   };
 }
