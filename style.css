@@ -353,70 +353,84 @@ html, body {
   letter-spacing: 0.04em;
 }
 
-/* Tally & KPI Command Dashboard — Streamlined & Compact */
+/* Tally & KPI Command Dashboard — Ultra-Slim Telemetry Ribbon */
 .tally-container {
   position: absolute;
-  top: 52px;
+  top: 58px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   z-index: 10;
   pointer-events: none;
-  max-width: calc(100vw - 320px);
+  max-width: calc(100vw - 40px);
   justify-content: center;
-  flex-wrap: wrap;
-  transition: all 0.25s ease;
+  background: rgba(6, 12, 22, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 3px 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .tally-card {
   pointer-events: auto;
-  background: rgba(10, 16, 28, 0.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 6px;
-  padding: 3px 8px;
-  display: flex;
-  flex-direction: column;
-  min-width: 80px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 2px 7px;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  min-width: auto;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  white-space: nowrap;
 }
 
 .tally-card:hover {
   border-color: rgba(232, 149, 47, 0.4);
-  background: rgba(10, 16, 28, 0.88);
+  background: rgba(255, 255, 255, 0.1);
   transform: translateY(-1px);
 }
 
+.tally-icon {
+  font-size: 9px;
+  line-height: 1;
+}
+
 .tally-label {
-  font-size: 7px;
+  font-size: 7.5px;
   font-weight: 700;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--sub);
-  margin-bottom: 1px;
+  margin: 0;
+  white-space: nowrap;
 }
 
 .tally-value-row {
-  display: flex;
+  display: inline-flex;
   align-items: baseline;
   gap: 3px;
+  margin: 0;
 }
 
 .tally-number {
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--ink);
   letter-spacing: -0.01em;
-  line-height: 1.15;
+  line-height: 1;
 }
 
 .tally-number small {
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 500;
   opacity: 0.85;
 }
@@ -425,33 +439,38 @@ html, body {
   font-family: var(--font-mono);
   font-size: 8px;
   color: var(--sub);
+  opacity: 0.75;
+}
+
+/* Hide duplicate secondary currency in ultra-compact view */
+.tally-card.tally-econ .tally-sub {
+  display: none;
 }
 
 .tally-value-row .divider {
   color: rgba(255, 255, 255, 0.2);
-  font-size: 9px;
+  font-size: 8px;
   margin: 0 1px;
 }
 
 .tally-header-row {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 3px;
-  margin-bottom: 1px;
+  gap: 4px;
+  margin: 0;
 }
 
 .tally-header-row .tally-label {
-  margin-bottom: 0;
+  margin: 0;
   white-space: nowrap;
 }
 
 .forecast-mode-toggle {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   background: rgba(15, 23, 42, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 5px;
+  border-radius: 8px;
   padding: 1px;
   gap: 2px;
 }
@@ -461,10 +480,10 @@ html, body {
   border: none;
   color: #94a3b8;
   font-family: var(--font-sans);
-  font-size: 7px;
+  font-size: 6.5px;
   font-weight: 700;
   padding: 1px 4px;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.18s ease;
   white-space: nowrap;
@@ -487,32 +506,50 @@ html, body {
   border: 1px solid rgba(252, 165, 165, 0.5);
 }
 
+.kpi-tag-row {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+}
+
+.kpi-badge {
+  display: inline-block;
+  font-size: 6.5px;
+  font-weight: 700;
+  padding: 0.5px 4px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+}
+
 .kpi-toggle-view-btn {
   pointer-events: auto;
-  background: rgba(10, 16, 28, 0.65);
+  background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--sub);
-  border-radius: 5px;
-  padding: 3px 6px;
+  border-radius: 12px;
+  padding: 2px 7px;
   font-size: 7.5px;
   font-weight: 600;
   font-family: var(--font-sans);
   cursor: pointer;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   transition: all 0.2s ease;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 2px;
-  align-self: center;
   white-space: nowrap;
 }
 
 .kpi-toggle-view-btn:hover {
   color: #fff;
-  background: rgba(15, 23, 42, 0.9);
-  border-color: rgba(255, 255, 255, 0.25);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.tally-container.collapsed {
+  background: rgba(6, 12, 22, 0.6);
+  padding: 2px 5px;
 }
 
 .tally-container.collapsed .tally-card {
