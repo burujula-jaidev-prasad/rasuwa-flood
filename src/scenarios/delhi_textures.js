@@ -369,35 +369,40 @@ export function getDelhiAerialDisasterMapTexture(isHeatmapMode = false) {
     ctx.fill();
   }
 
-  // 3. Old Delhi (Shahjahanabad) Dense Urban Street Grid (West Bank)
-  const shahWest = toCanvas(-110, -30);
-  const shahEast = toCanvas(10, 20);
-  const shahNorth = toCanvas(-40, -80);
-  const shahSouth = toCanvas(50, 40);
+  // 3. Old Delhi (Shahjahanabad) Dense Urban Ground & Paving (West Bank)
+  const shahWest = toCanvas(-115, -35);
+  const shahEast = toCanvas(15, 25);
+  const shahNorth = toCanvas(-45, -85);
+  const shahSouth = toCanvas(55, 45);
 
-  // Urban fabric backdrop
-  ctx.fillStyle = isHeatmapMode ? '#1e293b' : '#475569';
-  ctx.fillRect(shahWest.x, shahNorth.y, (shahEast.x - shahWest.x) * 0.95, (shahSouth.y - shahNorth.y) * 0.85);
+  // Unified authentic urban soil & stone foundation
+  ctx.fillStyle = isHeatmapMode ? '#1e293b' : '#4b4844';
+  ctx.fillRect(shahWest.x, shahNorth.y, (shahEast.x - shahWest.x) * 0.96, (shahSouth.y - shahNorth.y) * 0.90);
 
-  // Dense Old Delhi building blocks
-  const bldgColors = isHeatmapMode
-    ? ['#334155', '#1e293b', '#475569']
-    : ['#78350f', '#9a3412', '#b45309', '#d97706', '#64748b', '#94a3b8', '#cbd5e1'];
+  // Realistic secondary urban streets and pedestrian gali network
+  ctx.strokeStyle = isHeatmapMode ? '#334155' : '#2b2927';
+  ctx.lineWidth = 10;
+  for (let gx = shahWest.x + 20; gx < shahEast.x - 20; gx += 52) {
+    ctx.beginPath();
+    ctx.moveTo(gx, shahNorth.y + 10);
+    ctx.lineTo(gx + (Math.sin(gx * 0.05) * 15), shahSouth.y - 10);
+    ctx.stroke();
+  }
+  for (let gy = shahNorth.y + 20; gy < shahSouth.y - 20; gy += 46) {
+    ctx.beginPath();
+    ctx.moveTo(shahWest.x + 10, gy);
+    ctx.lineTo(shahEast.x - 10, gy + (Math.cos(gy * 0.05) * 12));
+    ctx.stroke();
+  }
 
-  for (let bx = shahWest.x + 10; bx < shahEast.x - 20; bx += 36) {
-    for (let by = shahNorth.y + 10; by < shahSouth.y - 20; by += 32) {
-      ctx.fillStyle = bldgColors[Math.floor(Math.random() * bldgColors.length)];
-      ctx.fillRect(bx, by, 28, 24);
-
-      // Inner courtyard cutout
-      if (Math.random() > 0.4) {
-        ctx.fillStyle = isHeatmapMode ? '#0f172a' : '#1e293b';
-        ctx.fillRect(bx + 7, by + 6, 14, 12);
-      }
-
-      // Rooftop water tank dot (black Sintex)
-      ctx.fillStyle = '#09090b';
-      ctx.fillRect(bx + 2, by + 2, 4, 4);
+  // Stone flagstone courtyards & textured pavement under buildings (natural earthy tones)
+  for (let px = shahWest.x + 15; px < shahEast.x - 25; px += 26) {
+    for (let py = shahNorth.y + 15; py < shahSouth.y - 25; py += 24) {
+      ctx.fillStyle = isHeatmapMode ? '#0f172a' : '#57524c';
+      ctx.fillRect(px, py, 22, 20);
+      ctx.strokeStyle = isHeatmapMode ? '#1e293b' : '#3f3b37';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(px, py, 22, 20);
     }
   }
 
