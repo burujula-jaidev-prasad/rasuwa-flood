@@ -1551,6 +1551,49 @@ export function buildDelhiScene(group, river, terrain) {
   }
 
   // -------------------------------------------------------------------------
+  // 0. HATHNIKUND BARRAGE SPILLWAY HEADWORKS & INFLOW SENSOR (u = 0.05)
+  // -------------------------------------------------------------------------
+  const fHath = getRiverFrame(0.05);
+  const hathGroup = new THREE.Group();
+  hathGroup.position.copy(fHath.pt);
+
+  // Concrete Spillway Weir Dam spanning 30m
+  const spillwayWeir = new THREE.Mesh(new THREE.BoxGeometry(32.0, 5.5, 6.0), concreteMat);
+  spillwayWeir.position.set(0, 1.8, 0);
+  spillwayWeir.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), fHath.side);
+  hathGroup.add(spillwayWeir);
+
+  // 4 Radial Crest Spillway Gates releasing torrent
+  for (let g = -1.5; g <= 1.5; g += 1.0) {
+    const gate = new THREE.Mesh(new THREE.BoxGeometry(5.8, 4.2, 0.4), darkSteel);
+    gate.position.set(fHath.side.x * g * 7.2, 3.2, fHath.side.z * g * 7.2);
+    hathGroup.add(gate);
+
+    // Violent foaming spillway water discharge
+    const foamSpray = new THREE.Mesh(new THREE.ConeGeometry(3.6, 9.0, 8), new THREE.MeshStandardMaterial({
+      color: 0xf1f5f9,
+      roughness: 0.3,
+      transparent: true,
+      opacity: 0.85
+    }));
+    foamSpray.rotation.x = -Math.PI * 0.45;
+    foamSpray.position.set(fHath.side.x * g * 7.2, 0.8, fHath.side.z * g * 7.2 + 4.5);
+    hathGroup.add(foamSpray);
+  }
+
+  // CWC Telemetry Sensor Tower with Satellite Dish
+  const cwcTower = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, 10.5, 8), darkSteel);
+  cwcTower.position.set(fHath.side.x * 17.5, 5.2, fHath.side.z * 17.5);
+  hathGroup.add(cwcTower);
+
+  const satDish = new THREE.Mesh(new THREE.SphereGeometry(1.2, 8, 8, 0, Math.PI * 2, 0, Math.PI * 0.45), concreteMat);
+  satDish.rotation.x = Math.PI * 0.35;
+  satDish.position.set(fHath.side.x * 17.5, 10.8, fHath.side.z * 17.5);
+  hathGroup.add(satDish);
+
+  group.add(hathGroup);
+
+  // -------------------------------------------------------------------------
   // 1. WAZIRABAD BARRAGE & VEHICULAR ROAD BRIDGE (u = 0.20) - CATASTROPHIC COLLAPSE
   // -------------------------------------------------------------------------
   const fWazir = getRiverFrame(0.20);
@@ -1659,6 +1702,55 @@ export function buildDelhiScene(group, river, terrain) {
   wazirBus.position.copy(busBasePos);
   wazirGroup.add(wazirBus);
 
+  // Wazirabad Bridge Civil Engineering Detailing:
+  // 1. Concrete Abutments & Approach Wingwalls on both riverbanks
+  [-17.5, 17.5].forEach(abOffset => {
+    const abutment = new THREE.Mesh(new THREE.BoxGeometry(4.2, 7.5, 7.0), concreteMat);
+    abutment.position.set(fWazir.side.x * abOffset, 2.8, fWazir.side.z * abOffset);
+    abutment.castShadow = true;
+    wazirGroup.add(abutment);
+  });
+
+  // 2. Overhead Winch Hoist Operating Deck & Machinery Housings
+  for (let h = 0; h < barragePiers; h++) {
+    const hOffset = (h - barragePiers * 0.5 + 0.5) * pierSpacing;
+    const hoistBox = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.1, 1.6), new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.5 }));
+    hoistBox.position.set(fWazir.side.x * hOffset, 7.6, fWazir.side.z * hOffset);
+    wazirGroup.add(hoistBox);
+
+    // Steel hoist cables connecting to radial gates
+    const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 3.8, 6), darkSteel);
+    cable.position.set(fWazir.side.x * hOffset, 5.2, fWazir.side.z * hOffset);
+    wazirGroup.add(cable);
+  }
+
+  // 3. Overhead Highway Directional Gantry: "OUTER RING ROAD ➔ WAZIRABAD BARRAGE"
+  const wazirSignMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.4 });
+  const wazirSignPlate = new THREE.Mesh(new THREE.BoxGeometry(7.5, 1.3, 0.15), wazirSignMat);
+  wazirSignPlate.position.set(fWazir.side.x * -11.0, 8.2, fWazir.side.z * -11.0);
+  wazirGroup.add(wazirSignPlate);
+
+  // 4. Delhi Jal Board (DJB) Water Intake Pumphouse Pipes & Signboard
+  const djbSignMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.4 });
+  const djbSign = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.9, 0.15), djbSignMat);
+  djbSign.position.set(fWazir.side.x * 12.0, 6.5, fWazir.side.z * 12.0 + 8.0);
+  wazirGroup.add(djbSign);
+
+  // Twin 1.2m diameter raw water suction pipes dipping into river
+  [-0.9, 0.9].forEach(px => {
+    const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 5.8, 12), new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.6 }));
+    pipe.position.set(fWazir.side.x * 12.0 + px, 1.8, fWazir.side.z * 12.0 + 3.2);
+    pipe.rotation.x = Math.PI * 0.25;
+    wazirGroup.add(pipe);
+  });
+
+  // Roadway lampposts along bridge deck
+  for (let lp = -3; lp <= 3; lp += 2) {
+    const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 3.5, 8), darkSteel);
+    lamp.position.set(fWazir.side.x * lp * 4.2, 7.0, fWazir.side.z * lp * 4.2 - 2.6);
+    wazirGroup.add(lamp);
+  }
+
   // 2. White Maruti Dzire Car washed off the shattered deck into the river
   const wazirCarMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.25, metalness: 0.5 });
   const wazirCar = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.2, 3.4), wazirCarMat);
@@ -1745,13 +1837,25 @@ export function buildDelhiScene(group, river, terrain) {
   const lohaPierMeshes = [];
   for (let s = 0; s <= lohaPiers; s++) {
     const offset = (s - lohaPiers * 0.5) * lohaSpacing;
-    const pier = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.65, 6.8, 16), redSandstoneMat);
+    const pierGroup = new THREE.Group();
     const pPos = new THREE.Vector3(fLoha.side.x * offset, 2.0, fLoha.side.z * offset);
-    pier.position.copy(pPos);
-    pier.castShadow = true;
-    pier.receiveShadow = true;
-    lohaGroup.add(pier);
-    lohaPierMeshes.push({ mesh: pier, basePos: pPos.clone(), index: s });
+    pierGroup.position.copy(pPos);
+
+    // Heavy Victorian stone masonry pier body
+    const pierBody = new THREE.Mesh(new THREE.BoxGeometry(2.4, 6.8, 4.2), redSandstoneMat);
+    pierBody.castShadow = true;
+    pierBody.receiveShadow = true;
+    pierGroup.add(pierBody);
+
+    // Authentic 1866 Pointed Triangular Stone Cutwater facing upstream to break river flow!
+    const cutwater = new THREE.Mesh(new THREE.ConeGeometry(1.4, 3.2, 4), redSandstoneMat);
+    cutwater.rotation.y = Math.PI * 0.25;
+    cutwater.rotation.x = -Math.PI * 0.5;
+    cutwater.position.set(0, 0, -2.8);
+    pierGroup.add(cutwater);
+
+    lohaGroup.add(pierGroup);
+    lohaPierMeshes.push({ mesh: pierGroup, basePos: pPos.clone(), index: s });
   }
 
   // 2. Steel Lattice Truss Spans (Span 2 breaks and plunges downward)
@@ -1803,6 +1907,63 @@ export function buildDelhiScene(group, river, terrain) {
   locoMesh.position.copy(locoBasePos);
   locoMesh.castShadow = true;
   lohaGroup.add(locoMesh);
+
+  // Loha Pul 1866 Double-Deck Architectural Detailing:
+  // 1. Upper Deck Railway Track: Wooden Sleepers & Continuous Steel Rails
+  const sleeperMat = new THREE.MeshStandardMaterial({ color: 0x3e2723, roughness: 0.9 });
+  const railSteelMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.2, metalness: 0.85 });
+
+  for (let sl = -16; sl <= 16; sl++) {
+    const sleeper = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 1.8), sleeperMat);
+    sleeper.position.set(0, 6.18, sl * 0.85);
+    lohaGroup.add(sleeper);
+  }
+
+  // Twin parallel railway tracks
+  [-0.48, 0.48].forEach(rx => {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.12, 31.5), railSteelMat);
+    rail.position.set(rx, 6.26, 0);
+    lohaGroup.add(rail);
+  });
+
+  // 2. Lower Deck 2-Lane Vehicular Roadway & Cantilevered Pedestrian Walkways
+  const lowerRoad = new THREE.Mesh(new THREE.BoxGeometry(lohaSpan * 1.05, 0.35, 5.6), tarmacMat);
+  lowerRoad.position.set(0, 3.8, 0);
+  lowerRoad.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), fLoha.side);
+  lohaGroup.add(lowerRoad);
+
+  // Cantilevered pedestrian footpaths with steel mesh protective fences
+  [-3.0, 3.0].forEach(pz => {
+    const path = new THREE.Mesh(new THREE.BoxGeometry(lohaSpan * 1.05, 0.2, 0.9), concreteMat);
+    path.position.set(0, 3.9, pz);
+    path.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), fLoha.side);
+    lohaGroup.add(path);
+
+    const fence = new THREE.Mesh(new THREE.BoxGeometry(lohaSpan * 1.05, 1.1, 0.05), darkSteel);
+    fence.position.set(0, 4.45, pz + (pz > 0 ? 0.45 : -0.45));
+    fence.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), fLoha.side);
+    lohaGroup.add(fence);
+  });
+
+  // 3. Northern Railway 2-Aspect Signal Gantry Post (Western Rail Approach)
+  const nrSignalGroup = new THREE.Group();
+  const signalPost = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 5.2, 8), darkSteel);
+  signalPost.position.set(0, 8.8, 14.5);
+  nrSignalGroup.add(signalPost);
+
+  const signalBox = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.2, 0.35), darkSteel);
+  signalBox.position.set(0, 10.8, 14.5);
+  nrSignalGroup.add(signalBox);
+
+  const redLens = new THREE.Mesh(new THREE.CircleGeometry(0.18, 12), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+  redLens.position.set(0, 11.1, 14.7);
+  nrSignalGroup.add(redLens);
+
+  const yellowLens = new THREE.Mesh(new THREE.CircleGeometry(0.18, 12), new THREE.MeshBasicMaterial({ color: 0xeab308 }));
+  yellowLens.position.set(0, 10.5, 14.7);
+  nrSignalGroup.add(yellowLens);
+
+  lohaGroup.add(nrSignalGroup);
 
   const coaches = [];
   const coachColors = [0xb45309, 0x9a3412, 0x7c2d12];
@@ -1954,6 +2115,33 @@ export function buildDelhiScene(group, river, terrain) {
   redFort.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fFort.tangent);
   group.add(redFort.group);
 
+  // Standalone Mughal Heritage Lawns (Meena Bazaar / 15 August Parade Grounds)
+  const mughalLawnMat = new THREE.MeshStandardMaterial({ color: 0x2e6930, roughness: 0.9 });
+  const stonePavementMat = new THREE.MeshStandardMaterial({ color: 0xa8a29e, roughness: 0.8 });
+
+  [-1, 1].forEach(dir => {
+    const lawn = new THREE.Mesh(new THREE.BoxGeometry(46.0, 0.25, 34.0), mughalLawnMat);
+    const lPos = fortPos.clone().addScaledVector(fFort.side, 26.0).addScaledVector(fFort.tangent, dir * 28.0);
+    lPos.y = terrain.getTerrainHeight(lPos.x, lPos.z) + 0.12;
+    lawn.position.copy(lPos);
+    lawn.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fFort.tangent);
+    group.add(lawn);
+
+    // Stone pathway around the gardens
+    const stonePath = new THREE.Mesh(new THREE.BoxGeometry(48.0, 0.28, 3.2), stonePavementMat);
+    stonePath.position.copy(lPos).addScaledVector(fFort.side, 18.0);
+    stonePath.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fFort.tangent);
+    group.add(stonePath);
+  });
+
+  // Grand Chandni Chowk Processional Boulevard leading directly up to Lahori Gate
+  const ccRoad = new THREE.Mesh(new THREE.BoxGeometry(42.0, 0.35, 14.0), tarmacMat);
+  const ccPos = fortPos.clone().addScaledVector(fFort.side, 38.0);
+  ccPos.y = terrain.getTerrainHeight(ccPos.x, ccPos.z) + 0.18;
+  ccRoad.position.copy(ccPos);
+  ccRoad.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), fFort.tangent);
+  group.add(ccRoad);
+
   // -------------------------------------------------------------------------
   // 6. ITO BARRAGE & DRAIN 12 REGULATOR BREACH (u = 0.74) - EXPLOSIVE BLOWOUT
   // -------------------------------------------------------------------------
@@ -2076,6 +2264,9 @@ export function buildDelhiScene(group, river, terrain) {
 
         // Verification safety check: outside active low-water riverbed channel (distance >= 22.0m)
         if (typeof river.getClosestRiverInfo === 'function' && river.getClosestRiverInfo(hPos.x, hPos.z).distance < 22.0) continue;
+        // PURE HERITAGE BUFFER: Red Fort (Lal Qila) exclusion zone (56m radius)
+        // Red Fort is a standalone imperial fortress with wide open Mughal gardens and defensive moat!
+        if (hPos.distanceTo(fortPos) < 56.0) continue;
 
         const haveli = createDelhiHaveliBlock(
           6.0 + (hIdx % 3) * 0.7,

@@ -63,17 +63,103 @@ export class FloodSimulation {
 
   initDelhiLandmarkBadges() {
     this.landmarkBadges = [];
-    const landmarks = [
-      { name: "Wazirabad Barrage", sub: "Water Works Submerged", u: 0.20, offset: new THREE.Vector3(0, 18, 0) },
-      { name: "Old Iron Bridge", sub: "Loha Pul (1866) • 208.08m", u: 0.35, offset: new THREE.Vector3(0, 20, 0) },
-      { name: "Kashmere Gate", sub: "Ring Road Submerged", u: 0.48, offset: new THREE.Vector3(-14, 18, 0) },
-      { name: "Red Fort (Lal Qila)", sub: "Historic 208.66m Record Peak", u: 0.60, offset: new THREE.Vector3(-22, 22, 0) },
-      { name: "ITO Barrage", sub: "Regulator 12 Breach & Bund", u: 0.74, offset: new THREE.Vector3(-14, 18, 0) },
-      { name: "Rajghat & Relief Camp", sub: "1,000 HP Dewatering Fleet", u: 0.88, offset: new THREE.Vector3(-14, 18, 0) }
+    const checkpoints = [
+      {
+        stage: "STAGE 1",
+        name: "Hathnikund Barrage",
+        sub: "359,000 Cusecs Release • Flood Origin",
+        u: 0.05,
+        offset: new THREE.Vector3(0, 22, 0),
+        color: 0xf59e0b
+      },
+      {
+        stage: "STAGE 2",
+        name: "Wazirabad Barrage & WTP",
+        sub: "Bridge Overtopped • 234 MGD Water Cut",
+        u: 0.20,
+        offset: new THREE.Vector3(0, 22, 0),
+        color: 0xef4444
+      },
+      {
+        stage: "STAGE 3",
+        name: "Old Iron Bridge (Loha Pul)",
+        sub: "Rail/Road Cut • Debris Dam • Truss Snaps",
+        u: 0.35,
+        offset: new THREE.Vector3(0, 24, 0),
+        color: 0xdc2626
+      },
+      {
+        stage: "STAGE 4",
+        name: "Kashmere Gate ISBT",
+        sub: "Ring Road Submerged 2.4m • NDRF Boats",
+        u: 0.48,
+        offset: new THREE.Vector3(-16, 22, 0),
+        color: 0xf97316
+      },
+      {
+        stage: "STAGE 5",
+        name: "Red Fort (Lal Qila)",
+        sub: "Moat Inundation • Sandstone Ramparts Breach",
+        u: 0.60,
+        offset: new THREE.Vector3(-24, 24, 0),
+        color: 0xb91c1c
+      },
+      {
+        stage: "STAGE 6",
+        name: "ITO Barrage & Drain 12",
+        sub: "Regulator Blowout • Supreme Court Inundated",
+        u: 0.74,
+        offset: new THREE.Vector3(-16, 22, 0),
+        color: 0x7f1d1d
+      },
+      {
+        stage: "STAGE 7",
+        name: "Rajghat Relief & Dewatering",
+        sub: "1,000 HP Heavy Dewatering Armament",
+        u: 0.88,
+        offset: new THREE.Vector3(-16, 20, 0),
+        color: 0x0284c7
+      }
     ];
 
-    for (const lm of landmarks) {
-      this.addPlaceBoard(lm.name, lm.sub, lm.u, lm.offset);
+    for (const cp of checkpoints) {
+      // 1. Bold 3D Checkpoint Billboard Badge
+      this.addPlaceBoard(`[${cp.stage}] ${cp.name}`, cp.sub, cp.u, cp.offset);
+
+      // 2. Prominent Vertical Holographic Checkpoint Beacon Pillar
+      const pt = this.river.getPointAt(cp.u);
+      const groundY = (this.terrain && typeof this.terrain.getTerrainHeight === 'function')
+        ? this.terrain.getTerrainHeight(pt.x, pt.z)
+        : pt.y;
+
+      const beaconMat = new THREE.MeshBasicMaterial({
+        color: cp.color,
+        transparent: true,
+        opacity: 0.32,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const beaconPillar = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, 34.0, 16), beaconMat);
+      beaconPillar.position.set(pt.x, groundY + 17.0, pt.z);
+      this.group.add(beaconPillar);
+
+      // 3. Double Pulsating Ground Shockwave Rings
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: cp.color,
+        transparent: true,
+        opacity: 0.75,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const ring1 = new THREE.Mesh(new THREE.RingGeometry(3.2, 4.4, 32), ringMat);
+      ring1.rotation.x = -Math.PI * 0.5;
+      ring1.position.set(pt.x, groundY + 0.4, pt.z);
+      this.group.add(ring1);
+
+      const ring2 = new THREE.Mesh(new THREE.RingGeometry(6.5, 7.8, 32), ringMat);
+      ring2.rotation.x = -Math.PI * 0.5;
+      ring2.position.set(pt.x, groundY + 0.42, pt.z);
+      this.group.add(ring2);
     }
   }
 
