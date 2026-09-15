@@ -345,9 +345,10 @@ export function buildDelhiScene(group, river, terrain) {
     cornice.position.set(0, 11.6, 0);
     gateGroup.add(cornice);
 
-    // 7 White Marble Onion Cupolas
+    // 7 White Marble Onion Cupolas (with dynamic detachment for cupolas 1 & 5)
     const numCupolas = 7;
     const cupolaSpacing = 13.5 / (numCupolas - 1);
+    const cupolaMeshes = [];
     for (let c = 0; c < numCupolas; c++) {
       const cx = -6.75 + c * cupolaSpacing;
       const cupolaGroup = new THREE.Group();
@@ -370,15 +371,25 @@ export function buildDelhiScene(group, river, terrain) {
       cupolaGroup.add(finial);
 
       gateGroup.add(cupolaGroup);
+      cupolaMeshes.push({
+        group: cupolaGroup,
+        initPos: cupolaGroup.position.clone(),
+        initRot: cupolaGroup.rotation.clone(),
+        collapses: (c === 1 || c === 5),
+        dropDir: (c === 1 ? -1 : 1)
+      });
     }
 
-    // Flag Mast & Tiranga Flag
+    // Flag Mast & Tiranga Flag (with dynamic tilt)
+    const flagMastGroup = new THREE.Group();
+    flagMastGroup.position.set(0, 11.6, 2.8);
+
     const flagMast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 10.5, 12), goldBrassMat);
-    flagMast.position.set(0, 16.5, 2.8);
-    gateGroup.add(flagMast);
+    flagMast.position.set(0, 5.25, 0);
+    flagMastGroup.add(flagMast);
 
     const flagGroup = new THREE.Group();
-    flagGroup.position.set(1.4, 20.2, 2.8);
+    flagGroup.position.set(1.4, 8.95, 0);
 
     const saffron = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.45, 0.04), new THREE.MeshBasicMaterial({ color: 0xff9933 }));
     saffron.position.y = 0.45;
@@ -394,7 +405,9 @@ export function buildDelhiScene(group, river, terrain) {
     const green = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.45, 0.04), new THREE.MeshBasicMaterial({ color: 0x138808 }));
     green.position.y = -0.45;
     flagGroup.add(green);
-    gateGroup.add(flagGroup);
+    flagMastGroup.add(flagGroup);
+
+    gateGroup.add(flagMastGroup);
 
     // PM Rostrum Podium
     const podium = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.85, 1.4), redSandstoneMat);
@@ -412,6 +425,8 @@ export function buildDelhiScene(group, river, terrain) {
     gateGroup.add(glassPanel);
 
     // Twin Octagonal Bastions
+    // East Bastion (facing river at bastionX = -11.5) will undergo scouring tilt and dome collapse!
+    const bastionData = [];
     [-11.5, 11.5].forEach(bastionX => {
       const bastionGroup = new THREE.Group();
       bastionGroup.position.set(bastionX, 0, 0);
@@ -449,62 +464,165 @@ export function buildDelhiScene(group, river, terrain) {
 
       bastionGroup.add(chhatriGroup);
       gateGroup.add(bastionGroup);
+
+      bastionData.push({
+        group: bastionGroup,
+        chhatriGroup,
+        bastionX,
+        isRiverside: (bastionX < 0),
+        initPos: bastionGroup.position.clone(),
+        initRot: bastionGroup.rotation.clone(),
+        chhatriInitPos: chhatriGroup.position.clone(),
+        chhatriInitRot: chhatriGroup.rotation.clone()
+      });
     });
 
     complexGroup.add(gateGroup);
 
-    // 2. 18m High Red Sandstone Curtain Ramparts
+    // 2. 18m High Red Sandstone Curtain Ramparts (With Breached Central Section)
     const wallHeight = 10.0;
     const wallThick = 3.2;
     const wallSpan = 38.0;
 
+    // We split the riverside wall (dir = -1) into 2 flanking solid walls + 1 central BREACHED wall section
+    const wallSegments = [];
+    const wallRubbleBlocks = [];
+
     [-1, 1].forEach(dir => {
-      const wallGroup = new THREE.Group();
       const wx = dir * (15.0 + wallSpan * 0.5);
-      wallGroup.position.set(wx, 0, -2.5);
+      if (dir === 1) {
+        // South Rampart: remains standing
+        const wallGroup = new THREE.Group();
+        wallGroup.position.set(wx, 0, -2.5);
 
-      const wallMesh = new THREE.Mesh(new THREE.BoxGeometry(wallSpan, wallHeight, wallThick), redSandstoneMat);
-      wallMesh.position.y = wallHeight * 0.5;
-      wallMesh.castShadow = true;
-      wallGroup.add(wallMesh);
+        const wallMesh = new THREE.Mesh(new THREE.BoxGeometry(wallSpan, wallHeight, wallThick), redSandstoneMat);
+        wallMesh.position.y = wallHeight * 0.5;
+        wallMesh.castShadow = true;
+        wallGroup.add(wallMesh);
 
-      for (let b = 0; b < 18; b++) {
-        const merlon = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.85, 0.6), redSandstoneMat);
-        merlon.position.set(-wallSpan * 0.5 + 1.0 + b * 2.1, wallHeight + 0.42, 1.4);
-        wallGroup.add(merlon);
+        for (let b = 0; b < 18; b++) {
+          const merlon = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.85, 0.6), redSandstoneMat);
+          merlon.position.set(-wallSpan * 0.5 + 1.0 + b * 2.1, wallHeight + 0.42, 1.4);
+          wallGroup.add(merlon);
+        }
+
+        const burj = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.8, wallHeight + 2.5, 8), redSandstoneMat);
+        burj.position.set(dir * wallSpan * 0.5, (wallHeight + 2.5) * 0.5, 0);
+        wallGroup.add(burj);
+
+        const burjDome = new THREE.Mesh(new THREE.SphereGeometry(1.6, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.7), whiteMarbleMat);
+        burjDome.position.set(dir * wallSpan * 0.5, wallHeight + 3.0, 0);
+        wallGroup.add(burjDome);
+
+        complexGroup.add(wallGroup);
+      } else {
+        // Riverside Rampart (dir = -1): Constructed with a dynamic central breach section!
+        const wallGroup = new THREE.Group();
+        wallGroup.position.set(wx, 0, -2.5);
+
+        // Flank Left segment (11m)
+        const flankL = new THREE.Mesh(new THREE.BoxGeometry(11.0, wallHeight, wallThick), redSandstoneMat);
+        flankL.position.set(-13.5, wallHeight * 0.5, 0);
+        flankL.castShadow = true;
+        wallGroup.add(flankL);
+
+        // Flank Right segment (11m)
+        const flankR = new THREE.Mesh(new THREE.BoxGeometry(11.0, wallHeight, wallThick), redSandstoneMat);
+        flankR.position.set(13.5, wallHeight * 0.5, 0);
+        flankR.castShadow = true;
+        wallGroup.add(flankR);
+
+        // Central Breaching Rampart Section (16m) that snaps, collapses outward, and crumbles
+        const breachSection = new THREE.Mesh(new THREE.BoxGeometry(16.0, wallHeight, wallThick), redSandstoneMat);
+        breachSection.position.set(0, wallHeight * 0.5, 0);
+        breachSection.castShadow = true;
+        wallGroup.add(breachSection);
+
+        // Rubble blocks that scatter when breachSection collapses
+        const rubbleGroup = new THREE.Group();
+        rubbleGroup.position.set(0, 0, 0);
+        for (let r = 0; r < 14; r++) {
+          const rw = 1.0 + Math.random() * 1.2;
+          const rh = 0.8 + Math.random() * 0.9;
+          const rd = 1.0 + Math.random() * 1.1;
+          const rMesh = new THREE.Mesh(new THREE.BoxGeometry(rw, rh, rd), redSandstoneMat);
+          rMesh.position.set(
+            (Math.random() - 0.5) * 14.0,
+            0.5 + Math.random() * 1.5,
+            (Math.random() - 0.5) * 5.0 + 3.0
+          );
+          rMesh.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
+          rMesh.visible = false;
+          rubbleGroup.add(rMesh);
+          wallRubbleBlocks.push({
+            mesh: rMesh,
+            initPos: rMesh.position.clone(),
+            initRot: rMesh.rotation.clone(),
+            driftSpeed: 1.5 + Math.random() * 2.5
+          });
+        }
+        wallGroup.add(rubbleGroup);
+
+        const burj = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.8, wallHeight + 2.5, 8), redSandstoneMat);
+        burj.position.set(-wallSpan * 0.5, (wallHeight + 2.5) * 0.5, 0);
+        wallGroup.add(burj);
+
+        const burjDome = new THREE.Mesh(new THREE.SphereGeometry(1.6, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.7), whiteMarbleMat);
+        burjDome.position.set(-wallSpan * 0.5, wallHeight + 3.0, 0);
+        wallGroup.add(burjDome);
+
+        complexGroup.add(wallGroup);
+
+        wallSegments.push({
+          wallGroup,
+          breachSection,
+          initPos: breachSection.position.clone(),
+          initRot: breachSection.rotation.clone()
+        });
       }
-
-      const burj = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.8, wallHeight + 2.5, 8), redSandstoneMat);
-      burj.position.set(dir * wallSpan * 0.5, (wallHeight + 2.5) * 0.5, 0);
-      wallGroup.add(burj);
-
-      const burjDome = new THREE.Mesh(new THREE.SphereGeometry(1.6, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.7), whiteMarbleMat);
-      burjDome.position.set(dir * wallSpan * 0.5, wallHeight + 3.0, 0);
-      wallGroup.add(burjDome);
-
-      complexGroup.add(wallGroup);
     });
 
-    // 3. Salimgarh Fort Causeway & 5-Arch Stone Bridge
+    // 3. Salimgarh Fort Causeway & 5-Arch Stone Bridge (With Collapse Mechanics)
     const causewayGroup = new THREE.Group();
     causewayGroup.position.set(38.0, 0, -18.0);
 
-    const bridgeDeck = new THREE.Mesh(new THREE.BoxGeometry(6.0, 1.4, 24.0), redSandstoneMat);
-    bridgeDeck.position.set(0, 4.2, 0);
-    causewayGroup.add(bridgeDeck);
+    // Split deck into 2 halves that plunge into water upon collapse
+    const deckSpanA = new THREE.Mesh(new THREE.BoxGeometry(6.0, 1.4, 12.0), redSandstoneMat);
+    deckSpanA.position.set(0, 4.2, -6.0);
+    causewayGroup.add(deckSpanA);
 
+    const deckSpanB = new THREE.Mesh(new THREE.BoxGeometry(6.0, 1.4, 12.0), redSandstoneMat);
+    deckSpanB.position.set(0, 4.2, 6.0);
+    causewayGroup.add(deckSpanB);
+
+    const causewayPiers = [];
     for (let a = 0; a < 5; a++) {
       const az = -9.6 + a * 4.8;
       const pier = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.6, 4.2, 12), redSandstoneMat);
       pier.position.set(0, 2.1, az);
       causewayGroup.add(pier);
+      causewayPiers.push({
+        mesh: pier,
+        initPos: pier.position.clone(),
+        initRot: pier.rotation.clone(),
+        collapses: (a === 1 || a === 2)
+      });
     }
     complexGroup.add(causewayGroup);
 
-    // 4. Perimeter Defensive Moat & Dynamic Water Mesh
-    const moatOuterWall = new THREE.Mesh(new THREE.BoxGeometry(105.0, 1.4, 0.8), redSandstoneMat);
-    moatOuterWall.position.set(0, 1.8, 9.5);
-    complexGroup.add(moatOuterWall);
+    // 4. Perimeter Defensive Moat & Dynamic Inundation Surge Channel
+    const moatOuterWallL = new THREE.Mesh(new THREE.BoxGeometry(42.0, 1.4, 0.8), redSandstoneMat);
+    moatOuterWallL.position.set(-31.5, 1.8, 9.5);
+    complexGroup.add(moatOuterWallL);
+
+    const moatOuterWallR = new THREE.Mesh(new THREE.BoxGeometry(42.0, 1.4, 0.8), redSandstoneMat);
+    moatOuterWallR.position.set(31.5, 1.8, 9.5);
+    complexGroup.add(moatOuterWallR);
+
+    // Breached central moat wall segment
+    const moatBreachWall = new THREE.Mesh(new THREE.BoxGeometry(21.0, 1.4, 0.8), redSandstoneMat);
+    moatBreachWall.position.set(0, 1.8, 9.5);
+    complexGroup.add(moatBreachWall);
 
     const moatWaterMat = new THREE.MeshStandardMaterial({
       color: 0x784c1f,
@@ -517,22 +635,253 @@ export function buildDelhiScene(group, river, terrain) {
     moatWaterMesh.position.set(0, 1.2, 3.5);
     complexGroup.add(moatWaterMesh);
 
+    // -------------------------------------------------------------------------
+    // 5. ACTIVE RED FORT INUNDATION SURGE CHANNEL (Surges from river INTO fort grounds!)
+    // -------------------------------------------------------------------------
+    const fortInundationGroup = new THREE.Group();
+
+    // Surge water stream connecting river channel directly into Red Fort courtyard
+    // Dimensions: 55m wide, 48m long, surging straight through the breached ramparts
+    const surgeWaterMat = new THREE.MeshStandardMaterial({
+      color: 0x6e4720,
+      roughness: 0.2,
+      metalness: 0.25,
+      transparent: true,
+      opacity: 0.92
+    });
+    const surgeStreamMesh = new THREE.Mesh(new THREE.BoxGeometry(52.0, 0.3, 44.0), surgeWaterMat);
+    surgeStreamMesh.position.set(-8.0, 0.0, 6.0); // Initially submerged beneath soil
+    fortInundationGroup.add(surgeStreamMesh);
+
+    // Inner Fort Courtyard Inundation Basin (flooding right to Lahori Gate steps!)
+    const courtyardWaterMesh = new THREE.Mesh(new THREE.BoxGeometry(44.0, 0.25, 36.0), surgeWaterMat);
+    courtyardWaterMesh.position.set(0, 0.0, -12.0);
+    fortInundationGroup.add(courtyardWaterMesh);
+
+    // Foaming Rapids Breach Mesh (foamy, turbulent white-brown water at breach gap)
+    const foamMat = new THREE.MeshStandardMaterial({
+      color: 0xeadcc9,
+      roughness: 0.4,
+      transparent: true,
+      opacity: 0.85
+    });
+    const breachRapidsMesh = new THREE.Mesh(new THREE.BoxGeometry(22.0, 0.45, 12.0), foamMat);
+    breachRapidsMesh.position.set(-4.0, 0.0, 0.0);
+    breachRapidsMesh.visible = false;
+    fortInundationGroup.add(breachRapidsMesh);
+
+    // Floating Flotsam inside Red Fort grounds (timber beams, stalls, Sintex tanks)
+    const fortFlotsam = [];
+    const flotsamMats = [
+      new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.5 }), // Sintex black tank
+      new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.9 }), // Timber market stall
+      new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8 })  // Fallen wooden logs
+    ];
+
+    for (let f = 0; f < 6; f++) {
+      let fMesh;
+      if (f % 3 === 0) {
+        // Sintex tank
+        fMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 1.4, 12), flotsamMats[0]);
+      } else if (f % 3 === 1) {
+        // Market stall canopy
+        fMesh = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.4, 1.8), flotsamMats[1]);
+      } else {
+        // Timber log
+        fMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 3.2, 8), flotsamMats[2]);
+        fMesh.rotation.z = Math.PI * 0.45;
+      }
+      fMesh.position.set(-15.0 + f * 5.5, 0.0, -8.0 + (f % 2) * 6.0);
+      fMesh.visible = false;
+      fortInundationGroup.add(fMesh);
+      fortFlotsam.push({
+        mesh: fMesh,
+        initPos: fMesh.position.clone(),
+        initRot: fMesh.rotation.clone(),
+        driftOffsetX: (f - 2.5) * 4.0,
+        driftSpeed: 1.2 + f * 0.4
+      });
+    }
+
+    complexGroup.add(fortInundationGroup);
+
     return {
       group: complexGroup,
       moatWaterMesh,
-      updateMoat: (uWave) => {
-        if (uWave < 0.50) {
+      updateShatter: (effU) => {
+        // -------------------------------------------------------------
+        // RED FORT FLOOD SURGE INUNDATION & STRUCTURAL SHATTERING
+        // Triggered dynamically as surge wave reaches Red Fort (effU >= 0.50)
+        // -------------------------------------------------------------
+        if (effU < 0.50) {
+          // 1. Pristine Moat & Dry Interior Courtyard
           moatWaterMesh.position.y = 1.2;
           moatWaterMat.opacity = 0.45;
+          surgeStreamMesh.position.y = -0.5; // Hidden under ground
+          courtyardWaterMesh.position.y = -0.5;
+          breachRapidsMesh.visible = false;
+
+          // 2. Restore Breached Rampart Section
+          if (wallSegments[0]) {
+            wallSegments[0].breachSection.position.copy(wallSegments[0].initPos);
+            wallSegments[0].breachSection.rotation.copy(wallSegments[0].initRot);
+          }
+          wallRubbleBlocks.forEach(rb => {
+            rb.mesh.visible = false;
+            rb.mesh.position.copy(rb.initPos);
+            rb.mesh.rotation.copy(rb.initRot);
+          });
+
+          // 3. Restore Moat Wall
+          moatBreachWall.position.set(0, 1.8, 9.5);
+          moatBreachWall.rotation.set(0, 0, 0);
+
+          // 4. Restore Causeway Deck & Piers
+          deckSpanA.position.set(0, 4.2, -6.0);
+          deckSpanA.rotation.set(0, 0, 0);
+          deckSpanB.position.set(0, 4.2, 6.0);
+          deckSpanB.rotation.set(0, 0, 0);
+          causewayPiers.forEach(p => {
+            p.mesh.position.copy(p.initPos);
+            p.mesh.rotation.copy(p.initRot);
+          });
+
+          // 5. Restore Bastions & Chhatris
+          bastionData.forEach(b => {
+            b.group.position.copy(b.initPos);
+            b.group.rotation.copy(b.initRot);
+            b.chhatriGroup.position.copy(b.chhatriInitPos);
+            b.chhatriGroup.rotation.copy(b.chhatriInitRot);
+          });
+
+          // 6. Restore Cupolas & Flagpole
+          cupolaMeshes.forEach(c => {
+            c.group.position.copy(c.initPos);
+            c.group.rotation.copy(c.initRot);
+          });
+          flagMastGroup.position.set(0, 11.6, 2.8);
+          flagMastGroup.rotation.set(0, 0, 0);
+          glassPanel.rotation.set(0, 0, 0);
+
+          // 7. Hide Interior Fort Flotsam
+          fortFlotsam.forEach(fl => {
+            fl.mesh.visible = false;
+            fl.mesh.position.copy(fl.initPos);
+            fl.mesh.rotation.copy(fl.initRot);
+          });
         } else {
-          const fillRatio = Math.min(1.0, (uWave - 0.50) / 0.15);
-          moatWaterMesh.position.y = 1.2 + fillRatio * 2.4;
-          moatWaterMat.opacity = 0.88;
+          // Surge Fraction (0.0 at effU=0.50 -> 1.0 at effU=0.68)
+          const fSurge = Math.min(1.0, (effU - 0.50) / 0.16);
+
+          // A. INUNDATION SURGE CHANNEL: Floods from river DIRECTLY INTO Red Fort!
+          const floodLevel = 0.4 + fSurge * 2.8; // Rises up to 3.2m inside fort!
+          moatWaterMesh.position.y = 1.2 + fSurge * 2.5;
+          moatWaterMat.opacity = 0.92;
+
+          surgeStreamMesh.position.y = floodLevel;
+          courtyardWaterMesh.position.y = floodLevel - 0.1;
+          breachRapidsMesh.visible = true;
+          breachRapidsMesh.position.y = floodLevel + 0.12;
+
+          // B. RIVERSIDE RAMPARTS SHATTER & BLOW OUT (At effU >= 0.53)
+          if (effU >= 0.53) {
+            const fBreak = Math.min(1.0, (effU - 0.53) / 0.12);
+
+            // Breached rampart section cracks, tilts 35 deg, and plunges outward into water
+            if (wallSegments[0]) {
+              const bSec = wallSegments[0].breachSection;
+              bSec.position.y = wallHeight * 0.5 - fBreak * 3.5;
+              bSec.position.z = fBreak * 4.2;
+              bSec.rotation.x = fBreak * 0.62; // ~35 deg outward plunge
+              bSec.rotation.y = fBreak * 0.18;
+            }
+
+            // Scatter red sandstone rubble blocks into the surge torrent
+            wallRubbleBlocks.forEach((rb, idx) => {
+              rb.mesh.visible = true;
+              rb.mesh.position.y = 0.6 + Math.sin(effU * 20 + idx) * 0.2;
+              rb.mesh.position.z = rb.initPos.z + fBreak * 6.5 + (idx % 3) * 1.5;
+              rb.mesh.rotation.x = rb.initRot.x + fBreak * 2.0;
+              rb.mesh.rotation.z = rb.initRot.z + fBreak * 1.8;
+            });
+
+            // Outer Moat Wall blowout at central breach
+            moatBreachWall.position.y = 1.8 - fBreak * 1.4;
+            moatBreachWall.position.z = 9.5 + fBreak * 3.8;
+            moatBreachWall.rotation.x = fBreak * 0.48;
+          }
+
+          // C. EAST RIVERSIDE BASTION SCOUR & MARBLE CHHATRI COLLAPSE (At effU >= 0.55)
+          if (effU >= 0.55) {
+            const fBastion = Math.min(1.0, (effU - 0.55) / 0.12);
+            const eastB = bastionData.find(b => b.isRiverside);
+            if (eastB) {
+              // Bastion sinks 1.4m and tilts 18 deg into river current
+              eastB.group.position.y = -fBastion * 1.4;
+              eastB.group.rotation.z = fBastion * 0.31; // 18 deg tilt
+              eastB.group.rotation.x = fBastion * 0.15;
+
+              // White marble chhatri snaps pillars and topples into the floodwaters!
+              eastB.chhatriGroup.position.y = 15.5 - fBastion * 6.5;
+              eastB.chhatriGroup.position.x = -fBastion * 4.5;
+              eastB.chhatriGroup.rotation.z = fBastion * 1.25; // 72 deg roll
+            }
+          }
+
+          // D. SALIMGARH FORT CAUSEWAY COLLAPSE (At effU >= 0.54)
+          if (effU >= 0.54) {
+            const fBridge = Math.min(1.0, (effU - 0.54) / 0.12);
+            // Deck Span A snaps down into river
+            deckSpanA.position.y = 4.2 - fBridge * 2.4;
+            deckSpanA.rotation.x = -fBridge * 0.42;
+            deckSpanA.rotation.z = -fBridge * 0.22;
+
+            // Piers 1 & 2 scour and sink
+            causewayPiers.forEach(p => {
+              if (p.collapses) {
+                p.mesh.position.y = p.initPos.y - fBridge * 1.8;
+                p.mesh.rotation.z = fBridge * 0.35;
+              }
+            });
+          }
+
+          // E. LAHORI GATE STRUCTURAL FRACTURE & CUPOLA COLLAPSE (At effU >= 0.56)
+          if (effU >= 0.56) {
+            const fGate = Math.min(1.0, (effU - 0.56) / 0.12);
+
+            // Flagpole tilts violently in the flood torrent (22 deg)
+            flagMastGroup.rotation.z = fGate * 0.38;
+            flagMastGroup.rotation.x = fGate * 0.18;
+
+            // Cupolas 1 & 5 break loose, snap from roof, and tumble
+            cupolaMeshes.forEach(c => {
+              if (c.collapses) {
+                c.group.position.y = c.initPos.y - fGate * 4.2;
+                c.group.position.x = c.initPos.x + c.dropDir * fGate * 3.2;
+                c.group.rotation.z = c.dropDir * fGate * 1.4;
+              }
+            });
+
+            // PM glass rostrum fractures & tilts
+            glassPanel.rotation.z = fGate * 0.22;
+          }
+
+          // F. INTERIOR FORT FLOTSAM: Drifts across the flooded Red Fort courtyard!
+          if (effU >= 0.52) {
+            const fFlotsam = Math.min(1.0, (effU - 0.52) / 0.14);
+            fortFlotsam.forEach(fl => {
+              fl.mesh.visible = true;
+              fl.mesh.position.y = floodLevel + 0.15 + Math.sin(effU * 16 + fl.driftSpeed) * 0.1;
+              fl.mesh.position.x = fl.initPos.x + Math.sin(effU * 8 + fl.driftSpeed) * 2.5;
+              fl.mesh.position.z = fl.initPos.z - fFlotsam * 8.0; // Swept deeper into the fort
+              fl.mesh.rotation.y = fl.initRot.y + fFlotsam * 1.8;
+              fl.mesh.rotation.z = fl.initRot.z + Math.sin(effU * 12 + fl.driftSpeed) * 0.25;
+            });
+          }
         }
       }
     };
   }
-
   function createISBTTerminal() {
     const isbtGroup = new THREE.Group();
 
