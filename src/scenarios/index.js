@@ -113,26 +113,31 @@ export const SCENARIOS = {
 export const AVAILABLE_SCENARIOS = [
   { id: 'delhi', name: 'Delhi, India', flag: '🇮🇳', hazard: 'Yamuna River Record Inundation', active: true },
   { id: 'newyork', name: 'New York, USA', flag: '🇺🇸', hazard: 'Cat-4 Hurricane Storm Surge', active: true },
+  { id: 'rasuwa', name: 'Nepal (Rasuwa)', flag: '🇳🇵', hazard: 'Langtang Avalanche Dam-Burst (GLOF)', active: true },
   { id: 'beijing', name: 'Beijing, China', flag: '🇨🇳', hazard: 'Mentougou Flash Deluge', active: true },
   { id: 'tokyo', name: 'Tokyo, Japan', flag: '🇯🇵', hazard: 'Arakawa Flood & G-CANS Defense', active: true },
-  { id: 'london', name: 'London, UK', flag: '🇬🇧', hazard: 'North Sea Tidal Surge & Barrier', active: true },
-  { id: 'rasuwa', name: 'Rasuwa, Nepal', flag: '🇳🇵', hazard: 'Langtang Avalanche Dam-Burst', active: true }
+  { id: 'london', name: 'London, UK', flag: '🇬🇧', hazard: 'North Sea Tidal Surge & Barrier', active: true }
 ];
 
-let currentScenarioId = 'delhi'; // Start with Delhi as requested!
+SCENARIOS.nepal = SCENARIOS.rasuwa;
+SCENARIOS.ny = SCENARIOS.newyork;
+
+let currentScenarioId = 'delhi';
 
 export function getCurrentScenarioId() {
   return currentScenarioId;
 }
 
 export function setCurrentScenarioId(id) {
-  if (SCENARIOS[id]) {
-    currentScenarioId = id;
+  const resolved = (id === 'nepal' ? 'rasuwa' : id === 'ny' ? 'newyork' : id);
+  if (SCENARIOS[resolved]) {
+    currentScenarioId = resolved;
   }
 }
 
 export function getScenario(id = currentScenarioId) {
-  return SCENARIOS[id] || SCENARIOS.delhi;
+  const resolved = (id === 'nepal' ? 'rasuwa' : id === 'ny' ? 'newyork' : id);
+  return SCENARIOS[resolved] || SCENARIOS.delhi;
 }
 
 export function getCurrentWaypoint(t, uWave = 0, scenarioId = currentScenarioId) {

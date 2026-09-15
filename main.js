@@ -12,16 +12,17 @@ class ExplainerApp {
     this.container = document.getElementById('canvas-container');
     this.clock = new THREE.Clock();
 
-    // Parse URL query parameter (e.g. ?scenario=newyork) or URL hash (e.g. #newyork)
+    // Parse URL query parameter (e.g. ?scenario=newyork, ?scenario=delhi, ?scenario=nepal) or hash
     const urlParams = new URLSearchParams(window.location.search);
-    const hash = window.location.hash.replace('#', '').toLowerCase();
-    const validScenarios = ['newyork', 'delhi', 'rasuwa', 'beijing', 'tokyo', 'london'];
-    const paramScenario = urlParams.get('scenario')?.toLowerCase();
-    const requestedScenario = (paramScenario && validScenarios.includes(paramScenario))
-      ? paramScenario
-      : (hash && validScenarios.includes(hash))
-        ? hash
-        : 'newyork'; // Default to New York
+    const rawHash = window.location.hash.replace('#', '').toLowerCase();
+    const rawParam = urlParams.get('scenario')?.toLowerCase();
+    const aliasMap = { nepal: 'rasuwa', ny: 'newyork' };
+    const resolvedInput = aliasMap[rawParam] || rawParam || aliasMap[rawHash] || rawHash;
+
+    const validScenarios = ['delhi', 'newyork', 'rasuwa', 'beijing', 'tokyo', 'london'];
+    const requestedScenario = (resolvedInput && validScenarios.includes(resolvedInput))
+      ? resolvedInput
+      : 'delhi'; // Default to Delhi with direct one-click access to New York & Nepal
 
     this.currentScenarioId = requestedScenario;
     setCurrentScenarioId(requestedScenario);
