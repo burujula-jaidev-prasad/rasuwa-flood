@@ -1890,63 +1890,121 @@ export function buildDelhiScene(group, river, terrain) {
     material: concreteMat
   });
 
-  // 2. OLD YAMUNA IRON BRIDGE (LOHA PUL - 1866) - PHOTO 2 OVERHAUL
-  // Double-Deck Victorian Riveted Through-Truss with Corrugated Walkway Hoods
+  // 2. OLD YAMUNA IRON BRIDGE (LOHA PUL - 1866) - PHOTO 2 COMPLETE OVERHAUL
+  // Double-Deck Victorian Riveted Through-Truss (Camelback Whipple Lattice)
+  // Corrugated Walkway Hoods, Blue ICF Train, Corbelled Piers & Painted Flood Gauge
   // -------------------------------------------------------------------------
   const fLoha = getRiverFrame(0.35);
   const lohaGroup = new THREE.Group();
   lohaGroup.position.copy(fLoha.pt);
 
-  const lohaPiers = 4;
-  const lohaSpan = 32.0;
-  const lohaSpacing = lohaSpan / lohaPiers;
+  // Orthonormal basis: X = across river (bridge deck), Y = Up (0,1,0), Z = river flow (downstream)
+  const lohaRotMatrix = new THREE.Matrix4().makeBasis(fLoha.side, fLoha.up, fLoha.tangent);
+  lohaGroup.quaternion.setFromRotationMatrix(lohaRotMatrix);
 
-  // Authentic Weathered Victorian Ironwork Materials (Photo 2)
+  // Total span: 34m across Yamuna channel, 4 spans of 8.5m each
+  const lohaPiers = 4;
+  const lohaSpan = 34.0;
+  const lohaSpacing = lohaSpan / lohaPiers; // 8.5m per span
+  const trussWidth = 6.4; // width between main trusses
+
+  // Authentic Victorian Materials matching Photo 2
   const lohaRustSteel = new THREE.MeshStandardMaterial({
-    color: 0x6e2417, // Weathered Victorian rust-red steel
+    color: 0x6e2417, // Weathered Victorian terracotta red steel
     roughness: 0.65,
     metalness: 0.55
   });
+  const tinHoodMat = new THREE.MeshStandardMaterial({
+    color: 0x475569, // Weathered corrugated metal canopies
+    roughness: 0.55,
+    metalness: 0.65
+  });
+  const walkwayPlankMat = new THREE.MeshStandardMaterial({
+    color: 0x451a03, // Weathered timber walkway planks
+    roughness: 0.85
+  });
   const railwayBlue = new THREE.MeshStandardMaterial({
-    color: 0x0284c7, // Indian Railways blue livery (Photo 2)
+    color: 0x0284c7, // Indian Railways ICF sky-blue livery (Photo 2)
+    roughness: 0.35,
+    metalness: 0.4
+  });
+  const railwayNavy = new THREE.MeshStandardMaterial({
+    color: 0x0f2e5c, // Indian Railways navy cantrail & lower skirt
     roughness: 0.4,
     metalness: 0.4
   });
-  const tinHoodMat = new THREE.MeshStandardMaterial({
-    color: 0x475569, // Weathered corrugated metal canopies
-    roughness: 0.6,
-    metalness: 0.6
+  const railwayCream = new THREE.MeshBasicMaterial({
+    color: 0xfef3c7 // Pinstripe separator
+  });
+  const locoRed = new THREE.MeshStandardMaterial({
+    color: 0x991b1b, // Indian Railways WDM/WAP locomotive red
+    roughness: 0.35,
+    metalness: 0.5
   });
 
-  // 1. Victorian Masonry Piers with Pointed Cutwaters & Painted Flood Gauges (Photo 2)
+  // -------------------------------------------------------------------------
+  // A. Heavy Victorian Stone Masonry Piers with Corbelled Capitals (Photo 2)
+  // -------------------------------------------------------------------------
   const lohaPierMeshes = [];
   for (let s = 0; s <= lohaPiers; s++) {
-    const offset = (s - lohaPiers * 0.5) * lohaSpacing;
+    const xOffset = (s - lohaPiers * 0.5) * lohaSpacing;
     const pierGroup = new THREE.Group();
-    const pPos = new THREE.Vector3(fLoha.side.x * offset, 2.0, fLoha.side.z * offset);
+    const pPos = new THREE.Vector3(xOffset, 1.8, 0);
     pierGroup.position.copy(pPos);
 
-    // Heavy stone masonry pier body
-    const pierBody = new THREE.Mesh(new THREE.BoxGeometry(2.4, 7.2, 4.6), redSandstoneMat);
+    // 1. Massive Stone Masonry Pier Body (Weathered red sandstone)
+    const pierBody = new THREE.Mesh(new THREE.BoxGeometry(2.6, 5.8, 8.4), redSandstoneMat);
     pierBody.castShadow = true;
     pierBody.receiveShadow = true;
     pierGroup.add(pierBody);
 
-    // Pointed triangular cutwater facing upstream
-    const cutwater = new THREE.Mesh(new THREE.ConeGeometry(1.5, 3.4, 4), redSandstoneMat);
+    // 2. Upstream Pointed Triangular Cutwater (-Z facing into floodwaters)
+    const cutwater = new THREE.Mesh(new THREE.ConeGeometry(1.5, 3.2, 4), redSandstoneMat);
     cutwater.rotation.y = Math.PI * 0.25;
     cutwater.rotation.x = -Math.PI * 0.5;
-    cutwater.position.set(0, 0, -3.1);
+    cutwater.position.set(0, 0, -4.2);
     pierGroup.add(cutwater);
 
-    // Painted White-and-Black Flood Level Staff on Upstream Pier Face (Photo 2)
-    const gaugeStaff = new THREE.Mesh(new THREE.BoxGeometry(0.35, 5.8, 0.05), new THREE.MeshBasicMaterial({ color: 0xf8fafc }));
-    gaugeStaff.position.set(0, 0.2, -1.8);
+    // 3. Downstream Semi-Cylindrical Rounded Tail (+Z)
+    const tail = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 5.8, 12, 1, false, 0, Math.PI), redSandstoneMat);
+    tail.position.set(0, 0, 4.2);
+    pierGroup.add(tail);
+
+    // 4. Stepped Corbelled Stone Capital (Pier Cap - Photo 2 Highlight)
+    // Three stepped tiers flaring outward to carry the cast iron bearings
+    const capTier1 = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.22, 8.8), redSandstoneMat);
+    capTier1.position.y = 2.95;
+    pierGroup.add(capTier1);
+
+    const capTier2 = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.22, 9.2), redSandstoneMat);
+    capTier2.position.y = 3.17;
+    pierGroup.add(capTier2);
+
+    const capShelf = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.24, 9.6), redSandstoneMat);
+    capShelf.position.y = 3.40;
+    capShelf.castShadow = true;
+    pierGroup.add(capShelf);
+
+    // Cast iron rocker bearing pedestals under the truss bottom chords
+    [-trussWidth * 0.5, trussWidth * 0.5].forEach(bz => {
+      const bearing = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.35, 0.7), darkSteel);
+      bearing.position.set(0, 3.68, bz);
+      pierGroup.add(bearing);
+    });
+
+    // 5. Painted White-and-Black Flood Level Staff on Upstream Face (Photo 2 Highlight!)
+    const gaugeStaff = new THREE.Mesh(new THREE.BoxGeometry(0.35, 5.6, 0.06), new THREE.MeshBasicMaterial({ color: 0xf8fafc }));
+    gaugeStaff.position.set(0, 0.3, -4.3);
     pierGroup.add(gaugeStaff);
 
-    for (let g = 0; g < 6; g++) {
-      const mark = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.15, 0.06), new THREE.MeshBasicMaterial({ color: 0x09090b }));
-      mark.position.set(0, -2.4 + g * 0.95, -1.8);
+    // Alternating metric 1m hash bands
+    for (let g = 0; g < 7; g++) {
+      const isDanger = (g === 5); // 208.66m danger mark
+      const markMat = isDanger
+        ? new THREE.MeshBasicMaterial({ color: 0xdc2626 })
+        : new THREE.MeshBasicMaterial({ color: 0x09090b });
+      const mark = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.16, 0.08), markMat);
+      mark.position.set(0, -2.4 + g * 0.85, -4.3);
       pierGroup.add(mark);
     }
 
@@ -1954,47 +2012,202 @@ export function buildDelhiScene(group, river, terrain) {
     lohaPierMeshes.push({ mesh: pierGroup, basePos: pPos.clone(), index: s });
   }
 
-  // 2. Multi-Span Rust-Red Steel Polygonal Through-Trusses with Corrugated Weather Hoods (Photo 2)
+  // -------------------------------------------------------------------------
+  // B. Procedural Helper: Build Polygonal Arched Through-Truss (Camelback Lattice)
+  // -------------------------------------------------------------------------
+  function buildTrussSpanGroup(spanLen, isHalf = false, halfSide = 1) {
+    const spanGroup = new THREE.Group();
+    const halfL = spanLen * 0.5;
+
+    // Twin through-truss girders at z = -trussWidth/2 and +trussWidth/2
+    [-trussWidth * 0.5, trussWidth * 0.5].forEach(gz => {
+      // 1. Bottom Chord (Continuous heavy riveted steel channel)
+      const bottomChord = new THREE.Mesh(new THREE.BoxGeometry(spanLen, 0.35, 0.35), lohaRustSteel);
+      bottomChord.position.set(0, 0, gz);
+      bottomChord.castShadow = true;
+      spanGroup.add(bottomChord);
+
+      // 2. Polygonal Arched Top Chord (Camelback Profile from Photo 2!)
+      const topPeakH = 4.2; // Peak height above bottom chord
+      const endRiseLen = spanLen * 0.24;
+
+      if (!isHalf) {
+        // Full Span: End Slope 1 -> Horizontal Middle -> End Slope 2
+        // Left inclined post (rising from y=0 to y=topPeakH)
+        const hyp1 = Math.sqrt(endRiseLen * endRiseLen + topPeakH * topPeakH);
+        const ang1 = Math.atan2(topPeakH, endRiseLen);
+        const postL = new THREE.Mesh(new THREE.BoxGeometry(hyp1, 0.35, 0.35), lohaRustSteel);
+        postL.position.set(-halfL + endRiseLen * 0.5, topPeakH * 0.5, gz);
+        postL.rotation.z = ang1;
+        postL.castShadow = true;
+        spanGroup.add(postL);
+
+        // Horizontal center top chord
+        const centerTopLen = spanLen - 2 * endRiseLen;
+        const centerTop = new THREE.Mesh(new THREE.BoxGeometry(centerTopLen, 0.35, 0.35), lohaRustSteel);
+        centerTop.position.set(0, topPeakH, gz);
+        centerTop.castShadow = true;
+        spanGroup.add(centerTop);
+
+        // Right inclined post (sloping down from y=topPeakH to y=0)
+        const postR = new THREE.Mesh(new THREE.BoxGeometry(hyp1, 0.35, 0.35), lohaRustSteel);
+        postR.position.set(halfL - endRiseLen * 0.5, topPeakH * 0.5, gz);
+        postR.rotation.z = -ang1;
+        postR.castShadow = true;
+        spanGroup.add(postR);
+      } else {
+        // Half Span (fractured half during collapse)
+        const centerTop = new THREE.Mesh(new THREE.BoxGeometry(spanLen * 0.85, 0.35, 0.35), lohaRustSteel);
+        centerTop.position.set(0, topPeakH * 0.8, gz);
+        spanGroup.add(centerTop);
+      }
+
+      // 3. Vertical Posts & Crossed Lattice Ties (Open Diamond Web from Photo 2!)
+      const numPanels = 4;
+      const panelW = spanLen / numPanels;
+      for (let p = 0; p <= numPanels; p++) {
+        const px = -halfL + p * panelW;
+        // Height of top chord at px
+        let py = topPeakH;
+        if (Math.abs(px) > halfL - endRiseLen) {
+          py = Math.max(0.6, (halfL - Math.abs(px)) / endRiseLen * topPeakH);
+        }
+        const vPost = new THREE.Mesh(new THREE.BoxGeometry(0.24, py, 0.24), lohaRustSteel);
+        vPost.position.set(px, py * 0.5, gz);
+        vPost.castShadow = true;
+        spanGroup.add(vPost);
+
+        // Diagonal tension tie rods between posts
+        if (p < numPanels) {
+          const midX = px + panelW * 0.5;
+          const diagLen = Math.sqrt(panelW * panelW + py * py);
+          const diagAng = Math.atan2(py, panelW);
+
+          const diag1 = new THREE.Mesh(new THREE.BoxGeometry(diagLen, 0.08, 0.08), lohaRustSteel);
+          diag1.position.set(midX, py * 0.5, gz);
+          diag1.rotation.z = diagAng;
+          spanGroup.add(diag1);
+
+          const diag2 = new THREE.Mesh(new THREE.BoxGeometry(diagLen, 0.08, 0.08), lohaRustSteel);
+          diag2.position.set(midX, py * 0.5, gz);
+          diag2.rotation.z = -diagAng;
+          spanGroup.add(diag2);
+        }
+      }
+
+      // 4. Cantilevered Lower Walkway & Iconic Corrugated Tin Canopies (Photo 2!)
+      const walkDir = (gz > 0 ? 1 : -1);
+      const walkZ = gz + walkDir * 1.35;
+
+      // Steel outrigger support brackets under the walkway
+      for (let p = 0; p <= numPanels; p++) {
+        const px = -halfL + p * panelW;
+        const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 1.35), darkSteel);
+        bracket.position.set(px, -0.15, gz + walkDir * 0.68);
+        spanGroup.add(bracket);
+
+        // Vertical strut supporting the canopy above
+        const hoodStrut = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.8, 0.08), darkSteel);
+        hoodStrut.position.set(px, 0.9, walkZ);
+        spanGroup.add(hoodStrut);
+      }
+
+      // Timber Walkway Deck Planks
+      const walkDeck = new THREE.Mesh(new THREE.BoxGeometry(spanLen, 0.12, 1.35), walkwayPlankMat);
+      walkDeck.position.set(0, 0.06, walkZ);
+      walkDeck.receiveShadow = true;
+      spanGroup.add(walkDeck);
+
+      // Reddish Pedestrian Handrail / Safety Balustrade (Photo 2)
+      const handrail = new THREE.Mesh(new THREE.BoxGeometry(spanLen, 0.08, 0.08), lohaRustSteel);
+      handrail.position.set(0, 1.05, walkZ + walkDir * 0.65);
+      spanGroup.add(handrail);
+
+      const midrail = new THREE.Mesh(new THREE.BoxGeometry(spanLen, 0.06, 0.06), lohaRustSteel);
+      midrail.position.set(0, 0.55, walkZ + walkDir * 0.65);
+      spanGroup.add(midrail);
+
+      // Distinctive Corrugated Tin Canopies / Protective Walkway Hoods (Photo 2 Highlight!)
+      // Slanted downward outward to shed monsoonal rain
+      for (let h = 0; h < 3; h++) {
+        const hx = -halfL + (h + 0.5) * (spanLen / 3);
+        const hood = new THREE.Mesh(new THREE.BoxGeometry((spanLen / 3) * 0.96, 0.05, 1.5), tinHoodMat);
+        hood.position.set(hx, 1.75, walkZ);
+        hood.rotation.x = walkDir * 0.38; // 22 deg downward slant
+        hood.castShadow = true;
+        spanGroup.add(hood);
+      }
+    });
+
+    // 5. Overhead Transverse Portal Braces connecting the top chords
+    const topH = 4.2;
+    for (let o = -1; o <= 1; o++) {
+      const ox = o * (halfL * 0.5);
+      const portalBeam = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, trussWidth), lohaRustSteel);
+      portalBeam.position.set(ox, topH, 0);
+      spanGroup.add(portalBeam);
+
+      // Sway X-braces across roof
+      const swayLen = Math.sqrt((halfL * 0.5) * (halfL * 0.5) + trussWidth * trussWidth);
+      const sway = new THREE.Mesh(new THREE.BoxGeometry(swayLen, 0.06, 0.06), darkSteel);
+      sway.position.set(ox, topH, 0);
+      sway.rotation.y = 0.65;
+      spanGroup.add(sway);
+    }
+
+    // 6. Lower Vehicular Roadway Deck (Tarmac)
+    const roadDeck = new THREE.Mesh(new THREE.BoxGeometry(spanLen, 0.28, trussWidth - 0.4), tarmacMat);
+    roadDeck.position.set(0, -0.05, 0);
+    roadDeck.receiveShadow = true;
+    spanGroup.add(roadDeck);
+
+    // 7. Upper Level Railway Track Structure (Indian Railways Broad Gauge)
+    const railY = 2.15; // Upper deck elevation
+    // Wooden sleepers
+    const numSleepers = Math.floor(spanLen / 0.65);
+    for (let sl = 0; sl < numSleepers; sl++) {
+      const slX = -halfL + (sl + 0.5) * (spanLen / numSleepers);
+      const sleeper = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.12, 2.5), walkwayPlankMat);
+      sleeper.position.set(slX, railY, 0);
+      spanGroup.add(sleeper);
+    }
+
+    // Twin continuous steel rails (1.676m Broad Gauge)
+    [-0.838, 0.838].forEach(rz => {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(spanLen, 0.14, 0.08), darkSteel);
+      rail.position.set(0, railY + 0.12, rz);
+      spanGroup.add(rail);
+    });
+
+    return spanGroup;
+  }
+
+  // -------------------------------------------------------------------------
+  // C. Assemble Multi-Span Through-Trusses across Yamuna
+  // -------------------------------------------------------------------------
   const lohaTrussMeshes = [];
   for (let s = 0; s < lohaPiers; s++) {
     const spanCenter = (s - lohaPiers * 0.5 + 0.5) * lohaSpacing;
-    const tPos = new THREE.Vector3(fLoha.side.x * spanCenter, 5.2, fLoha.side.z * spanCenter);
+    const tPos = new THREE.Vector3(spanCenter, 5.5, 0);
 
     if (s === 2) {
-      // Central Span that snaps into two halves upon collapse
-      const halfLen = lohaSpacing * 0.48;
+      // Central Span 2 snaps into two halves (Half A and Half B) upon collapse
+      const halfLen = lohaSpacing * 0.49;
 
+      // Half A (West side of break)
       const trussAGroup = new THREE.Group();
-      const posA = tPos.clone().addScaledVector(fLoha.side, -halfLen * 0.5);
+      const posA = new THREE.Vector3(spanCenter - halfLen * 0.5, 5.5, 0);
       trussAGroup.position.copy(posA);
-
-      const tMeshA = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2.6, halfLen), lohaRustSteel);
-      tMeshA.castShadow = true;
-      trussAGroup.add(tMeshA);
-
-      // Corrugated metal protective weather-hoods (Photo 2)
-      for (let h = -1; h <= 1; h++) {
-        const hood = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 1.1), tinHoodMat);
-        hood.position.set(0, 1.1, h * 1.2);
-        hood.rotation.x = 0.35;
-        trussAGroup.add(hood);
-      }
+      const spanA = buildTrussSpanGroup(halfLen, true, -1);
+      trussAGroup.add(spanA);
       lohaGroup.add(trussAGroup);
 
+      // Half B (East side of break)
       const trussBGroup = new THREE.Group();
-      const posB = tPos.clone().addScaledVector(fLoha.side, halfLen * 0.5);
+      const posB = new THREE.Vector3(spanCenter + halfLen * 0.5, 5.5, 0);
       trussBGroup.position.copy(posB);
-
-      const tMeshB = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2.6, halfLen), lohaRustSteel);
-      tMeshB.castShadow = true;
-      trussBGroup.add(tMeshB);
-
-      for (let h = -1; h <= 1; h++) {
-        const hood = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 1.1), tinHoodMat);
-        hood.position.set(0, 1.1, h * 1.2);
-        hood.rotation.x = 0.35;
-        trussBGroup.add(hood);
-      }
+      const spanB = buildTrussSpanGroup(halfLen, true, 1);
+      trussBGroup.add(spanB);
       lohaGroup.add(trussBGroup);
 
       lohaTrussMeshes.push({
@@ -2004,22 +2217,13 @@ export function buildDelhiScene(group, river, terrain) {
         halfB: { mesh: trussBGroup, basePos: posB.clone(), baseRot: trussBGroup.rotation.clone() }
       });
     } else {
+      // Standing approach spans
       const spanGroup = new THREE.Group();
       spanGroup.position.copy(tPos);
-
-      const tMesh = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2.6, lohaSpacing * 0.96), lohaRustSteel);
-      tMesh.castShadow = true;
-      spanGroup.add(tMesh);
-
-      // Corrugated protective hoods along walkways (Photo 2)
-      for (let h = -2; h <= 2; h++) {
-        const hood = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 1.2), tinHoodMat);
-        hood.position.set(0, 1.1, h * 1.4);
-        hood.rotation.x = 0.35;
-        spanGroup.add(hood);
-      }
-
+      const spanMesh = buildTrussSpanGroup(lohaSpacing, false);
+      spanGroup.add(spanMesh);
       lohaGroup.add(spanGroup);
+
       lohaTrussMeshes.push({
         span: s,
         isSplit: false,
@@ -2030,78 +2234,130 @@ export function buildDelhiScene(group, river, terrain) {
     }
   }
 
-  // 3. Upper Railway Deck: Indian Railways Blue ICF Coaches & Catenary Masts (Photo 2)
-  const locoMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.35 });
-  const locoMesh = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.35, 3.8), locoMat);
-  const locoBasePos = new THREE.Vector3(0, 7.2, 2.4);
-  locoMesh.position.copy(locoBasePos);
-  locoMesh.castShadow = true;
-  lohaGroup.add(locoMesh);
+  // -------------------------------------------------------------------------
+  // D. Indian Railways Blue ICF Passenger Train on Upper Track (Photo 2)
+  // -------------------------------------------------------------------------
+  // 1. Red WDM/WAP Locomotive
+  const locoGroup = new THREE.Group();
+  const locoBasePos = new THREE.Vector3(6.5, 8.8, 0);
+  locoGroup.position.copy(locoBasePos);
 
-  // 3 Blue Indian Railways passenger coaches (Photo 2)
+  const locoBody = new THREE.Mesh(new THREE.BoxGeometry(5.2, 1.8, 1.7), locoRed);
+  locoBody.castShadow = true;
+  locoGroup.add(locoBody);
+
+  // Driver cab windows
+  const locoCabGlass = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.65, 1.55), glassDark);
+  locoCabGlass.position.set(-2.55, 0.35, 0);
+  locoGroup.add(locoCabGlass);
+
+  // High-voltage warning yellow stripe
+  const locoStripe = new THREE.Mesh(new THREE.BoxGeometry(5.25, 0.18, 1.72), new THREE.MeshBasicMaterial({ color: 0xeab308 }));
+  locoGroup.add(locoStripe);
+
+  // Roof Pantograph
+  const pantoArm = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.45, 0.6), darkSteel);
+  pantoArm.position.set(0.8, 1.15, 0);
+  locoGroup.add(pantoArm);
+
+  lohaGroup.add(locoGroup);
+  const locoMesh = locoGroup; // alias for shatter function
+
+  // 2. Three Indian Railways Blue ICF Passenger Coaches (Photo 2)
   const coaches = [];
   for (let c = 0; c < 3; c++) {
     const coachGroup = new THREE.Group();
-    const cPos = new THREE.Vector3(0, 7.2, -2.4 - c * 4.4);
+    // Spaced along the track along X
+    const cPos = new THREE.Vector3(0.5 - c * 6.2, 8.8, 0);
     coachGroup.position.copy(cPos);
 
-    const cBody = new THREE.Mesh(new THREE.BoxGeometry(1.05, 1.25, 4.2), railwayBlue);
-    cBody.castShadow = true;
-    coachGroup.add(cBody);
+    // Main coach body (Navy blue lower/roof)
+    const cMain = new THREE.Mesh(new THREE.BoxGeometry(5.8, 1.85, 1.65), railwayNavy);
+    cMain.castShadow = true;
+    coachGroup.add(cMain);
 
-    const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.08, 0.16, 4.2), new THREE.MeshBasicMaterial({ color: 0xf8fafc }));
-    coachGroup.add(stripe);
+    // Sky-blue window band (Photo 2)
+    const cSkyBand = new THREE.Mesh(new THREE.BoxGeometry(5.82, 0.75, 1.68), railwayBlue);
+    cSkyBand.position.y = 0.12;
+    coachGroup.add(cSkyBand);
 
-    const winBand = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.28, 4.0), glassDark);
-    winBand.position.y = 0.22;
-    coachGroup.add(winBand);
+    // Cream separation pinstripes
+    [-0.28, 0.52].forEach(sy => {
+      const str = new THREE.Mesh(new THREE.BoxGeometry(5.84, 0.08, 1.7), railwayCream);
+      str.position.y = sy;
+      coachGroup.add(str);
+    });
+
+    // Individual passenger windows (10 windows per side)
+    for (let w = -4; w <= 4; w++) {
+      const winL = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.05), glassDark);
+      winL.position.set(w * 0.58, 0.12, 0.85);
+      coachGroup.add(winL);
+
+      const winR = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.05), glassDark);
+      winR.position.set(w * 0.58, 0.12, -0.85);
+      coachGroup.add(winR);
+    }
+
+    // Curved silver roof
+    const roof = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 5.8, 12, 1, false, 0, Math.PI), tinHoodMat);
+    roof.rotation.z = Math.PI * 0.5;
+    roof.position.y = 0.92;
+    coachGroup.add(roof);
+
+    // Torpedo ventilators along the roof
+    for (let v = -2; v <= 2; v++) {
+      const vent = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.22, 8), darkSteel);
+      vent.position.set(v * 1.1, 1.52, 0);
+      coachGroup.add(vent);
+    }
+
+    // 4-wheel bogie wheel trucks
+    [-2.0, 2.0].forEach(bx => {
+      const bogie = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.45, 1.55), darkSteel);
+      bogie.position.set(bx, -1.05, 0);
+      coachGroup.add(bogie);
+    });
 
     lohaGroup.add(coachGroup);
     coaches.push({ mesh: coachGroup, basePos: cPos.clone(), index: c });
   }
 
-  // Overhead Railway OHE Catenary Masts across bridge (Photo 2)
-  for (let cm = -3; cm <= 3; cm += 2) {
-    const mast = new THREE.Mesh(new THREE.BoxGeometry(0.12, 4.2, 0.12), darkSteel);
-    mast.position.set(0.95, 8.2, cm * 4.5);
+  // 3. Overhead Railway OHE Catenary Masts across the bridge
+  for (let cm = -2; cm <= 2; cm++) {
+    const oheX = cm * lohaSpacing;
+    const mast = new THREE.Mesh(new THREE.BoxGeometry(0.12, 4.8, 0.12), darkSteel);
+    mast.position.set(oheX, 10.2, 1.5);
     lohaGroup.add(mast);
 
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.08, 0.08), darkSteel);
-    arm.position.set(0.3, 10.1, cm * 4.5);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 1.8), darkSteel);
+    arm.position.set(oheX, 12.2, 0.6);
     lohaGroup.add(arm);
   }
 
-  // 4. Lower Vehicular Roadway Deck running through the bottom of the truss
-  const lowerRoad = new THREE.Mesh(new THREE.BoxGeometry(lohaSpan * 1.05, 0.35, 5.6), tarmacMat);
-  lowerRoad.position.set(0, 3.8, 0);
-  lowerRoad.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), fLoha.side);
-  lohaGroup.add(lowerRoad);
-
-  // 5. Severed Twisted Steel Rails & Splintered Debris
+  // -------------------------------------------------------------------------
+  // E. Severed Twisted Steel Rails & Splintered Debris
+  // -------------------------------------------------------------------------
   const brokenSteelBeams = [];
   for (let b = 0; b < 8; b++) {
     const beam = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.28, 2.6 + Math.random() * 1.8), darkSteel);
     const bPos = new THREE.Vector3(
-      (Math.random() - 0.5) * 3.5,
-      5.2 + Math.random() * 1.2,
-      (Math.random() - 0.5) * 6.0
+      (Math.random() - 0.5) * 4.0,
+      6.5 + Math.random() * 1.2,
+      (Math.random() - 0.5) * 4.0
     );
     beam.position.copy(bPos);
     beam.castShadow = true;
     lohaGroup.add(beam);
     brokenSteelBeams.push({
       mesh: beam,
-      basePos: bPos.clone(),
-      driftVel: new THREE.Vector3(
-        fLoha.tangent.x * (20.0 + Math.random() * 14.0),
-        -6.0 - Math.random() * 4.0,
-        fLoha.tangent.z * (20.0 + Math.random() * 14.0)
-      ),
-      spinVel: new THREE.Vector3(Math.random() * 7.0, Math.random() * 9.0, Math.random() * 7.0)
+      basePos: bPos.clone()
     });
   }
 
-  // 6. Dynamic Debris Dam / Logjam Group (From Collapsing Havelis)
+  // -------------------------------------------------------------------------
+  // F. Dynamic Debris Dam / Logjam Group (Accumulating from upstream havelis)
+  // -------------------------------------------------------------------------
   const lohaDebrisDamGroup = new THREE.Group();
   const damWoodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 });
   const damTinMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.4, metalness: 0.6 });
@@ -2119,7 +2375,7 @@ export function buildDelhiScene(group, river, terrain) {
       dMesh = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 0.9), damWoodMat);
     }
     const offsetSide = (d % 2 === 0 ? 0.4 : -0.4) * (d * 0.2);
-    const dPos = new THREE.Vector3(offsetSide - 1.2, 1.2 + (d % 4) * 0.45, -2.4 - (d * 0.25));
+    const dPos = new THREE.Vector3(offsetSide - 0.5, 2.2 + (d % 4) * 0.45, -3.8 - (d * 0.25));
     dMesh.position.copy(dPos);
     dMesh.rotation.set(0.3 + (d % 3) * 0.4, 0.2 + (d % 4) * 0.3, 0.5);
     dMesh.visible = false;
@@ -2127,17 +2383,17 @@ export function buildDelhiScene(group, river, terrain) {
     damItems.push({ mesh: dMesh, basePos: dPos.clone(), baseRot: dMesh.rotation.clone(), idx: d });
   }
 
-  const damFoamBulge = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.3, 4.2), damFoamMat);
-  damFoamBulge.position.set(-1.0, 1.4, -3.2);
+  const damFoamBulge = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.4, 3.5), damFoamMat);
+  damFoamBulge.position.set(0, 2.4, -4.2);
   damFoamBulge.visible = false;
   lohaDebrisDamGroup.add(damFoamBulge);
 
   const pierWakes = [];
   for (let s = 0; s <= lohaPiers; s++) {
-    const offset = (s - lohaPiers * 0.5) * lohaSpacing;
+    const xOffset = (s - lohaPiers * 0.5) * lohaSpacing;
     const wake = new THREE.Mesh(new THREE.ConeGeometry(0.9, 5.5, 6), damFoamMat);
     wake.rotation.x = Math.PI * 0.5;
-    const wPos = new THREE.Vector3(fLoha.side.x * offset, 1.1, fLoha.side.z * offset + 3.2);
+    const wPos = new THREE.Vector3(xOffset, 1.8, 4.8);
     wake.position.copy(wPos);
     wake.visible = false;
     lohaGroup.add(wake);
@@ -2158,9 +2414,8 @@ export function buildDelhiScene(group, river, terrain) {
     sinkScale: 0.25,
     washSpeed: 30.0,
     maxProg: 0.09,
-    material: darkSteel
+    material: lohaRustSteel
   });
-
   // -------------------------------------------------------------------------
   // 3. NIGAMBODH GHAT SACRED BATHING COMPLEX (u = 0.42)
   // -------------------------------------------------------------------------
@@ -3089,30 +3344,29 @@ export function buildDelhiScene(group, river, terrain) {
         d.mesh.position.copy(d.basePos);
       });
       damFoamBulge.visible = false;
-      pierWakes.forEach(w => w.mesh.visible = false);
+      pierWakes.forEach(w => { w.mesh.visible = false; });
     } else {
-      // A. HYDRODYNAMIC DEBRIS DAMMING: Debris from collapsing frontline havelis & bastis accumulates!
-      // Visible between effU = 0.28 and 0.45
+      // A. HYDRODYNAMIC DEBRIS DAMMING (effU >= 0.28): Havelis & basti debris accumulates!
       const fDam = Math.min(1.0, (effU - 0.28) / 0.08); // 0.0 at 0.28 -> 1.0 at 0.36
       damItems.forEach((d, idx) => {
         d.mesh.visible = (effU >= 0.29);
-        // Debris drifts from upstream and packs tightly against Pier 2
+        // Debris drifts from upstream (-Z) and packs against Pier 2
         d.mesh.position.y = d.basePos.y + fDam * 0.8 + Math.sin(effU * 24 + idx) * 0.08;
         d.mesh.position.z = d.basePos.z + (1.0 - fDam) * (-6.0); // Floats into position!
         d.mesh.rotation.x = d.baseRot.x + fDam * 0.4;
       });
 
       damFoamBulge.visible = (effU >= 0.29);
-      damFoamBulge.position.y = 1.4 + fDam * 0.9;
+      damFoamBulge.position.y = 2.4 + fDam * 0.9;
 
-      // Pier wake foam trailing downstream showing high-velocity flood bypass
+      // Pier wake foam trailing downstream (+Z)
       pierWakes.forEach((w, wIdx) => {
         w.mesh.visible = (effU >= 0.28);
         w.mesh.scale.set(1.0 + fDam * 0.8, 1.0 + fDam * 1.5, 1.0);
-        w.mesh.position.y = 1.1 + fDam * 0.8 + Math.sin(effU * 30 + wIdx) * 0.05;
+        w.mesh.position.y = 1.8 + fDam * 0.8 + Math.sin(effU * 30 + wIdx) * 0.05;
       });
 
-      // B. CATASTROPHIC TRUSS & PIER COLLAPSE (Triggered by debris damming dynamic pressure at effU >= 0.34)
+      // B. CATASTROPHIC TRUSS & PIER COLLAPSE (Triggered by debris dam dynamic thrust at effU >= 0.34)
       if (effU < 0.34) {
         // Bridge remains standing while debris accumulates
         lohaPierMeshes.forEach(p => {
@@ -3136,61 +3390,63 @@ export function buildDelhiScene(group, river, terrain) {
           c.mesh.position.copy(c.basePos);
           c.mesh.rotation.set(0, 0, 0);
         });
-        brokenSteelBeams.forEach(b => b.mesh.visible = false);
+        brokenSteelBeams.forEach(b => { b.mesh.visible = false; });
       } else {
         const prog = Math.min(1.0, (effU - 0.34) / 0.12);
         const ease = Math.sin(prog * Math.PI * 0.5);
 
-        // 1. Foundation scouring & debris thrust: Central deepwater pier tilts by 22 degrees
+        // 1. Pier 2 scours and tilts 24 degrees downstream (+Z) and sideways (+X)
         const p2 = lohaPierMeshes[2];
         if (p2) {
           p2.mesh.rotation.z = ease * 0.38;
-          p2.mesh.position.y = p2.basePos.y - ease * 0.9;
+          p2.mesh.rotation.x = ease * 0.24;
+          p2.mesh.position.y = p2.basePos.y - ease * 1.1;
         }
         const p1 = lohaPierMeshes[1];
         if (p1) {
           p1.mesh.rotation.z = ease * 0.16;
         }
 
-        // 2. Central Steel Truss Span 2 snaps in two and plunges into river!
+        // 2. Central Steel Truss Span 2 snaps in half (V-shape collapse plunging into Yamuna!)
         const t2 = lohaTrussMeshes[2];
         if (t2 && t2.isSplit) {
-          t2.halfA.mesh.rotation.z = ease * 0.80;
+          t2.halfA.mesh.rotation.z = ease * 0.75;
           t2.halfA.mesh.rotation.x = ease * 0.28;
           t2.halfA.mesh.position.y = t2.halfA.basePos.y - ease * 4.2;
-          t2.halfA.mesh.position.x = t2.halfA.basePos.x + ease * fLoha.tangent.x * 2.8;
-          t2.halfA.mesh.position.z = t2.halfA.basePos.z + ease * fLoha.tangent.z * 2.8;
+          t2.halfA.mesh.position.z = t2.halfA.basePos.z + ease * 2.8;
 
           t2.halfB.mesh.rotation.z = -ease * 0.70;
-          t2.halfB.mesh.rotation.y = ease * 0.50;
+          t2.halfB.mesh.rotation.y = ease * 0.35;
           t2.halfB.mesh.position.y = t2.halfB.basePos.y - ease * 4.8;
-          t2.halfB.mesh.position.x = t2.halfB.basePos.x + ease * fLoha.tangent.x * 4.8;
-          t2.halfB.mesh.position.z = t2.halfB.basePos.z + ease * fLoha.tangent.z * 4.8;
+          t2.halfB.mesh.position.z = t2.halfB.basePos.z + ease * 3.8;
         }
 
         const t1 = lohaTrussMeshes[1];
         if (t1 && !t1.isSplit) {
-          t1.mesh.rotation.z = ease * 0.32;
-          t1.mesh.position.y = t1.basePos.y - ease * 1.6;
+          t1.mesh.rotation.z = ease * 0.28;
+          t1.mesh.position.y = t1.basePos.y - ease * 1.4;
         }
 
-        // 3. Train Derailment & Coaches Swept Downstream
-        locoMesh.rotation.x = ease * 0.60;
-        locoMesh.rotation.z = ease * 0.24;
-        locoMesh.position.y = locoBasePos.y - ease * 2.1;
+        // 3. Train Derailment & Blue Coaches Swept Downstream
+        locoMesh.rotation.z = ease * 0.35;
+        locoMesh.rotation.x = ease * 0.45;
+        locoMesh.position.y = locoBasePos.y - ease * 1.8;
         locoMesh.position.z = locoBasePos.z + ease * 1.5;
 
         if (coaches[0]) {
-          coaches[0].mesh.rotation.z = ease * 0.72;
+          coaches[0].mesh.rotation.z = ease * 0.65;
           coaches[0].mesh.rotation.x = ease * 0.32;
-          coaches[0].mesh.position.y = coaches[0].basePos.y - ease * 1.6;
+          coaches[0].mesh.position.y = coaches[0].basePos.y - ease * 2.2;
         }
 
         if (coaches[1]) {
+          // Coach 2 breaks coupler and washes downstream (+Z)
           const washDist = Math.pow(prog, 1.4) * 32.0;
-          coaches[1].mesh.position.copy(coaches[1].basePos)
-            .addScaledVector(fLoha.tangent, washDist)
-            .add(new THREE.Vector3(0, -Math.min(5.5, ease * 5.8), 0));
+          coaches[1].mesh.position.set(
+            coaches[1].basePos.x + ease * 2.0,
+            coaches[1].basePos.y - Math.min(5.5, ease * 5.8),
+            coaches[1].basePos.z + washDist
+          );
           coaches[1].mesh.rotation.x = ease * 2.2;
           coaches[1].mesh.rotation.y = ease * 2.8;
           coaches[1].mesh.rotation.z = ease * 1.5;
