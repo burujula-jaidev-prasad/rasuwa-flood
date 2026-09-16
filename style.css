@@ -67,11 +67,19 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  background: linear-gradient(180deg, rgba(6, 14, 22, 0.96) 0%, rgba(6, 14, 22, 0.82) 100%);
+  gap: 16px;
+  background: linear-gradient(180deg, rgba(6, 14, 22, 0.96) 0%, rgba(6, 14, 22, 0.84) 100%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   z-index: 30;
   pointer-events: auto;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .brand-container {
@@ -83,115 +91,227 @@ html, body {
 }
 
 .brand-badge {
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  background: rgba(232, 149, 47, 0.18);
+  background: rgba(232, 149, 47, 0.16);
   color: var(--amber);
-  padding: 2px 6px;
+  padding: 2.5px 6px;
   border-radius: 4px;
-  border: 1px solid rgba(232, 149, 47, 0.4);
+  border: 1px solid rgba(232, 149, 47, 0.38);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .brand-title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 320px;
+  max-width: 220px;
 }
 
-.brand-subtitle {
-  font-size: 11px;
-  color: var(--sub);
-  margin-left: 6px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 260px;
+/* Modern Scenario Dropdown Switcher */
+.scenario-dropdown {
+  position: relative;
+  display: inline-block;
 }
 
-@media (max-width: 1366px) {
-  .brand-subtitle {
-    display: none;
-  }
-}
-
-/* Multi-City Scenario Selector Bar */
-.scenario-selector {
+.scenario-dropdown-trigger {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 4px 10px;
   display: flex;
   align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-.scenario-btn {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
-  padding: 3px 8px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  gap: 6px;
   cursor: pointer;
   color: var(--ink);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   transition: all 0.2s ease;
   user-select: none;
-  white-space: nowrap;
 }
 
-.scenario-btn:hover:not(.disabled) {
-  background: rgba(232, 149, 47, 0.2);
-  border-color: rgba(232, 149, 47, 0.5);
-  transform: translateY(-1px);
-}
-
-.scenario-btn.active {
-  background: rgba(232, 149, 47, 0.25);
+.scenario-dropdown-trigger:hover {
+  background: rgba(30, 41, 59, 0.95);
   border-color: var(--amber);
-  color: #fff;
-  box-shadow: 0 0 10px rgba(232, 149, 47, 0.35);
+  box-shadow: 0 0 12px rgba(232, 149, 47, 0.25);
 }
 
-.scenario-btn.disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+.sc-dropdown-arrow {
+  font-size: 9px;
+  color: var(--sub);
+  transition: transform 0.2s ease;
+  margin-left: 2px;
+}
+
+.scenario-dropdown.open .sc-dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.scenario-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 320px;
+  background: rgba(10, 18, 30, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65);
+  padding: 6px;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 100;
+  animation: dropdownFade 0.15s ease forwards;
+}
+
+.scenario-dropdown-menu.open {
+  display: flex;
+}
+
+@keyframes dropdownFade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-header {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--sub);
+  padding: 6px 10px 4px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 2px;
+}
+
+.scenario-dropdown-menu .scenario-btn {
+  width: 100%;
+  border-radius: 6px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.scenario-dropdown-menu .scenario-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.scenario-dropdown-menu .scenario-btn.active {
+  background: rgba(232, 149, 47, 0.18);
+  border-color: rgba(232, 149, 47, 0.5);
 }
 
 .sc-flag {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1;
+  flex-shrink: 0;
 }
 
-.sc-name {
+.sc-btn-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sc-btn-title {
   font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
 }
 
-.sc-badge {
-  font-size: 8px;
-  text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 1px 4px;
-  border-radius: 4px;
+.scenario-dropdown-menu .scenario-btn.active .sc-btn-title {
+  color: var(--amber);
+}
+
+.sc-btn-desc {
+  font-size: 9.5px;
   color: var(--sub);
-  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Header Center — What-If Toggle Controls */
+.header-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.forecast-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 2px 4px;
+  gap: 4px;
+}
+
+.mode-toggle-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sub);
+  padding: 0 4px 0 6px;
+}
+
+.mode-pill-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--sub);
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.mode-pill-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mode-pill-btn.active {
+  background: rgba(232, 149, 47, 0.25);
+  border-color: var(--amber);
+  color: #fff;
+  box-shadow: 0 0 8px rgba(232, 149, 47, 0.3);
+}
+
+/* Header Right — Streamlined Action Controls */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .incident-flyer-btn {
-  background: rgba(245, 158, 11, 0.16);
+  background: rgba(245, 158, 11, 0.14);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(245, 158, 11, 0.5);
+  border: 1px solid rgba(245, 158, 11, 0.45);
   border-radius: 14px;
   padding: 3px 8px;
   display: flex;
@@ -199,19 +319,18 @@ html, body {
   gap: 4px;
   cursor: pointer;
   color: #fef08a;
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.02em;
   transition: all 0.2s ease;
   user-select: none;
   pointer-events: auto;
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
-  margin-left: 2px;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
   white-space: nowrap;
 }
 
 .incident-flyer-btn:hover {
-  background: rgba(245, 158, 11, 0.32);
+  background: rgba(245, 158, 11, 0.3);
   border-color: #f59e0b;
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
@@ -399,7 +518,7 @@ html, body {
   letter-spacing: 0.04em;
 }
 
-/* Tally & KPI Command Dashboard — Structured Telemetry Ribbon */
+/* Tally & KPI Command Dashboard — Streamlined Telemetry Ribbon */
 .tally-container {
   position: absolute;
   top: 54px;
@@ -407,28 +526,28 @@ html, body {
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   z-index: 20;
   pointer-events: auto;
   max-width: calc(100vw - 32px);
   justify-content: center;
-  background: rgba(6, 12, 22, 0.90);
+  background: rgba(6, 12, 22, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 4px 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  border-radius: 18px;
+  padding: 3px 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
   transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
   white-space: nowrap;
 }
 
 .tally-card {
   pointer-events: auto;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 2.5px 8px;
   display: inline-flex;
   flex-direction: row;
   align-items: center;
@@ -443,6 +562,10 @@ html, body {
   border-color: rgba(232, 149, 47, 0.4);
   background: rgba(255, 255, 255, 0.08);
   transform: translateY(-1px);
+}
+
+.tally-card .kpi-tag-row {
+  display: none; /* Hide redundant bottom badge row to keep top bar sleek and uncrowded */
 }
 
 .tally-icon {
@@ -2392,18 +2515,23 @@ html, body {
   .top-nav {
     padding: 0 10px;
     height: 44px;
+    gap: 8px;
   }
   .brand-title {
-    max-width: 180px;
-    font-size: 11.5px;
+    display: none;
   }
-  .scenario-btn {
-    padding: 2px 5px;
-    font-size: 9.5px;
+  .header-center {
+    display: none;
+  }
+  .scenario-dropdown-menu {
+    width: 280px;
+    max-width: 90vw;
+  }
+  .incident-flyer-btn span:not(.flyer-btn-icon) {
+    display: none;
   }
   .incident-flyer-btn {
-    padding: 2px 5px;
-    font-size: 9px;
+    padding: 3px 6px;
   }
   .tally-container {
     top: 48px;

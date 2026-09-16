@@ -242,6 +242,28 @@ export class UIManager {
       });
     }
 
+    // Scenario dropdown toggle & outside click
+    const scDropdown = document.getElementById('scenario-dropdown');
+    const scTrigger = document.getElementById('scenario-dropdown-trigger');
+    const scMenu = document.getElementById('scenario-dropdown-menu');
+
+    if (scTrigger && scMenu) {
+      scTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = scMenu.classList.toggle('open');
+        if (scDropdown) scDropdown.classList.toggle('open', isOpen);
+        scTrigger.setAttribute('aria-expanded', isOpen);
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!scMenu.contains(e.target) && !scTrigger.contains(e.target)) {
+          scMenu.classList.remove('open');
+          if (scDropdown) scDropdown.classList.remove('open');
+          scTrigger.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
     // Scenario switcher buttons
     const scenarioBtns = document.querySelectorAll('.scenario-btn');
     scenarioBtns.forEach(btn => {
@@ -250,6 +272,9 @@ export class UIManager {
         const id = btn.dataset.id;
         scenarioBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+        if (scMenu) scMenu.classList.remove('open');
+        if (scDropdown) scDropdown.classList.remove('open');
+        if (scTrigger) scTrigger.setAttribute('aria-expanded', 'false');
         if (this.options.onSelectScenario) {
           this.options.onSelectScenario(id);
         }
@@ -1974,6 +1999,22 @@ export class UIManager {
     scenarioBtns.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.id === id);
     });
+
+    // Update scenario dropdown trigger badge & label
+    const scDropdownNames = {
+      delhi: { flag: '🇮🇳', name: 'Delhi' },
+      rasuwa: { flag: '🇳🇵', name: 'Nepal' },
+      newyork: { flag: '🇺🇸', name: 'New York' },
+      tokyo: { flag: '🇯🇵', name: 'Tokyo' },
+      beijing: { flag: '🇨🇳', name: 'Beijing' },
+      london: { flag: '🇬🇧', name: 'London' }
+    };
+    if (scDropdownNames[id]) {
+      const curFlag = document.getElementById('current-sc-flag');
+      const curName = document.getElementById('current-sc-name');
+      if (curFlag) curFlag.textContent = scDropdownNames[id].flag;
+      if (curName) curName.textContent = scDropdownNames[id].name;
+    }
 
     // Reset and initialize UI to pre-disaster baseline (t = 0, uWave = 0)
     this.update(0.0, 0, 0);

@@ -21,59 +21,100 @@
   <!-- Cinematic Vignette Overlay -->
   <div class="vignette"></div>
 
-  <!-- Top Navigation / Title Bar -->
+  <!-- Top Navigation / Mission Control Bar -->
   <header class="top-nav">
-    <div class="brand-container">
-      <span class="brand-badge" id="brand-badge">Forecasting Simulator</span>
-      <h1 class="brand-title" id="brand-title">New York: Hurricane Storm Surge & Inundation</h1>
-      <span class="brand-subtitle" id="brand-subtitle">Atlantic Funneling, Subway Flooding & ConEd Grid Arc-Blast</span>
+    <!-- Left: Brand & Scenario Selector Dropdown -->
+    <div class="header-left">
+      <div class="brand-container">
+        <span class="brand-badge" id="brand-badge">SIMULATOR</span>
+        <h1 class="brand-title" id="brand-title">Delhi: Yamuna Record Inundation</h1>
+        <span class="brand-subtitle" id="brand-subtitle" style="display: none;"></span>
+      </div>
+
+      <!-- Modern Scenario Selector Dropdown (Replaces 6 bulky buttons) -->
+      <div class="scenario-dropdown" id="scenario-dropdown">
+        <button class="scenario-dropdown-trigger" id="scenario-dropdown-trigger" type="button" aria-haspopup="true" aria-expanded="false" title="Switch Disaster Scenario">
+          <span class="sc-flag" id="current-sc-flag">🇮🇳</span>
+          <span class="sc-name" id="current-sc-name">Delhi</span>
+          <span class="sc-dropdown-arrow">▾</span>
+        </button>
+        <div class="scenario-dropdown-menu" id="scenario-dropdown-menu">
+          <div class="dropdown-header">SELECT CALAMITY SCENARIO</div>
+          <button class="scenario-btn active" data-id="delhi" title="Delhi: Yamuna River Record Inundation & Red Fort Shatter">
+            <span class="sc-flag">🇮🇳</span>
+            <div class="sc-btn-info">
+              <span class="sc-btn-title">Delhi, India</span>
+              <span class="sc-btn-desc">Yamuna Deluge & Red Fort Rampart Breach</span>
+            </div>
+          </button>
+          <button class="scenario-btn" data-id="rasuwa" title="Nepal: Langtang Avalanche & Dam-Burst (GLOF)">
+            <span class="sc-flag">🇳🇵</span>
+            <div class="sc-btn-info">
+              <span class="sc-btn-title">Nepal (Rasuwa)</span>
+              <span class="sc-btn-desc">Langtang Cryospheric GLOF & Dam Outburst</span>
+            </div>
+          </button>
+          <button class="scenario-btn" data-id="newyork" title="New York: Cat-4 Hurricane Storm Surge & Manhattan Inundation">
+            <span class="sc-flag">🇺🇸</span>
+            <div class="sc-btn-info">
+              <span class="sc-btn-title">New York, USA</span>
+              <span class="sc-btn-desc">Cat-4 Hurricane Surge & Harbor Deluge</span>
+            </div>
+          </button>
+          <button class="scenario-btn" data-id="tokyo" title="Tokyo: Arakawa Deluge & G-CANS Subterranean Defense">
+            <span class="sc-flag">🇯🇵</span>
+            <div class="sc-btn-info">
+              <span class="sc-btn-title">Tokyo, Japan</span>
+              <span class="sc-btn-desc">Arakawa Deluge & G-CANS Subterranean Defense</span>
+            </div>
+          </button>
+          <button class="scenario-btn" data-id="beijing" title="Beijing: Mentougou Mountain Flash Deluge & Yongding River Flood">
+            <span class="sc-flag">🇨🇳</span>
+            <div class="sc-btn-info">
+              <span class="sc-btn-title">Beijing, China</span>
+              <span class="sc-btn-desc">Mentougou Mountain Torrent & Flash Deluge</span>
+            </div>
+          </button>
+          <button class="scenario-btn" data-id="london" title="London: North Sea Tidal Surge & Thames Barrier Emergency Closure">
+            <span class="sc-flag">🇬🇧</span>
+            <div class="sc-btn-info">
+              <span class="sc-btn-title">London, UK</span>
+              <span class="sc-btn-desc">North Sea Surge & Thames Barrier Closure</span>
+            </div>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <!-- Multi-City Scenario Selector Bar -->
-    <nav class="scenario-selector" id="scenario-selector">
-      <button class="scenario-btn" data-id="newyork" title="New York: Cat-4 Hurricane Storm Surge & Manhattan Inundation">
-        <span class="sc-flag">🇺🇸</span>
-        <span class="sc-name">New York</span>
-      </button>
-      <button class="scenario-btn active" data-id="delhi" title="Delhi: Yamuna River Record Inundation & Red Fort Shatter">
-        <span class="sc-flag">🇮🇳</span>
-        <span class="sc-name">Delhi</span>
-      </button>
-      <button class="scenario-btn" data-id="rasuwa" title="Nepal: Langtang Avalanche & Dam-Burst (GLOF)">
-        <span class="sc-flag">🇳🇵</span>
-        <span class="sc-name">Nepal</span>
-      </button>
-      <button class="scenario-btn" data-id="beijing" title="Beijing: Mentougou Mountain Flash Deluge & Yongding River Flood">
-        <span class="sc-flag">🇨🇳</span>
-        <span class="sc-name">Beijing</span>
-      </button>
-      <button class="scenario-btn" data-id="tokyo" title="Tokyo: Arakawa Deluge & G-CANS Subterranean Defense">
-        <span class="sc-flag">🇯🇵</span>
-        <span class="sc-name">Tokyo</span>
-      </button>
-      <button class="scenario-btn" data-id="london" title="London: North Sea Tidal Surge & Thames Barrier Emergency Closure">
-        <span class="sc-flag">🇬🇧</span>
-        <span class="sc-name">London</span>
-      </button>
-      <button class="incident-flyer-btn" id="open-flyer-btn" title="View Official Incident Dossier & Flyer">
+    <!-- Center: What-If Simulation Model Controls (Cleanly positioned in top header) -->
+    <div class="header-center">
+      <div class="forecast-mode-toggle" id="ny-mode-toggle" title="What-If Simulation Model: Compare Early Warning vs Sudden Deluge Breach">
+        <span class="mode-toggle-label">What-If:</span>
+        <button type="button" class="mode-pill-btn active" data-mode="modern" id="mode-btn-modern">🛡️ Warning (11)</button>
+        <button type="button" class="mode-pill-btn" data-mode="failure" id="mode-btn-failure">⚠️ Breach (420)</button>
+      </div>
+    </div>
+
+    <!-- Right: Streamlined Action Controls -->
+    <div class="header-actions">
+      <button class="incident-flyer-btn" id="open-flyer-btn" title="View Official Incident Dossier">
         <span class="flyer-btn-icon">📋</span>
-        <span>Incident Flyer</span>
+        <span>Dossier</span>
       </button>
-      <button class="incident-flyer-btn disaster-map-btn" id="disaster-map-btn" title="Toggle CWC Flood Risk Hazard GIS Heatmap / 3D Orthophoto">
+      <button class="incident-flyer-btn disaster-map-btn" id="disaster-map-btn" title="Toggle Hazard GIS Heatmap">
         <span class="flyer-btn-icon">🗺️</span>
-        <span>Disaster Map</span>
+        <span>Hazard Map</span>
       </button>
       <button class="incident-flyer-btn flowchart-btn" id="open-flowchart-btn" title="View 7-Stage Disaster Flowchart">
         <span class="flyer-btn-icon">📊</span>
         <span>Flowchart</span>
       </button>
-    </nav>
-
+    </div>
   </header>
 
-  <!-- KPI Disaster Command Dashboard -->
+  <!-- KPI Disaster Command Dashboard — Streamlined Telemetry Ribbon -->
   <div class="tally-container">
-    <div class="tally-card tally-econ" title="Estimated Total Economic Destruction (USD & Local Currency)">
+    <div class="tally-card tally-econ" title="Estimated Total Economic Destruction">
       <span class="tally-icon">💰</span>
       <span class="tally-label">Loss:</span>
       <div class="tally-value-row">
@@ -121,14 +162,9 @@
       </div>
     </div>
 
-    <div class="tally-card tally-dead" title="Estimated Human Impact & Evacuation">
-      <div class="tally-header-row">
-        <div class="forecast-mode-toggle" id="ny-mode-toggle" title="What-If Simulation Model: Compare Early Warning (44 Casualties) vs Sudden Deluge Breach (1,480 Casualties)">
-          <button type="button" class="mode-pill-btn active" data-mode="modern" id="mode-btn-modern">🛡️ Warning (44)</button>
-          <button type="button" class="mode-pill-btn" data-mode="failure" id="mode-btn-failure">⚠️ Breach (1.4k)</button>
-        </div>
-        <span class="tally-label" id="tally-human-label" style="display:none;">What-If</span>
-      </div>
+    <div class="tally-card tally-dead" title="Estimated Human Impact & Casualties">
+      <span class="tally-icon">👥</span>
+      <span class="tally-label" id="tally-human-label">Impact:</span>
       <div class="tally-value-row">
         <span class="tally-number red-num" id="tally-dead">0</span>
         <span class="tally-sub" id="tally-dead-unit">fatalities</span>
@@ -152,6 +188,7 @@
         <span class="kpi-badge badge-prob" id="tally-prob-tag">Extreme Hazard ↗</span>
       </div>
     </div>
+
     <button type="button" class="kpi-toggle-view-btn" id="kpi-toggle-view-btn" title="Toggle KPI Dashboard View">
       <span class="kpi-toggle-icon">⌃</span>
       <span class="kpi-toggle-text">Hide</span>
