@@ -13,8 +13,8 @@
     }
   }
   </script>
-  <script type="module" crossorigin src="./assets/index-D6t5i3iQ.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-CuaiRLaq.css">
+  <script type="module" crossorigin src="./assets/index-C019C4O3.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DfpsBzZ4.css">
 </head>
 <body>
   <!-- 3D WebGL Canvas Container -->
@@ -140,6 +140,18 @@
       </div>
       <div class="kpi-tag-row">
         <span class="kpi-badge badge-human" id="tally-human-region">0 Deaths</span>
+      </div>
+    </div>
+
+    <div class="tally-card tally-prob" id="tally-prob-card" title="Calamity Recurrence Probability: Annual Exceedance Probability (AEP) & Multi-Decadal Forecast">
+      <span class="tally-icon">📈</span>
+      <span class="tally-label">Chance:</span>
+      <div class="tally-value-row">
+        <span class="tally-number cyan-num" id="tally-prob-val">1.0% <small>AEP</small></span>
+        <span class="tally-sub" id="tally-prob-return">1-in-100 Yr</span>
+      </div>
+      <div class="kpi-tag-row">
+        <span class="kpi-badge badge-prob" id="tally-prob-tag">Extreme Hazard</span>
       </div>
     </div>
     <button type="button" class="kpi-toggle-view-btn" id="kpi-toggle-view-btn" title="Toggle KPI Dashboard View">
@@ -291,6 +303,17 @@
           <span class="fmc-label">Power Grid Failure</span>
           <span class="fmc-val yellow" id="fmc-grid">345 kV Arc-Blast</span>
           <span class="fmc-sub">ConEd 14th St Substation</span>
+        </div>
+      </div>
+
+      <!-- Calamity Recurrence Probability & Telemetry Forecast Section -->
+      <div class="flyer-section" id="flyer-probability-section">
+        <div class="flyer-section-title">
+          <span>📈</span>
+          <span id="flyer-prob-title">CALAMITY RECURRENCE PROBABILITY & SENSOR NETWORK FORECAST</span>
+        </div>
+        <div class="flyer-prob-container" id="flyer-prob-container">
+          <!-- Populated dynamically by UIManager -->
         </div>
       </div>
 
