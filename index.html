@@ -31,59 +31,21 @@
         <span class="brand-subtitle" id="brand-subtitle" style="display: none;"></span>
       </div>
 
-      <!-- Modern Scenario Selector Dropdown (Replaces 6 bulky buttons) -->
-      <div class="scenario-dropdown" id="scenario-dropdown">
-        <button class="scenario-dropdown-trigger" id="scenario-dropdown-trigger" type="button" aria-haspopup="true" aria-expanded="false" title="Switch Disaster Scenario">
-          <span class="sc-flag" id="current-sc-flag">🇮🇳</span>
-          <span class="sc-name" id="current-sc-name">Delhi</span>
-          <span class="sc-dropdown-arrow">▾</span>
+      <!-- 3-Project Switcher (Delhi, New York, Nepal) -->
+      <nav class="scenario-selector" id="scenario-selector" title="Disaster Calamity Project Switcher">
+        <button class="scenario-btn active" data-id="delhi" title="Delhi: Yamuna River Record Inundation & Red Fort Ramparts">
+          <span class="sc-flag">🇮🇳</span>
+          <span class="sc-name">Delhi</span>
         </button>
-        <div class="scenario-dropdown-menu" id="scenario-dropdown-menu">
-          <div class="dropdown-header">SELECT CALAMITY SCENARIO</div>
-          <button class="scenario-btn active" data-id="delhi" title="Delhi: Yamuna River Record Inundation & Red Fort Shatter">
-            <span class="sc-flag">🇮🇳</span>
-            <div class="sc-btn-info">
-              <span class="sc-btn-title">Delhi, India</span>
-              <span class="sc-btn-desc">Yamuna Deluge & Red Fort Rampart Breach</span>
-            </div>
-          </button>
-          <button class="scenario-btn" data-id="rasuwa" title="Nepal: Langtang Avalanche & Dam-Burst (GLOF)">
-            <span class="sc-flag">🇳🇵</span>
-            <div class="sc-btn-info">
-              <span class="sc-btn-title">Nepal (Rasuwa)</span>
-              <span class="sc-btn-desc">Langtang Cryospheric GLOF & Dam Outburst</span>
-            </div>
-          </button>
-          <button class="scenario-btn" data-id="newyork" title="New York: Cat-4 Hurricane Storm Surge & Manhattan Inundation">
-            <span class="sc-flag">🇺🇸</span>
-            <div class="sc-btn-info">
-              <span class="sc-btn-title">New York, USA</span>
-              <span class="sc-btn-desc">Cat-4 Hurricane Surge & Harbor Deluge</span>
-            </div>
-          </button>
-          <button class="scenario-btn" data-id="tokyo" title="Tokyo: Arakawa Deluge & G-CANS Subterranean Defense">
-            <span class="sc-flag">🇯🇵</span>
-            <div class="sc-btn-info">
-              <span class="sc-btn-title">Tokyo, Japan</span>
-              <span class="sc-btn-desc">Arakawa Deluge & G-CANS Subterranean Defense</span>
-            </div>
-          </button>
-          <button class="scenario-btn" data-id="beijing" title="Beijing: Mentougou Mountain Flash Deluge & Yongding River Flood">
-            <span class="sc-flag">🇨🇳</span>
-            <div class="sc-btn-info">
-              <span class="sc-btn-title">Beijing, China</span>
-              <span class="sc-btn-desc">Mentougou Mountain Torrent & Flash Deluge</span>
-            </div>
-          </button>
-          <button class="scenario-btn" data-id="london" title="London: North Sea Tidal Surge & Thames Barrier Emergency Closure">
-            <span class="sc-flag">🇬🇧</span>
-            <div class="sc-btn-info">
-              <span class="sc-btn-title">London, UK</span>
-              <span class="sc-btn-desc">North Sea Surge & Thames Barrier Closure</span>
-            </div>
-          </button>
-        </div>
-      </div>
+        <button class="scenario-btn" data-id="newyork" title="New York: Cat-4 Hurricane Storm Surge & Manhattan Inundation">
+          <span class="sc-flag">🇺🇸</span>
+          <span class="sc-name">New York</span>
+        </button>
+        <button class="scenario-btn" data-id="rasuwa" title="Nepal: Langtang Cryospheric GLOF & Avalanche Surge">
+          <span class="sc-flag">🇳🇵</span>
+          <span class="sc-name">Nepal</span>
+        </button>
+      </nav>
     </div>
 
     <!-- Center: What-If Simulation Model Controls (Cleanly positioned in top header) -->

@@ -19,7 +19,7 @@ class ExplainerApp {
     const aliasMap = { nepal: 'rasuwa', ny: 'newyork' };
     const resolvedInput = aliasMap[rawParam] || rawParam || aliasMap[rawHash] || rawHash;
 
-    const validScenarios = ['delhi', 'newyork', 'rasuwa', 'beijing', 'tokyo', 'london'];
+    const validScenarios = ['delhi', 'newyork', 'rasuwa'];
     const requestedScenario = (resolvedInput && validScenarios.includes(resolvedInput))
       ? resolvedInput
       : 'delhi'; // Default to Delhi with direct one-click access to New York & Nepal

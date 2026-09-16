@@ -113,10 +113,7 @@ export const SCENARIOS = {
 export const AVAILABLE_SCENARIOS = [
   { id: 'delhi', name: 'Delhi, India', flag: '🇮🇳', hazard: 'Yamuna River Record Inundation', active: true },
   { id: 'newyork', name: 'New York, USA', flag: '🇺🇸', hazard: 'Cat-4 Hurricane Storm Surge', active: true },
-  { id: 'rasuwa', name: 'Nepal (Rasuwa)', flag: '🇳🇵', hazard: 'Langtang Avalanche Dam-Burst (GLOF)', active: true },
-  { id: 'beijing', name: 'Beijing, China', flag: '🇨🇳', hazard: 'Mentougou Flash Deluge', active: true },
-  { id: 'tokyo', name: 'Tokyo, Japan', flag: '🇯🇵', hazard: 'Arakawa Flood & G-CANS Defense', active: true },
-  { id: 'london', name: 'London, UK', flag: '🇬🇧', hazard: 'North Sea Tidal Surge & Barrier', active: true }
+  { id: 'rasuwa', name: 'Nepal (Rasuwa)', flag: '🇳🇵', hazard: 'Langtang Cryospheric GLOF', active: true }
 ];
 
 SCENARIOS.nepal = SCENARIOS.rasuwa;
