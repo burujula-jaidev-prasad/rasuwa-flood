@@ -752,11 +752,16 @@ html, body {
 
 .tally-card.tally-prob {
   cursor: pointer;
+  border-color: rgba(56, 189, 248, 0.28);
+  background: rgba(56, 189, 248, 0.05);
+  transition: all 0.2s ease;
 }
 
 .tally-card.tally-prob:hover {
-  border-color: rgba(56, 189, 248, 0.5);
-  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.75);
+  background: rgba(56, 189, 248, 0.14);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.22);
+  transform: translateY(-1px);
 }
 
 .tally-card.tally-prob .cyan-num,
