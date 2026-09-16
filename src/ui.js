@@ -1811,9 +1811,9 @@ export class UIManager {
           <div class="panel-subtitle">${wp.subtitle} • <code>${wp.coords}</code></div>
 
           <div class="panel-tabs">
-            <button class="panel-tab ${this.activeTab === 'impact' ? 'active' : ''}" id="tab-impact-btn">Impact Readout</button>
-            <button class="panel-tab ${this.activeTab === 'countermeasures' ? 'active' : ''}" id="tab-counter-btn">City Defenses 🛡️</button>
-            <button class="panel-tab ${this.activeTab === 'probability' ? 'active' : ''}" id="tab-prob-btn">Probability & Forecast 📈</button>
+            <button class="panel-tab ${this.activeTab === 'impact' ? 'active' : ''}" id="tab-impact-btn">Impact 📊</button>
+            <button class="panel-tab ${this.activeTab === 'countermeasures' ? 'active' : ''}" id="tab-counter-btn">Defenses 🛡️</button>
+            <button class="panel-tab ${this.activeTab === 'probability' ? 'active' : ''}" id="tab-prob-btn">Forecast 📈</button>
           </div>
         </div>
 
