@@ -50,6 +50,35 @@ export const NEWYORK_CONFIG = {
     rainIntensity: 0.0,   // Crystal clear morning atmosphere
     terrainType: 'coastal_harbor'
   },
+  probabilityData: {
+    calamityType: 'Category-4 Hurricane Storm Surge & Tidal Funneling',
+    returnPeriod: '1-in-250 Years',
+    returnYears: 250,
+    baseAEP: 0.40,
+    climateAdjustedAEP: 0.95,
+    aepPercent: '0.40%',
+    climateAEPPercent: '0.95%',
+    severity: 'Extreme Coastal Surge',
+    severityClass: 'extreme',
+    forecastChances: {
+      year10: 9.1,
+      year25: 21.2,
+      year50: 37.9,
+      year100: 61.4
+    },
+    dataCollection: {
+      primaryAgencies: ['NOAA / National Hurricane Center', 'USGS New York Water Science', 'US Army Corps of Engineers'],
+      sensorNetwork: 'NOAA NDBC Buoy 44065 • USGS Battery Station 01376304 • 6 Acoustic Doppler Current Profilers',
+      samplingCadence: '6-Minute Continuous Telemetry',
+      uplinkProtocol: 'NOAA CO-OPS Real-Time Oceanographic Data & SLOSH Model Grid',
+      historicalBenchmark: 'Surpassed Hurricane Sandy (2012) 13.88 ft crest reaching 15.8 ft NAVD88'
+    },
+    climateMultiplier: {
+      factor: '+2.8×',
+      trend: 'Rapid Acceleration (+280% frequency)',
+      driver: '+1.8°C Western Atlantic sea surface warming compounding with 3.2 mm/yr relative sea level rise'
+    }
+  },
   timeline: {
     durationSec: 36.0,
     clockStart: '30 Oct 06:30 AM',
@@ -494,6 +523,11 @@ export function getNewYorkTallyValues(t, uWave = 0, mode = currentNYMode) {
   const econBillionUSD = (econUSD / 1000).toFixed(1);
 
   return {
+    probAEP: NEWYORK_CONFIG.probabilityData.aepPercent,
+    probReturn: NEWYORK_CONFIG.probabilityData.returnPeriod,
+    probForecast10Y: `${NEWYORK_CONFIG.probabilityData.forecastChances.year10}%`,
+    probSeverity: NEWYORK_CONFIG.probabilityData.severity,
+    probDataNetwork: 'NOAA / USGS Telemetry',
     dead,
     missing,
     evacuated,

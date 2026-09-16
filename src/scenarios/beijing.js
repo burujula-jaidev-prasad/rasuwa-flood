@@ -37,6 +37,35 @@ export const BEIJING_CONFIG = {
     rainIntensity: 0.0,   // Crystal-clear morning
     terrainType: 'mountain_floodplain'
   },
+  probabilityData: {
+    calamityType: 'Orographic Cloudburst & Yongding River Flash Flood',
+    returnPeriod: '1-in-140 Years',
+    returnYears: 140,
+    baseAEP: 0.71,
+    climateAdjustedAEP: 0.71,
+    aepPercent: '0.71%',
+    climateAEPPercent: '0.71%',
+    severity: 'Severe Mountain Flash Risk',
+    severityClass: 'severe',
+    forecastChances: {
+      year10: 6.9,
+      year25: 16.3,
+      year50: 30.1,
+      year100: 51.1
+    },
+    dataCollection: {
+      primaryAgencies: ['China Meteorological Administration (CMA)', 'Beijing Hydrological Bureau', 'Ministry of Emergency Management'],
+      sensorNetwork: 'Dual-Polarization S-Band Radar • 85 Mountain Torrent Telemetry Loggers • Sanjiadian Dam Inflow Sensors',
+      samplingCadence: '5-Minute Automated Telemetry',
+      uplinkProtocol: 'BeiDou Navigation Satellite Short-Message System & Emergency 5G',
+      historicalBenchmark: '1,029 mm Miaofengshan (Record since 1883); 4,649 m³/s Yongding peak discharge'
+    },
+    climateMultiplier: {
+      factor: '+2.3×',
+      trend: 'Significant Acceleration (+230% frequency)',
+      driver: 'Quasi-stationary continental high-pressure block causing typhoon moisture conveyor stall'
+    }
+  },
   timeline: {
     durationSec: 36.0,
     clockStart: '31 Jul 06:45 AM',
@@ -383,6 +412,11 @@ export function getBeijingTallyValues(t, uWave = 0) {
   const econBillionRMB = (econUSD * 7.15 / 1000).toFixed(1);
 
   return {
+    probAEP: BEIJING_CONFIG.probabilityData.aepPercent,
+    probReturn: BEIJING_CONFIG.probabilityData.returnPeriod,
+    probForecast10Y: `${BEIJING_CONFIG.probabilityData.forecastChances.year10}%`,
+    probSeverity: BEIJING_CONFIG.probabilityData.severity,
+    probDataNetwork: 'CMA / MEM Telemetry',
     dead,
     missing,
     evacuated,

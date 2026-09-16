@@ -49,6 +49,35 @@ export const DELHI_CONFIG = {
     rainIntensity: 0.0,   // Crystal-clear morning atmosphere
     terrainType: 'alluvial'
   },
+  probabilityData: {
+    calamityType: 'Monsoonal Catchment Cloudburst & Barrage Overtopping',
+    returnPeriod: '1-in-100 Years',
+    returnYears: 100,
+    baseAEP: 1.0,
+    climateAdjustedAEP: 1.8,
+    aepPercent: '1.0%',
+    climateAEPPercent: '1.8%',
+    severity: 'Extreme Hazard',
+    severityClass: 'extreme',
+    forecastChances: {
+      year10: 16.6,
+      year25: 36.5,
+      year50: 59.7,
+      year100: 83.8
+    },
+    dataCollection: {
+      primaryAgencies: ['Central Water Commission (CWC)', 'India Meteorological Dept (IMD)', 'Upper Yamuna River Board (UYRB)'],
+      sensorNetwork: '14 CWC Ultrasonic River Gauges • 3 IMD S-Band Doppler Radars • 28 Catchment Rain Stations',
+      samplingCadence: '15-Minute Automated Telemetry',
+      uplinkProtocol: 'INSAT-3DR Satellite & VHF Emergency Telemetry',
+      historicalBenchmark: 'Record Stage 208.66m (Breaching 205.33m Danger Mark by 3.33m)'
+    },
+    climateMultiplier: {
+      factor: '+2.1×',
+      trend: 'Accelerating (+210% frequency by 2050)',
+      driver: 'Monsoonal trough & Western Disturbance confluence over Upper Yamuna catchment'
+    }
+  },
   timeline: {
     durationSec: 36.0,
     clockStart: '11 July 06:30 AM',
@@ -497,6 +526,11 @@ export function getDelhiTallyValues(t, uWave = 0, mode = currentDelhiMode) {
   const econINR = (econUSD * 0.0835).toFixed(1); // in Billion INR (₹)
 
   return {
+    probAEP: DELHI_CONFIG.probabilityData.aepPercent,
+    probReturn: DELHI_CONFIG.probabilityData.returnPeriod,
+    probForecast10Y: `${DELHI_CONFIG.probabilityData.forecastChances.year10}%`,
+    probSeverity: DELHI_CONFIG.probabilityData.severity,
+    probDataNetwork: 'CWC / IMD Telemetry',
     dead,
     missing,
     evacuated,

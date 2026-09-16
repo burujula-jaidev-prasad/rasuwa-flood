@@ -10,7 +10,7 @@ export class UIManager {
     this.isGuided = true;
     this.rainActive = true;
     this.isSidebarOpen = true;
-    this.activeTab = 'impact'; // 'impact' | 'countermeasures'
+    this.activeTab = 'impact'; // 'impact' | 'countermeasures' | 'probability'
     this.currentScenario = getScenario();
     this.lastT = 0;
     this.lastUWave = 0;
@@ -42,6 +42,10 @@ export class UIManager {
     this.elFlowchartSection = document.getElementById('flyer-flowchart-section');
     this.elFlowchartTitle = document.getElementById('flyer-flowchart-title');
 
+    this.elFlyerProbSection = document.getElementById('flyer-probability-section');
+    this.elFlyerProbTitle = document.getElementById('flyer-prob-title');
+    this.elFlyerProbContainer = document.getElementById('flyer-prob-container');
+
     this.elBrandBadge = document.getElementById('brand-badge');
     this.elBrandTitle = document.getElementById('brand-title');
     this.elBrandSubtitle = document.getElementById('brand-subtitle');
@@ -70,6 +74,11 @@ export class UIManager {
     this.elTallyMissing = document.getElementById('tally-missing');
     this.elTallyMissingUnit = document.getElementById('tally-missing-unit');
     this.elTallyHumanRegion = document.getElementById('tally-human-region');
+
+    this.elTallyProbCard = document.getElementById('tally-prob-card');
+    this.elTallyProbVal = document.getElementById('tally-prob-val');
+    this.elTallyProbReturn = document.getElementById('tally-prob-return');
+    this.elTallyProbTag = document.getElementById('tally-prob-tag');
 
     this.elNyModeToggle = document.getElementById('ny-mode-toggle');
     this.elModeBtnModern = document.getElementById('mode-btn-modern');
@@ -280,6 +289,15 @@ export class UIManager {
         const text = this.elKpiToggleBtn.querySelector('.kpi-toggle-text');
         if (icon) icon.textContent = isCollapsed ? '⌄' : '⌃';
         if (text) text.textContent = isCollapsed ? 'KPIs' : 'Hide';
+      });
+    }
+
+    if (this.elTallyProbCard) {
+      this.elTallyProbCard.addEventListener('click', () => {
+        this.activeTab = 'probability';
+        const wp = this.currentScenario?.waypoints?.find(w => w.id === this.activeWaypointId) || this.currentScenario?.waypoints?.[0] || WAYPOINTS[0];
+        this.renderAnalytics(wp);
+        this.toggleSidebar(true);
       });
     }
   }
@@ -1248,6 +1266,129 @@ export class UIManager {
     if (this.elFlyerAlertText) {
       this.elFlyerAlertText.innerHTML = d.alert;
     }
+
+    // Calamity Recurrence Probability & Telemetry Forecast Section in Incident Dossier
+    if (this.elFlyerProbContainer) {
+      const scenarioObj = getScenario(scenarioId);
+      const prob = scenarioObj?.config?.probabilityData || this.currentScenario?.config?.probabilityData;
+      if (prob) {
+        const fc = prob.forecastChances || {};
+        const dc = prob.dataCollection || {};
+        const cm = prob.climateMultiplier || {};
+        const agencies = dc.primaryAgencies || [];
+
+        if (this.elFlyerProbTitle) {
+          const scName = scenarioObj?.config?.name?.split(',')[0] || scenarioId.toUpperCase();
+          this.elFlyerProbTitle.textContent = `${scName.toUpperCase()} CALAMITY RECURRENCE PROBABILITY & TELEMETRY SENSOR NETWORK`;
+        }
+
+        this.elFlyerProbContainer.innerHTML = `
+          <div class="flyer-prob-grid">
+            <div class="flyer-prob-kpi-card">
+              <span class="fprob-kpi-label">Annual Exceedance (AEP)</span>
+              <span class="fprob-kpi-val cyan">${prob.aepPercent || '1.0%'}</span>
+              <span class="fprob-kpi-sub">Climate-Adjusted: <strong>${prob.climateAEPPercent || '1.8%'}</strong></span>
+            </div>
+            <div class="flyer-prob-kpi-card">
+              <span class="fprob-kpi-label">Return Period Interval (T)</span>
+              <span class="fprob-kpi-val amber">${prob.returnPeriod || '1-in-100 Yr'}</span>
+              <span class="fprob-kpi-sub">Design Basis Recurrence</span>
+            </div>
+            <div class="flyer-prob-kpi-card">
+              <span class="fprob-kpi-label">10-Year Planning Horizon</span>
+              <span class="fprob-kpi-val yellow">${fc.year10 || 16.6}%</span>
+              <span class="fprob-kpi-sub">P(10) Cumulative Risk</span>
+            </div>
+            <div class="flyer-prob-kpi-card">
+              <span class="fprob-kpi-label">50-Year Asset Life</span>
+              <span class="fprob-kpi-val red">${fc.year50 || 59.7}%</span>
+              <span class="fprob-kpi-sub">P(50) Structural Exposure</span>
+            </div>
+          </div>
+
+          <div class="flyer-prob-detail-row">
+            <!-- Multi-Decadal Recurrence Horizons -->
+            <div class="flyer-prob-horizons">
+              <div class="fprob-subheading">MULTI-DECADAL RECURRENCE HORIZONS • P(N) = 1 - (1 - p)<sup>N</sup></div>
+              <div class="fprob-bar-list">
+                <div class="fprob-bar-item">
+                  <div class="fprob-bar-meta">
+                    <span>10-Year Planning Horizon</span>
+                    <strong>${fc.year10}%</strong>
+                  </div>
+                  <div class="fprob-bar-track">
+                    <div class="fprob-bar-fill fill-amber" style="width: ${Math.min(fc.year10, 100)}%;"></div>
+                  </div>
+                </div>
+                <div class="fprob-bar-item">
+                  <div class="fprob-bar-meta">
+                    <span>25-Year Infrastructure Cycle</span>
+                    <strong>${fc.year25}%</strong>
+                  </div>
+                  <div class="fprob-bar-track">
+                    <div class="fprob-bar-fill fill-amber" style="width: ${Math.min(fc.year25, 100)}%;"></div>
+                  </div>
+                </div>
+                <div class="fprob-bar-item">
+                  <div class="fprob-bar-meta">
+                    <span>50-Year Structural Design</span>
+                    <strong>${fc.year50}%</strong>
+                  </div>
+                  <div class="fprob-bar-track">
+                    <div class="fprob-bar-fill fill-red" style="width: ${Math.min(fc.year50, 100)}%;"></div>
+                  </div>
+                </div>
+                <div class="fprob-bar-item">
+                  <div class="fprob-bar-meta">
+                    <span>100-Year Century Exposure</span>
+                    <strong>${fc.year100}%</strong>
+                  </div>
+                  <div class="fprob-bar-track">
+                    <div class="fprob-bar-fill fill-red" style="width: ${Math.min(fc.year100, 100)}%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Telemetry & Sensor Deployment Grid -->
+            <div class="flyer-prob-telemetry">
+              <div class="fprob-subheading">SCIENTIFIC SENSOR NETWORK & TELEMETRY UPLINK</div>
+              <div class="fprob-telemetry-item">
+                <span class="fprob-icon">🛰️</span>
+                <div>
+                  <strong>Sensor Grid:</strong>
+                  <div>${dc.sensorNetwork || 'Real-time telemetry stations'}</div>
+                </div>
+              </div>
+              <div class="fprob-telemetry-item">
+                <span class="fprob-icon">📡</span>
+                <div>
+                  <strong>Cadence & Telemetry Uplink:</strong>
+                  <div>${dc.samplingCadence || 'Real-time'} • ${dc.uplinkProtocol || 'Direct Satellite'}</div>
+                </div>
+              </div>
+              <div class="fprob-telemetry-item">
+                <span class="fprob-icon">🏛️</span>
+                <div>
+                  <strong>Monitoring Agencies:</strong>
+                  <div class="agency-tags" style="margin-top: 4px;">
+                    ${agencies.map(a => `<span class="agency-badge">${a}</span>`).join('')}
+                  </div>
+                </div>
+              </div>
+              <div class="fprob-telemetry-item">
+                <span class="fprob-icon">🔥</span>
+                <div>
+                  <strong>Climate Trend Multiplier:</strong>
+                  <div style="color: #f59e0b; font-weight: 600;">${cm.factor || '+2.0×'} (${cm.trend || 'Accelerating'})</div>
+                  <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">${cm.driver || ''}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
   }
 
   // Zero-lag update synchronized with actual wave front position uWave!
@@ -1415,6 +1556,17 @@ export class UIManager {
       this.elTallyEconLevel.className = `kpi-badge badge-econ level-${tallies.econClass}`;
     }
 
+    // Calamity Recurrence Probability & Telemetry Forecast Card
+    if (this.elTallyProbVal && tallies.probAEP) {
+      this.elTallyProbVal.innerHTML = `${tallies.probAEP} <small>AEP</small>`;
+    }
+    if (this.elTallyProbReturn && tallies.probReturn) {
+      this.elTallyProbReturn.textContent = tallies.probReturn;
+    }
+    if (this.elTallyProbTag && tallies.probSeverity) {
+      this.elTallyProbTag.textContent = tallies.probSeverity;
+    }
+
     // 3. Active Waypoint & Analytics Panel synced with ZERO latency to uWave
     const { index, waypoint } = getCurrentWaypoint(t, uWave);
     if (this.activeWaypointId !== waypoint.id) {
@@ -1482,7 +1634,7 @@ export class UIManager {
             <p class="detail-body">${wp.warningGap}</p>
           </details>
         `;
-      } else {
+      } else if (this.activeTab === 'countermeasures') {
         // Countermeasures & Municipal Defense Telemetry
         const readiness = wp.countermeasure?.readiness || '75%';
         contentHtml = `
@@ -1515,6 +1667,135 @@ export class UIManager {
             </div>
           </div>
         `;
+      } else {
+        // Calamity Probability, Forecast Horizons & Sensor Telemetry
+        const prob = this.currentScenario?.config?.probabilityData || {};
+        const fc = prob.forecastChances || { year10: 16.6, year25: 36.5, year50: 59.7, year100: 83.8 };
+        const dc = prob.dataCollection || {};
+        const cm = prob.climateMultiplier || {};
+        const agencies = dc.primaryAgencies || [];
+
+        contentHtml = `
+          <div class="prob-tab-container">
+            <!-- Return Period & Annual Exceedance (AEP) Card -->
+            <div class="prob-kpi-banner">
+              <div class="prob-kpi-head">
+                <span class="prob-hazard-badge ${prob.severityClass || 'extreme'}">${prob.severity || 'Extreme Hazard'}</span>
+                <span class="prob-math-badge" title="Annual Exceedance Probability: p = 1/T">p = 1 / T</span>
+              </div>
+              <div class="prob-kpi-numbers">
+                <div class="prob-kpi-item">
+                  <span class="prob-kpi-val cyan">${prob.aepPercent || '1.0%'}</span>
+                  <span class="prob-kpi-lbl">Annual Exceedance (AEP)</span>
+                </div>
+                <div class="prob-kpi-divider"></div>
+                <div class="prob-kpi-item">
+                  <span class="prob-kpi-val amber">${prob.returnPeriod || '1-in-100 Yr'}</span>
+                  <span class="prob-kpi-lbl">Recurrence Interval (T)</span>
+                </div>
+              </div>
+              <div class="prob-hazard-name">${prob.calamityType || 'Hydrological Deluge'}</div>
+            </div>
+
+            <!-- Multi-Decadal Planning Forecast Horizons -->
+            <div class="prob-horizons-card">
+              <div class="prob-card-header">
+                <span class="prob-card-title">MULTI-DECADAL FORECAST HORIZONS</span>
+                <span class="prob-card-tag">P(N) = 1 - (1-p)ᴺ</span>
+              </div>
+              <div class="horizon-bars-list">
+                <div class="horizon-row">
+                  <div class="horizon-row-meta">
+                    <span class="h-label">10-Year Planning</span>
+                    <span class="h-val ${fc.year10 > 15 ? 'amber' : 'cyan'}">${fc.year10}%</span>
+                  </div>
+                  <div class="h-track">
+                    <div class="h-fill ${fc.year10 > 15 ? 'fill-amber' : 'fill-cyan'}" style="width: ${Math.min(fc.year10, 100)}%;"></div>
+                  </div>
+                </div>
+
+                <div class="horizon-row">
+                  <div class="horizon-row-meta">
+                    <span class="h-label">25-Year Infrastructure</span>
+                    <span class="h-val amber">${fc.year25}%</span>
+                  </div>
+                  <div class="h-track">
+                    <div class="h-fill fill-amber" style="width: ${Math.min(fc.year25, 100)}%;"></div>
+                  </div>
+                </div>
+
+                <div class="horizon-row">
+                  <div class="horizon-row-meta">
+                    <span class="h-label">50-Year Asset Life</span>
+                    <span class="h-val red">${fc.year50}%</span>
+                  </div>
+                  <div class="h-track">
+                    <div class="h-fill fill-red" style="width: ${Math.min(fc.year50, 100)}%;"></div>
+                  </div>
+                </div>
+
+                <div class="horizon-row">
+                  <div class="horizon-row-meta">
+                    <span class="h-label">100-Year Design Basis</span>
+                    <span class="h-val red">${fc.year100}%</span>
+                  </div>
+                  <div class="h-track">
+                    <div class="h-fill fill-red" style="width: ${Math.min(fc.year100, 100)}%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Scientific Data Collection & Telemetry Hardware -->
+            <div class="prob-telemetry-card">
+              <div class="prob-card-header">
+                <span class="prob-card-title">SCIENTIFIC SENSOR NETWORK</span>
+                <span class="prob-card-tag">LIVE TELEMETRY</span>
+              </div>
+              <div class="telemetry-point">
+                <span class="telemetry-ico">📡</span>
+                <div class="telemetry-info">
+                  <strong>Sensor Hardware Grid:</strong>
+                  <div>${dc.sensorNetwork || 'Ultrasonic gauges, radar & weather stations'}</div>
+                </div>
+              </div>
+              <div class="telemetry-point">
+                <span class="telemetry-ico">⏱️</span>
+                <div class="telemetry-info">
+                  <strong>Telemetry Cadence & Uplink:</strong>
+                  <div>${dc.samplingCadence || 'Real-time'} • ${dc.uplinkProtocol || 'Satellite/VHF'}</div>
+                </div>
+              </div>
+              <div class="telemetry-point">
+                <span class="telemetry-ico">🏛️</span>
+                <div class="telemetry-info">
+                  <strong>Primary Monitoring Agencies:</strong>
+                  <div class="agency-tags" style="margin-top: 3px;">
+                    ${agencies.map(a => `<span class="agency-badge">${a}</span>`).join('')}
+                  </div>
+                </div>
+              </div>
+              ${dc.historicalBenchmark ? `
+              <div class="telemetry-point">
+                <span class="telemetry-ico">🎯</span>
+                <div class="telemetry-info">
+                  <strong>Historical Benchmark:</strong>
+                  <div style="color: #cbd5e1;">${dc.historicalBenchmark}</div>
+                </div>
+              </div>
+              ` : ''}
+            </div>
+
+            <!-- Climate Change Trend Multiplier -->
+            <div class="climate-impact-card">
+              <div class="climate-card-head">
+                <span class="climate-badge">🔥 Climate Multiplier: ${cm.factor || '+2.0×'}</span>
+                <span class="climate-trend-badge">${cm.trend || 'Accelerating'}</span>
+              </div>
+              <p class="climate-driver-desc">${cm.driver || 'Rising ocean and atmospheric temperatures enhance moisture convergence and rapid runoff rates.'}</p>
+            </div>
+          </div>
+        `;
       }
 
       this.elRightPanel.innerHTML = `
@@ -1532,6 +1813,7 @@ export class UIManager {
           <div class="panel-tabs">
             <button class="panel-tab ${this.activeTab === 'impact' ? 'active' : ''}" id="tab-impact-btn">Impact Readout</button>
             <button class="panel-tab ${this.activeTab === 'countermeasures' ? 'active' : ''}" id="tab-counter-btn">City Defenses 🛡️</button>
+            <button class="panel-tab ${this.activeTab === 'probability' ? 'active' : ''}" id="tab-prob-btn">Probability & Forecast 📈</button>
           </div>
         </div>
 
@@ -1549,6 +1831,7 @@ export class UIManager {
       // Attach Tab Listeners
       const tabImpact = document.getElementById('tab-impact-btn');
       const tabCounter = document.getElementById('tab-counter-btn');
+      const tabProb = document.getElementById('tab-prob-btn');
 
       if (tabImpact) {
         tabImpact.addEventListener('click', () => {
@@ -1559,6 +1842,12 @@ export class UIManager {
       if (tabCounter) {
         tabCounter.addEventListener('click', () => {
           this.activeTab = 'countermeasures';
+          this.renderAnalytics(wp);
+        });
+      }
+      if (tabProb) {
+        tabProb.addEventListener('click', () => {
+          this.activeTab = 'probability';
           this.renderAnalytics(wp);
         });
       }

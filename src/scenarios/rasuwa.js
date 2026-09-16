@@ -35,6 +35,35 @@ export const RASUWA_CONFIG = {
     rainIntensity: 0.0,   // Crystal-clear morning
     terrainType: 'himalayan'
   },
+  probabilityData: {
+    calamityType: 'Alpine Glacial Lake Outburst Flood (GLOF) & Avalanche Surge',
+    returnPeriod: '1-in-150 Years',
+    returnYears: 150,
+    baseAEP: 0.67,
+    climateAdjustedAEP: 1.4,
+    aepPercent: '0.67%',
+    climateAEPPercent: '1.4%',
+    severity: 'Catastrophic Cryosphere Risk',
+    severityClass: 'catastrophic',
+    forecastChances: {
+      year10: 13.1,
+      year25: 29.7,
+      year50: 50.6,
+      year100: 75.6
+    },
+    dataCollection: {
+      primaryAgencies: ['ICIMOD', 'Dept of Hydrology & Meteorology (DHM Nepal)', 'Copernicus Earth Observation'],
+      sensorNetwork: '8 High-Altitude Automatic Weather Stations (AWS) • Sentinel-1 InSAR • Acoustic Debris Tripwires',
+      samplingCadence: '30-Minute Real-Time Telemetry',
+      uplinkProtocol: 'Iridium Satellite Uplink & Solar-Powered Seismic Triggers',
+      historicalBenchmark: '1981 & 2016 Bhotekoshi Outbursts; 2026 Compound 42M m³ Surge'
+    },
+    climateMultiplier: {
+      factor: '+3.4×',
+      trend: 'Severe Acceleration (+340% frequency)',
+      driver: '+0.06°C/year Himalayan warming accelerating supra-glacial lake expansion & moraine debuttressing'
+    }
+  },
   timeline: {
     durationSec: 85.0,
     clockStart: '24 Sep 06:15 AM',
@@ -385,6 +414,11 @@ export function getRasuwaTallyValues(t, uWave = 0) {
   const econNPR = (econUSD * 0.134).toFixed(1);
 
   return {
+    probAEP: RASUWA_CONFIG.probabilityData.aepPercent,
+    probReturn: RASUWA_CONFIG.probabilityData.returnPeriod,
+    probForecast10Y: `${RASUWA_CONFIG.probabilityData.forecastChances.year10}%`,
+    probSeverity: RASUWA_CONFIG.probabilityData.severity,
+    probDataNetwork: 'ICIMOD / DHM Telemetry',
     dead,
     missing,
     evacuated: missing,

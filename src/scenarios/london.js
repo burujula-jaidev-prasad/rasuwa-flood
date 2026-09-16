@@ -37,6 +37,35 @@ export const LONDON_CONFIG = {
     rainIntensity: 0.0,   // Crystal-clear morning
     terrainType: 'tidal_estuary'
   },
+  probabilityData: {
+    calamityType: 'North Sea Inverse-Barometer Tidal Surge & Funneling',
+    returnPeriod: '1-in-100 Years',
+    returnYears: 100,
+    baseAEP: 1.0,
+    climateAdjustedAEP: 1.0,
+    aepPercent: '1.0%',
+    climateAEPPercent: '1.0%',
+    severity: 'High Estuarine Surge Risk',
+    severityClass: 'high',
+    forecastChances: {
+      year10: 9.6,
+      year25: 22.2,
+      year50: 39.5,
+      year100: 63.4
+    },
+    dataCollection: {
+      primaryAgencies: ['UK Environment Agency (EA)', 'Met Office Storm Tide Forecasting Service', 'National Oceanography Centre'],
+      sensorNetwork: '44 National Tide Gauges (Southend, Sheerness) • North Sea Wave Buoys • Thames Barrier Level Probes',
+      samplingCadence: '15-Minute Continuous Telemetry',
+      uplinkProtocol: 'CS3X Numerical Continental Shelf Hydrodynamic Telemetry Link',
+      historicalBenchmark: '1953 Big Flood (307 deaths) leading to Thames Barrier 1982 construction; 221 closures to date'
+    },
+    climateMultiplier: {
+      factor: '+1.8×',
+      trend: 'Moderate Acceleration (+180% frequency)',
+      driver: 'North Atlantic jet stream waviness and winter gales forcing counter-clockwise North Sea surges'
+    }
+  },
   timeline: {
     durationSec: 36.0,
     clockStart: '01 Feb 07:15 AM',
@@ -383,6 +412,11 @@ export function getLondonTallyValues(t, uWave = 0) {
   const econBillionGBP = (econUSD / 1.30 / 1000).toFixed(1);
 
   return {
+    probAEP: LONDON_CONFIG.probabilityData.aepPercent,
+    probReturn: LONDON_CONFIG.probabilityData.returnPeriod,
+    probForecast10Y: `${LONDON_CONFIG.probabilityData.forecastChances.year10}%`,
+    probSeverity: LONDON_CONFIG.probabilityData.severity,
+    probDataNetwork: 'EA / Met Office Telemetry',
     dead,
     missing,
     evacuated,

@@ -37,6 +37,35 @@ export const TOKYO_CONFIG = {
     rainIntensity: 0.0,   // Crystal-clear morning
     terrainType: 'alluvial_lowland'
   },
+  probabilityData: {
+    calamityType: 'Super-Typhoon Extreme Precipitation & Arakawa Basin Deluge',
+    returnPeriod: '1-in-200 Years',
+    returnYears: 200,
+    baseAEP: 0.50,
+    climateAdjustedAEP: 0.50,
+    aepPercent: '0.50%',
+    climateAEPPercent: '0.50%',
+    severity: 'High Metropolitan Risk',
+    severityClass: 'high',
+    forecastChances: {
+      year10: 4.9,
+      year25: 11.8,
+      year50: 22.2,
+      year100: 39.5
+    },
+    dataCollection: {
+      primaryAgencies: ['Japan Meteorological Agency (JMA)', 'MLIT Kanto Regional Bureau', 'Tokyo Metropolitan Disaster Prevention'],
+      sensorNetwork: '1,300 JMA AMeDAS Pluviometers • MLIT X-RAIN Polarimetric Radars • G-CANS Silo Pressure Transducers',
+      samplingCadence: '1-Minute High-Speed Telemetry',
+      uplinkProtocol: 'Dedicated Emergency Fiber-Optic Telemetry & JMA Satellite Link',
+      historicalBenchmark: 'Typhoon Hagibis (2019) 200M m³ inflow; G-CANS peak 200 m³/s diversion threshold'
+    },
+    climateMultiplier: {
+      factor: '+1.9×',
+      trend: 'Moderate Acceleration (+190% frequency)',
+      driver: 'Northward shift of western Pacific typhoon tracks with +7% water vapor capacity per 1°C'
+    }
+  },
   timeline: {
     durationSec: 36.0,
     clockStart: '12 Oct 07:00 AM',
@@ -383,6 +412,11 @@ export function getTokyoTallyValues(t, uWave = 0) {
   const econTrillionJPY = (econUSD * 150 / 1000000).toFixed(1);
 
   return {
+    probAEP: TOKYO_CONFIG.probabilityData.aepPercent,
+    probReturn: TOKYO_CONFIG.probabilityData.returnPeriod,
+    probForecast10Y: `${TOKYO_CONFIG.probabilityData.forecastChances.year10}%`,
+    probSeverity: TOKYO_CONFIG.probabilityData.severity,
+    probDataNetwork: 'JMA / MLIT Telemetry',
     dead,
     missing,
     evacuated,
