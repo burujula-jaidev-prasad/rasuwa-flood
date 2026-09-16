@@ -264,11 +264,26 @@ export class UIManager {
       });
     }
 
-    // Scenario switcher buttons
+    // Scenario switcher buttons (supports both direct page links and dynamic switches)
     const scenarioBtns = document.querySelectorAll('.scenario-btn');
     scenarioBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (btn.classList.contains('disabled')) return;
+      btn.addEventListener('click', (e) => {
+        if (btn.classList.contains('disabled')) {
+          e.preventDefault();
+          return;
+        }
+
+        // If this is an anchor linking to a dedicated page
+        if (btn.tagName === 'A' && btn.getAttribute('href')) {
+          if (btn.classList.contains('active')) {
+            // Already on this page, prevent redundant navigation
+            e.preventDefault();
+            return;
+          }
+          // Allow natural navigation to the target page
+          return;
+        }
+
         const id = btn.dataset.id;
         scenarioBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');

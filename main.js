@@ -12,17 +12,33 @@ class ExplainerApp {
     this.container = document.getElementById('canvas-container');
     this.clock = new THREE.Clock();
 
-    // Parse URL query parameter (e.g. ?scenario=newyork, ?scenario=delhi, ?scenario=nepal) or hash
+    // Scenario determination priority for multi-page architecture:
+    // 1. window.__INITIAL_SCENARIO__ explicitly declared in dedicated HTML page
+    // 2. Pathname detection (e.g., /newyork.html, /nepal.html, /delhi.html)
+    // 3. URL query parameter (?scenario=newyork) or hash (#newyork)
+    // 4. Default: 'delhi'
+    const aliasMap = { nepal: 'rasuwa', ny: 'newyork' };
+    const pathname = window.location.pathname.toLowerCase();
+    let detectedFromPath = null;
+    if (pathname.includes('newyork')) detectedFromPath = 'newyork';
+    else if (pathname.includes('nepal') || pathname.includes('rasuwa')) detectedFromPath = 'rasuwa';
+    else if (pathname.includes('delhi')) detectedFromPath = 'delhi';
+
     const urlParams = new URLSearchParams(window.location.search);
     const rawHash = window.location.hash.replace('#', '').toLowerCase();
     const rawParam = urlParams.get('scenario')?.toLowerCase();
-    const aliasMap = { nepal: 'rasuwa', ny: 'newyork' };
-    const resolvedInput = aliasMap[rawParam] || rawParam || aliasMap[rawHash] || rawHash;
+    const resolvedUrl = aliasMap[rawParam] || rawParam || aliasMap[rawHash] || rawHash;
+
+    const explicitScenario = window.__INITIAL_SCENARIO__
+      ? (aliasMap[window.__INITIAL_SCENARIO__] || window.__INITIAL_SCENARIO__)
+      : null;
+
+    const resolvedInput = explicitScenario || detectedFromPath || resolvedUrl;
 
     const validScenarios = ['delhi', 'newyork', 'rasuwa'];
     const requestedScenario = (resolvedInput && validScenarios.includes(resolvedInput))
       ? resolvedInput
-      : 'delhi'; // Default to Delhi with direct one-click access to New York & Nepal
+      : 'delhi';
 
     this.currentScenarioId = requestedScenario;
     setCurrentScenarioId(requestedScenario);

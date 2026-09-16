@@ -27,13 +27,13 @@
     <div class="header-left">
       <div class="brand-container">
         <span class="brand-badge" id="brand-badge">SIMULATOR</span>
-        <h1 class="brand-title" id="brand-title">Delhi: Yamuna Record Inundation</h1>
+        <h1 class="brand-title" id="brand-title">Nepal: Langtang Cryospheric GLOF</h1>
         <span class="brand-subtitle" id="brand-subtitle" style="display: none;"></span>
       </div>
 
       <!-- 3-Project Switcher (Delhi, New York, Nepal) -->
       <nav class="scenario-selector" id="scenario-selector" title="Disaster Calamity Project Switcher">
-        <a href="./delhi.html" class="scenario-btn active" data-id="delhi" title="Delhi: Yamuna River Record Inundation & Red Fort Ramparts">
+        <a href="./delhi.html" class="scenario-btn" data-id="delhi" title="Delhi: Yamuna River Record Inundation & Red Fort Ramparts">
           <span class="sc-flag">🇮🇳</span>
           <span class="sc-name">Delhi</span>
         </a>
@@ -41,7 +41,7 @@
           <span class="sc-flag">🇺🇸</span>
           <span class="sc-name">New York</span>
         </a>
-        <a href="./nepal.html" class="scenario-btn" data-id="rasuwa" title="Nepal: Langtang Cryospheric GLOF & Avalanche Surge">
+        <a href="./nepal.html" class="scenario-btn active" data-id="rasuwa" title="Nepal: Langtang Cryospheric GLOF & Avalanche Surge">
           <span class="sc-flag">🇳🇵</span>
           <span class="sc-name">Nepal</span>
         </a>
@@ -50,7 +50,7 @@
 
     <!-- Center: What-If Simulation Model Controls (Cleanly positioned in top header) -->
     <div class="header-center">
-      <div class="forecast-mode-toggle" id="ny-mode-toggle" title="What-If Simulation Model: Compare Early Warning vs Sudden Deluge Breach">
+      <div class="forecast-mode-toggle" id="ny-mode-toggle" style="display: none;">
         <span class="mode-toggle-label">What-If:</span>
         <button type="button" class="mode-pill-btn active" data-mode="modern" id="mode-btn-modern">🛡️ Warning (11)</button>
         <button type="button" class="mode-pill-btn" data-mode="failure" id="mode-btn-failure">⚠️ Breach (420)</button>
@@ -356,7 +356,7 @@
   </div>
 
   <script>
-    window.__INITIAL_SCENARIO__ = 'delhi';
+    window.__INITIAL_SCENARIO__ = 'rasuwa';
   </script>
   <script type="module" src="./main.js"></script>
 </body>
