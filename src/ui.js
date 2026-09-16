@@ -338,7 +338,7 @@ export class UIManager {
     });
 
     if (this.elTallyHumanLabel) {
-      this.elTallyHumanLabel.textContent = (mode === 'modern') ? 'What-If: Warning' : 'What-If: Breach';
+      this.elTallyHumanLabel.textContent = 'Impact:';
     }
     if (this.elTallyMissingUnit) {
       this.elTallyMissingUnit.textContent = (mode === 'modern') ? 'evacuated' : 'missing';
@@ -366,7 +366,7 @@ export class UIManager {
     });
 
     if (this.elTallyHumanLabel) {
-      this.elTallyHumanLabel.textContent = (mode === 'warning') ? 'What-If: Warning' : 'What-If: Breach';
+      this.elTallyHumanLabel.textContent = 'Impact:';
     }
     if (this.elTallyDeadUnit) {
       this.elTallyDeadUnit.textContent = (mode === 'warning') ? 'drowned' : 'fatalities';
@@ -1899,14 +1899,22 @@ export class UIManager {
       this.elDisasterMapBtn.classList.remove('active');
     }
 
+    const conciseHazards = {
+      delhi: 'Yamuna River Record Inundation',
+      newyork: 'Cat-4 Hurricane Storm Surge',
+      rasuwa: 'Langtang Cryospheric GLOF',
+      beijing: 'Mentougou Flash Deluge',
+      tokyo: 'Arakawa Deluge & G-CANS',
+      london: 'North Sea Tidal Surge'
+    };
     if (this.elBrandTitle) {
-      this.elBrandTitle.textContent = this.currentScenario.config.name + ': ' + this.currentScenario.config.hazard;
+      this.elBrandTitle.textContent = conciseHazards[id] || this.currentScenario.config.name;
     }
     if (this.elBrandSubtitle) {
       this.elBrandSubtitle.textContent = this.currentScenario.config.tagline;
     }
     if (this.elBrandBadge) {
-      this.elBrandBadge.textContent = 'Forecasting Simulator';
+      this.elBrandBadge.textContent = 'SIMULATOR';
     }
 
     const elHydroIcon = document.querySelector('.tally-hydro .tally-icon');
@@ -1919,40 +1927,41 @@ export class UIManager {
     }
 
     if (id === 'london') {
-      if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Tube Armor';
-      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Floodplain Impact';
+      if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Tube Armor:';
+      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Impact:';
       if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = 'fatalities';
       if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = 'evacuated';
       if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'Thames Basin';
     } else if (id === 'tokyo') {
-      if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'G-CANS Diverted';
-      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Zero-Meter Impact';
+      if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'G-CANS:';
+      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Impact:';
       if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = 'fatalities';
       if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = 'evacuated';
       if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'Koto 5 Wards';
     } else if (id === 'beijing') {
-      if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Highways Cut';
-      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Capital Impact';
+      if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Highways:';
+      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Impact:';
       if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = 'fatalities';
       if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = 'evacuated';
       if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'Mentougou & Basin';
     } else if (id === 'newyork') {
       const mode = getNYForecastMode();
-      if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Subways Flooded';
-      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = (mode === 'modern') ? 'What-If: Warning' : 'What-If: Breach';
+      if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Subways:';
+      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Impact:';
       if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = 'fatalities';
       if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = (mode === 'modern') ? 'evacuated' : 'missing';
       if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'NYC Metro & Harbor';
     } else if (id === 'delhi') {
       const mode = getDelhiForecastMode();
-      if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Works Offline';
-      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = (mode === 'warning') ? 'What-If: Warning' : 'What-If: Breach';
+      if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Works:';
+      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Impact:';
       if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = (mode === 'warning') ? 'drowned' : 'fatalities';
       if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = (mode === 'warning') ? 'evacuated' : 'missing';
       if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'Yamuna Corridor';
     } else {
-      if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Hydro Offline';
-      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Human Toll';
+      // Nepal (rasuwa)
+      if (this.elTallyHydroLabel) this.elTallyHydroLabel.textContent = 'Hydro:';
+      if (this.elTallyHumanLabel) this.elTallyHumanLabel.textContent = 'Impact:';
       if (this.elTallyDeadUnit) this.elTallyDeadUnit.textContent = 'dead';
       if (this.elTallyMissingUnit) this.elTallyMissingUnit.textContent = 'missing';
       if (this.elTallyHumanRegion) this.elTallyHumanRegion.textContent = 'Trishuli Corridor';
